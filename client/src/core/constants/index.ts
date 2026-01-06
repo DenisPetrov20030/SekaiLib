@@ -1,0 +1,31 @@
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+export const TOKEN_STORAGE_KEY = 'refreshToken';
+export const ACCESS_TOKEN_STORAGE_KEY = 'accessToken';
+
+export const ROUTES = {
+  HOME: '/',
+  LOGIN: '/login',
+  REGISTER: '/register',
+  CATALOG: '/catalog',
+  TITLE_DETAILS: '/titles/:id',
+  READER: '/titles/:titleId/chapters/:chapterNumber',
+  READING_LISTS: '/reading-lists',
+  READING_LIST_STATUS: '/reading-lists/:status',
+  PROFILE: '/profile',
+  ADMIN: '/admin',
+  ADMIN_TITLES: '/admin/titles',
+  ADMIN_TITLE_EDIT: '/admin/titles/:id',
+  ADMIN_TITLE_CREATE: '/admin/titles/create',
+  NOT_FOUND: '/404',
+} as const;
+
+export const PAGINATION = {
+  DEFAULT_PAGE: 1,
+  DEFAULT_PAGE_SIZE: 20,
+  PAGE_SIZE_OPTIONS: [10, 20, 50, 100],
+} as const;
+
+export const DEBOUNCE_DELAY = 500;
+
+export const READER_SETTINGS_STORAGE_KEY = 'readerSettings';
