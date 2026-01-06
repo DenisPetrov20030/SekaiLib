@@ -11,6 +11,7 @@ public record TitleDetailsDto(
     string CoverImageUrl,
     TitleStatus Status,
     string CountryOfOrigin,
+    PublisherDto Publisher,
     IEnumerable<GenreDto> Genres,
     IEnumerable<TranslationTeamDto> TranslationTeams,
     IEnumerable<ChapterDto> Chapters

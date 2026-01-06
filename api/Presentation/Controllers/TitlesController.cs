@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using SekaiLib.Application.DTOs;
 using SekaiLib.Application.DTOs.Chapters;
 using SekaiLib.Application.DTOs.Titles;
@@ -53,5 +55,32 @@ public class TitlesController : ControllerBase
     {
         var chapter = await _chapterService.GetChapterContentByNumberAsync(titleId, chapterNumber);
         return Ok(chapter);
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<ActionResult<TitleDetailsDto>> Create([FromBody] CreateTitleRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var title = await _titleService.CreateAsync(userId, request);
+        return CreatedAtAction(nameof(GetById), new { id = title.Id }, title);
+    }
+
+    [HttpPut("{id}")]
+    [Authorize]
+    public async Task<ActionResult<TitleDetailsDto>> Update(Guid id, [FromBody] UpdateTitleRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var title = await _titleService.UpdateAsync(userId, id, request);
+        return Ok(title);
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize]
+    public async Task<ActionResult> Delete(Guid id)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _titleService.DeleteAsync(userId, id);
+        return NoContent();
     }
 }

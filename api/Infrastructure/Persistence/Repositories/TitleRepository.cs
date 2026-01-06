@@ -59,6 +59,7 @@ public class TitleRepository : Repository<Title>, ITitleRepository
     public async Task<Title?> GetWithChaptersAsync(Guid id)
     {
         return await DbSet
+            .Include(t => t.Publisher)
             .Include(t => t.Chapters)
             .Include(t => t.TitleGenres)
                 .ThenInclude(tg => tg.Genre)
@@ -75,5 +76,30 @@ public class TitleRepository : Repository<Title>, ITitleRepository
             .OrderBy(t => t.Name)
             .Take(20)
             .ToListAsync();
+    }
+
+    public async Task<PagedResult<Title>> GetByPublisherAsync(Guid publisherId, int page, int pageSize)
+    {
+        var query = DbSet
+            .Include(t => t.Chapters)
+            .Include(t => t.TitleGenres)
+                .ThenInclude(tg => tg.Genre)
+            .Where(t => t.PublisherId == publisherId);
+
+        var totalCount = await query.CountAsync();
+
+        var data = await query
+            .OrderByDescending(t => t.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<Title>
+        {
+            Data = data,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 }

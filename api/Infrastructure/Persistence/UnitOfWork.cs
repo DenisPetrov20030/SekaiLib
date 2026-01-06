@@ -16,6 +16,7 @@ public class UnitOfWork : IUnitOfWork
     public IReviewRepository Reviews { get; }
     public ITitleRatingRepository TitleRatings { get; }
     public IRepository<Genre> Genres { get; }
+    public IRepository<TitleGenre> TitleGenres { get; }
     public IRepository<TranslationTeam> TranslationTeams { get; }
     public IRepository<RefreshToken> RefreshTokens { get; }
 
@@ -28,6 +29,7 @@ public class UnitOfWork : IUnitOfWork
         IReviewRepository reviews,
         ITitleRatingRepository titleRatings,
         IRepository<Genre> genres,
+        IRepository<TitleGenre> titleGenres,
         IRepository<TranslationTeam> translationTeams,
         IRepository<RefreshToken> refreshTokens)
     {
@@ -39,6 +41,7 @@ public class UnitOfWork : IUnitOfWork
         Reviews = reviews;
         TitleRatings = titleRatings;
         Genres = genres;
+        TitleGenres = titleGenres;
         TranslationTeams = translationTeams;
         RefreshTokens = refreshTokens;
     }

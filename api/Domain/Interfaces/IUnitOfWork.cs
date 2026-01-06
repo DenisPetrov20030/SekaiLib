@@ -12,6 +12,7 @@ public interface IUnitOfWork
     IReviewRepository Reviews { get; }
     ITitleRatingRepository TitleRatings { get; }
     IRepository<Genre> Genres { get; }
+    IRepository<TitleGenre> TitleGenres { get; }
     IRepository<TranslationTeam> TranslationTeams { get; }
     IRepository<RefreshToken> RefreshTokens { get; }
     Task<int> SaveChangesAsync();

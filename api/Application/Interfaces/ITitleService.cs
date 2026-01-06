@@ -8,7 +8,8 @@ public interface ITitleService
     Task<PagedResponse<TitleDto>> GetCatalogAsync(CatalogFilterDto filter, int page, int pageSize);
     Task<TitleDetailsDto> GetByIdAsync(Guid id);
     Task<IEnumerable<TitleDto>> SearchAsync(string query);
-    Task<TitleDetailResponse> CreateAsync(CreateTitleRequest request);
-    Task<TitleDetailResponse> UpdateAsync(Guid id, UpdateTitleRequest request);
-    Task DeleteAsync(Guid id);
+    Task<TitleDetailsDto> CreateAsync(Guid userId, CreateTitleRequest request);
+    Task<TitleDetailsDto> UpdateAsync(Guid userId, Guid titleId, UpdateTitleRequest request);
+    Task DeleteAsync(Guid userId, Guid titleId);
+    Task<PagedResponse<TitleDto>> GetUserTitlesAsync(Guid userId, int page, int pageSize);
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using SekaiLib.Application.DTOs.Titles;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Domain.Enums;
@@ -21,24 +22,27 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("titles")]
-    public async Task<ActionResult<TitleDetailResponse>> CreateTitle(CreateTitleRequest request)
+    public async Task<ActionResult<TitleDetailsDto>> CreateTitle([FromBody] CreateTitleRequest request)
     {
-        var title = await _titleService.CreateAsync(request);
-        return CreatedAtAction(nameof(TitlesController.GetById), "Titles", new { id = title.Id }, title);
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _titleService.CreateAsync(userId, request);
+        return CreatedAtAction(nameof(TitlesController.GetById), "Titles", new { id = result.Id }, result);
     }
 
     [HttpPut("titles/{id}")]
-    public async Task<ActionResult<TitleDetailResponse>> UpdateTitle(Guid id, UpdateTitleRequest request)
+    public async Task<ActionResult<TitleDetailsDto>> UpdateTitle(Guid id, [FromBody] UpdateTitleRequest request)
     {
-        var title = await _titleService.UpdateAsync(id, request);
-        return Ok(title);
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _titleService.UpdateAsync(userId, id, request);
+        return Ok(result);
     }
 
     [HttpDelete("titles/{id}")]
     [Authorize(Roles = "Administrator")]
     public async Task<ActionResult> DeleteTitle(Guid id)
     {
-        await _titleService.DeleteAsync(id);
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _titleService.DeleteAsync(userId, id);
         return NoContent();
     }
 }

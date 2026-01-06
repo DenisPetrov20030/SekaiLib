@@ -42,6 +42,11 @@ public class Repository<T> : IRepository<T> where T : class
         await Task.CompletedTask;
     }
 
+    public virtual void Remove(T entity)
+    {
+        DbSet.Remove(entity);
+    }
+
     public virtual async Task<bool> ExistsAsync(Guid id)
     {
         return await DbSet.FindAsync(id) != null;

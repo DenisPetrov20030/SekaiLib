@@ -8,4 +8,5 @@ public interface ITitleRepository : IRepository<Title>
     Task<PagedResult<Title>> GetCatalogAsync(CatalogFilter filter, int page, int pageSize);
     Task<Title?> GetWithChaptersAsync(Guid id);
     Task<IEnumerable<Title>> SearchByNameAsync(string query);
+    Task<PagedResult<Title>> GetByPublisherAsync(Guid publisherId, int page, int pageSize);
 }

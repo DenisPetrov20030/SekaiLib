@@ -7,6 +7,7 @@ using SekaiLib.Application.Common;
 using SekaiLib.Domain.Entities;
 using SekaiLib.Domain.Enums;
 using SekaiLib.Domain.Interfaces;
+using SekaiLib.Domain.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace SekaiLib.Application.Services;
@@ -57,6 +58,12 @@ public class TitleService : ITitleService
         if (title == null)
             throw new NotFoundException("Title", id);
 
+        var publisher = new PublisherDto(
+            title.Publisher.Id,
+            title.Publisher.Username,
+            title.Publisher.AvatarUrl
+        );
+
         var genres = title.TitleGenres.Select(tg => new GenreDto(tg.Genre.Id, tg.Genre.Name));
         var translationTeams = title.TitleTranslators.Select(tt => new TranslationTeamDto(tt.TranslationTeam.Id, tt.TranslationTeam.Name));
         var chapters = title.Chapters
@@ -71,6 +78,7 @@ public class TitleService : ITitleService
             title.CoverImageUrl,
             title.Status,
             title.CountryOfOrigin,
+            publisher,
             genres,
             translationTeams,
             chapters
@@ -92,17 +100,22 @@ public class TitleService : ITitleService
         ));
     }
 
-    public async Task<TitleDetailResponse> CreateAsync(CreateTitleRequest request)
+    public async Task<TitleDetailsDto> CreateAsync(Guid userId, CreateTitleRequest request)
     {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+            throw new NotFoundException("User", userId);
+
         var title = new Title
         {
             Id = Guid.NewGuid(),
-            Name = request.Title,
-            Description = request.Description ?? string.Empty,
-            CoverImageUrl = request.CoverUrl ?? string.Empty,
+            Name = request.Name,
+            Author = request.Author,
+            Description = request.Description,
+            CoverImageUrl = request.CoverImageUrl ?? string.Empty,
             Status = request.Status,
-            Author = string.Empty,
-            CountryOfOrigin = string.Empty,
+            CountryOfOrigin = request.CountryOfOrigin,
+            PublisherId = userId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -119,62 +132,88 @@ public class TitleService : ITitleService
         await _unitOfWork.Titles.AddAsync(title);
         await _unitOfWork.SaveChangesAsync();
 
-        return await GetDetailResponseAsync(title.Id);
+        return await GetByIdAsync(title.Id);
     }
 
-    public async Task<TitleDetailResponse> UpdateAsync(Guid id, UpdateTitleRequest request)
+    public async Task<TitleDetailsDto> UpdateAsync(Guid userId, Guid titleId, UpdateTitleRequest request)
     {
-        var title = await _unitOfWork.Titles.GetByIdAsync(id);
+        var title = await _unitOfWork.Titles.GetByIdAsync(titleId);
         if (title == null)
-            throw new NotFoundException("Title", id);
+            throw new NotFoundException("Title", titleId);
 
-        title.Name = request.Title;
-        title.Description = request.Description ?? string.Empty;
-        title.CoverImageUrl = request.CoverUrl ?? string.Empty;
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+            throw new UnauthorizedException();
+
+        if (title.PublisherId != userId && user.Role != UserRole.Administrator)
+            throw new ForbiddenException();
+
+        title.Name = request.Name;
+        title.Author = request.Author;
+        title.Description = request.Description;
+        title.CoverImageUrl = request.CoverImageUrl ?? title.CoverImageUrl;
         title.Status = request.Status;
+        title.CountryOfOrigin = request.CountryOfOrigin;
         title.UpdatedAt = DateTime.UtcNow;
+
+        var existingGenres = await _unitOfWork.TitleGenres.GetByTitleIdAsync(titleId);
+        foreach (var genre in existingGenres)
+        {
+            _unitOfWork.TitleGenres.Remove(genre);
+        }
+
+        foreach (var genreId in request.GenreIds)
+        {
+            title.TitleGenres.Add(new TitleGenre
+            {
+                TitleId = title.Id,
+                GenreId = genreId
+            });
+        }
 
         await _unitOfWork.Titles.UpdateAsync(title);
         await _unitOfWork.SaveChangesAsync();
 
-        return await GetDetailResponseAsync(title.Id);
+        return await GetByIdAsync(title.Id);
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid userId, Guid titleId)
     {
-        var title = await _unitOfWork.Titles.GetByIdAsync(id);
+        var title = await _unitOfWork.Titles.GetByIdAsync(titleId);
         if (title == null)
-            throw new NotFoundException("Title", id);
+            throw new NotFoundException("Title", titleId);
+
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+            throw new UnauthorizedException();
+
+        if (title.PublisherId != userId && user.Role != UserRole.Administrator)
+            throw new ForbiddenException();
 
         await _unitOfWork.Titles.DeleteAsync(title);
         await _unitOfWork.SaveChangesAsync();
     }
 
-    private async Task<TitleDetailResponse> GetDetailResponseAsync(Guid id)
+    public async Task<PagedResponse<TitleDto>> GetUserTitlesAsync(Guid userId, int page, int pageSize)
     {
-        var title = await _unitOfWork.Titles.GetWithChaptersAsync(id);
-        if (title == null)
-            throw new NotFoundException("Title", id);
+        var result = await _unitOfWork.Titles.GetByPublisherAsync(userId, page, pageSize);
 
-        var likesCount = await _unitOfWork.TitleRatings.GetLikesCountAsync(id);
-        var dislikesCount = await _unitOfWork.TitleRatings.GetDislikesCountAsync(id);
+        var titleDtos = result.Data.Select(t => new TitleDto(
+            t.Id,
+            t.Name,
+            t.Author,
+            t.Description,
+            t.CoverImageUrl,
+            t.Status,
+            t.Chapters.Count
+        ));
 
-        var genres = title.TitleGenres.Select(tg => new GenreDto(tg.Genre.Id, tg.Genre.Name)).ToList();
-
-        return new TitleDetailResponse(
-            title.Id,
-            title.Name,
-            null,
-            title.Description,
-            title.CoverImageUrl,
-            title.Status,
-            null,
-            genres,
-            title.Chapters.Count,
-            likesCount,
-            dislikesCount,
-            title.CreatedAt,
-            title.UpdatedAt
+        return new PagedResponse<TitleDto>(
+            titleDtos,
+            result.TotalCount,
+            result.Page,
+            result.PageSize,
+            result.TotalPages
         );
     }
 }

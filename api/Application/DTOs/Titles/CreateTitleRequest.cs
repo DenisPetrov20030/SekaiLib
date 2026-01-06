@@ -3,11 +3,11 @@ using SekaiLib.Domain.Enums;
 namespace SekaiLib.Application.DTOs.Titles;
 
 public record CreateTitleRequest(
-    string Title,
-    string? OriginalTitle,
-    string? Description,
-    string? CoverUrl,
+    string Name,
+    string Author,
+    string Description,
+    string? CoverImageUrl,
     TitleStatus Status,
-    int? Year,
+    string CountryOfOrigin,
     List<Guid> GenreIds
 );
