@@ -13,6 +13,10 @@ public class Title
     public string CountryOfOrigin { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    
+    public Guid PublisherId { get; set; }
+    public User Publisher { get; set; } = null!;
+    
     public ICollection<Chapter> Chapters { get; set; } = new List<Chapter>();
     public ICollection<TitleGenre> TitleGenres { get; set; } = new List<TitleGenre>();
     public ICollection<TitleTranslator> TitleTranslators { get; set; } = new List<TitleTranslator>();

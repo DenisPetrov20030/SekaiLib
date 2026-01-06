@@ -9,7 +9,7 @@ export const TitleGrid = ({ titles }: TitleGridProps) => {
   if (!titles || titles.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-text-muted">No titles found</p>
+        <p className="text-text-muted">Творів не знайдено</p>
       </div>
     );
   }

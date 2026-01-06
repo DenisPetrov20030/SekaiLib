@@ -60,7 +60,7 @@ export function ReviewList({ titleId, onLoginRequired }: ReviewListProps) {
     <div className="space-y-6">
       {isAuthenticated && !userHasReview && (
         <div className="bg-surface-800 rounded-lg p-4">
-          <h3 className="text-lg font-medium text-text-primary mb-4">Write a Review</h3>
+          <h3 className="text-lg font-medium text-text-primary mb-4">Напишіть рецензію</h3>
           <ReviewForm onSubmit={handleCreate} />
         </div>
       )}
@@ -69,15 +69,15 @@ export function ReviewList({ titleId, onLoginRequired }: ReviewListProps) {
         <div className="bg-surface-800 rounded-lg p-4 text-center">
           <p className="text-text-secondary">
             <button onClick={onLoginRequired} className="text-primary-500 hover:underline">
-              Sign in
+              Увійдіть
             </button>{' '}
-            to write a review
+            щоб написати рецензію
           </p>
         </div>
       )}
 
       {reviews.length === 0 ? (
-        <p className="text-center text-text-muted py-8">No reviews yet</p>
+        <p className="text-center text-text-muted py-8">Рецензій ще немає</p>
       ) : (
         <div className="space-y-4">
           {reviews.map((review) => (

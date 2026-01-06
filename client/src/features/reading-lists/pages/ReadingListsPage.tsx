@@ -4,11 +4,11 @@ import { fetchReadingLists } from '../store';
 import { ReadingStatus } from '../../../core/types';
 
 const READING_STATUS_LABELS: Record<ReadingStatus, string> = {
-  [ReadingStatus.Reading]: 'Reading',
-  [ReadingStatus.Planned]: 'Planned',
-  [ReadingStatus.Completed]: 'Completed',
-  [ReadingStatus.Dropped]: 'Dropped',
-  [ReadingStatus.Favorite]: 'Favorites',
+  [ReadingStatus.Reading]: 'Читаю',
+  [ReadingStatus.Planned]: 'Заплановано',
+  [ReadingStatus.Completed]: 'Завершено',
+  [ReadingStatus.Dropped]: 'Припинено',
+  [ReadingStatus.Favorite]: 'Улюблені',
 };
 
 const READING_STATUSES = [
@@ -44,7 +44,7 @@ export const ReadingListsPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-text-primary mb-8">My Reading Lists</h1>
+      <h1 className="text-3xl font-bold text-text-primary mb-8">Мої списки читання</h1>
 
       <div className="mb-6 flex gap-4 border-b border-surface-hover">
         {READING_STATUSES.map((s) => (
@@ -65,7 +65,7 @@ export const ReadingListsPage = () => {
 
       {filteredItems.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-text-muted">No titles in this list</p>
+          <p className="text-text-muted">У цьому списку немає творів</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -84,7 +84,7 @@ export const ReadingListsPage = () => {
                   />
                 ) : (
                   <div className="w-full h-64 flex items-center justify-center bg-surface-hover">
-                    <span className="text-text-muted">No cover</span>
+                    <span className="text-text-muted">Без обкладинки</span>
                   </div>
                 )}
               </div>

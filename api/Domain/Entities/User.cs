@@ -18,4 +18,5 @@ public class User
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
     public ICollection<ReviewReaction> ReviewReactions { get; set; } = new List<ReviewReaction>();
     public ICollection<TitleRating> TitleRatings { get; set; } = new List<TitleRating>();
+    public ICollection<Title> PublishedTitles { get; set; } = new List<Title>();
 }

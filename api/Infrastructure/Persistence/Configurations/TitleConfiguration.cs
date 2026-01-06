@@ -27,6 +27,11 @@ public class TitleConfiguration : IEntityTypeConfiguration<Title>
         builder.Property(t => t.CountryOfOrigin)
             .HasMaxLength(100);
 
+        builder.HasOne(t => t.Publisher)
+            .WithMany(u => u.PublishedTitles)
+            .HasForeignKey(t => t.PublisherId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasMany(t => t.Chapters)
             .WithOne(c => c.Title)
             .HasForeignKey(c => c.TitleId)

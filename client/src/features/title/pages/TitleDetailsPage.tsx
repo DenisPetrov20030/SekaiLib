@@ -33,7 +33,7 @@ export const TitleDetailsPage = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center text-red-600">
-          {error || 'Title not found'}
+          {error || 'Твір не знайдено'}
         </div>
       </div>
     );
@@ -58,7 +58,7 @@ export const TitleDetailsPage = () => {
 
         <div className="md:col-span-2">
           <h1 className="text-3xl font-bold text-text-primary">{currentTitle.name}</h1>
-          <p className="mt-2 text-lg text-text-muted">by {currentTitle.author}</p>
+          <p className="mt-2 text-lg text-text-muted">автор: {currentTitle.author}</p>
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-900 text-primary-100">
@@ -82,12 +82,12 @@ export const TitleDetailsPage = () => {
           </div>
 
           <div className="mt-6">
-            <h2 className="text-xl font-semibold text-text-primary">Description</h2>
+            <h2 className="text-xl font-semibold text-text-primary">Опис</h2>
             <p className="mt-2 text-text-secondary whitespace-pre-line">{currentTitle.description}</p>
           </div>
 
           <div className="mt-6">
-            <h2 className="text-xl font-semibold text-text-primary">Genres</h2>
+            <h2 className="text-xl font-semibold text-text-primary">Жанри</h2>
             <div className="mt-2 flex flex-wrap gap-2">
               {currentTitle.genres.map((genre) => (
                 <span
@@ -101,7 +101,7 @@ export const TitleDetailsPage = () => {
           </div>
 
           <div className="mt-8">
-            <h2 className="text-xl font-semibold text-text-primary">Chapters</h2>
+            <h2 className="text-xl font-semibold text-text-primary">Розділи</h2>
             <div className="mt-4 space-y-2">
               {currentTitle.chapters.map((chapter) => (
                 <a
@@ -126,7 +126,7 @@ export const TitleDetailsPage = () => {
           </div>
 
           <div className="mt-8">
-            <h2 className="text-xl font-semibold text-text-primary mb-4">Reviews</h2>
+            <h2 className="text-xl font-semibold text-text-primary mb-4">Рецензії</h2>
             <ReviewList
               titleId={currentTitle.id}
               onLoginRequired={() => setShowLogin(true)}

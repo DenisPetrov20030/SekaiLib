@@ -18,7 +18,7 @@ export const SearchBar = ({ onSearch, initialValue = '' }: SearchBarProps) => {
     <div className="mb-6">
       <input
         type="text"
-        placeholder="Search by title or author..."
+        placeholder="Пошук за назвою або автором..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-lg"

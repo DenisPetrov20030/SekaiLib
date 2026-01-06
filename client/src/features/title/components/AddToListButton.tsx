@@ -10,16 +10,16 @@ interface AddToListButtonProps {
 }
 
 const statusOptions = [
-  { value: String(ReadingStatus.Reading), label: 'Reading' },
-  { value: String(ReadingStatus.Planned), label: 'Planned' },
-  { value: String(ReadingStatus.Completed), label: 'Completed' },
-  { value: String(ReadingStatus.Dropped), label: 'Dropped' },
-  { value: String(ReadingStatus.Favorite), label: 'Favorites' },
+  { value: String(ReadingStatus.Reading), label: 'Читаю' },
+  { value: String(ReadingStatus.Planned), label: 'Заплановано' },
+  { value: String(ReadingStatus.Completed), label: 'Завершено' },
+  { value: String(ReadingStatus.Dropped), label: 'Припинено' },
+  { value: String(ReadingStatus.Favorite), label: 'Улюблені' },
 ];
 
 const getStatusLabel = (status: ReadingStatus): string => {
   const option = statusOptions.find(opt => opt.value === String(status));
-  return option?.label || 'In List';
+  return option?.label || 'У списку';
 };
 
 export function AddToListButton({ titleId, onLoginRequired }: AddToListButtonProps) {
@@ -120,17 +120,17 @@ export function AddToListButton({ titleId, onLoginRequired }: AddToListButtonPro
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
-        {showSelect ? 'Save' : 'Add to List'}
+        {showSelect ? 'Зберегти' : 'Додати до списку'}
       </Button>
       {showSelect && (
         <>
           {currentStatus !== null && (
             <Button variant="danger" onClick={handleRemove} loading={loading}>
-              Remove
+              Видалити
             </Button>
           )}
           <Button variant="ghost" onClick={() => setShowSelect(false)}>
-            Cancel
+            Скасувати
           </Button>
         </>
       )}

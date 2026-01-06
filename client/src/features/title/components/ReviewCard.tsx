@@ -40,7 +40,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
   };
 
   const handleDelete = async () => {
-    if (confirm('Are you sure you want to delete this review?')) {
+    if (confirm('Ви впевнені, що хочете видалити цю рецензію?')) {
       await reviewsApi.delete(titleId, currentReview.id);
       onDelete(currentReview.id);
     }
@@ -91,10 +91,10 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
           {isOwner && (
             <>
               <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>
-                Edit
+                Редагувати
               </Button>
               <Button size="sm" variant="ghost" onClick={handleDelete}>
-                Delete
+                Видалити
               </Button>
             </>
           )}

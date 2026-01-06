@@ -25,14 +25,14 @@ export const Header = () => {
                   to={ROUTES.CATALOG}
                   className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
                 >
-                  Catalog
+                  Каталог
                 </Link>
                 {isAuthenticated && (
                   <Link
                     to={ROUTES.READING_LISTS}
                     className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
                   >
-                    My Lists
+                    Мої списки
                   </Link>
                 )}
                 {isAdmin && (
@@ -59,7 +59,7 @@ export const Header = () => {
                     onClick={logout}
                     className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
                   >
-                    Logout
+                    Вийти
                   </button>
                 </>
               ) : (
@@ -68,13 +68,13 @@ export const Header = () => {
                     onClick={() => setIsLoginModalOpen(true)}
                     className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
                   >
-                    Login
+                    Вхід
                   </button>
                   <Link
                     to={ROUTES.REGISTER}
                     className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700"
                   >
-                    Sign Up
+                    Реєстрація
                   </Link>
                 </>
               )}

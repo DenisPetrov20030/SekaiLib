@@ -43,7 +43,7 @@ export const CatalogFilters = ({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label htmlFor="genre" className="block text-sm font-medium text-text-secondary mb-1">
-            Genre
+            Жанр
           </label>
           <select
             id="genre"
@@ -51,7 +51,7 @@ export const CatalogFilters = ({
             onChange={(e) => handleGenreChange(e.target.value)}
             className="block w-full rounded-md border-surface-hover bg-surface text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500"
           >
-            <option value="">All Genres</option>
+            <option value="">Усі жанри</option>
             {genres.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.name}
@@ -62,7 +62,7 @@ export const CatalogFilters = ({
 
         <div>
           <label htmlFor="country" className="block text-sm font-medium text-text-secondary mb-1">
-            Country
+            Країна
           </label>
           <select
             id="country"
@@ -70,17 +70,17 @@ export const CatalogFilters = ({
             onChange={(e) => handleCountryChange(e.target.value)}
             className="block w-full rounded-md border-surface-hover bg-surface text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500"
           >
-            <option value="">All Countries</option>
-            <option value="Japan">Japan</option>
-            <option value="China">China</option>
-            <option value="Korea">Korea</option>
-            <option value="Other">Other</option>
+            <option value="">Усі країни</option>
+            <option value="Japan">Японія</option>
+            <option value="China">Китай</option>
+            <option value="Korea">Південна Корея</option>
+            <option value="Other">Інше</option>
           </select>
         </div>
 
         <div>
           <label htmlFor="status" className="block text-sm font-medium text-text-secondary mb-1">
-            Status
+            Статус
           </label>
           <select
             id="status"
@@ -88,11 +88,11 @@ export const CatalogFilters = ({
             onChange={(e) => handleStatusChange(e.target.value)}
             className="block w-full rounded-md border-surface-hover bg-surface text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500"
           >
-            <option value="">All Statuses</option>
-            <option value={TitleStatus.Ongoing}>Ongoing</option>
-            <option value={TitleStatus.Completed}>Completed</option>
-            <option value={TitleStatus.Hiatus}>Hiatus</option>
-            <option value={TitleStatus.Cancelled}>Cancelled</option>
+            <option value="">Усі статуси</option>
+            <option value={TitleStatus.Ongoing}>Продовжується</option>
+            <option value={TitleStatus.Completed}>Завершено</option>
+            <option value={TitleStatus.Hiatus}>Перерва</option>
+            <option value={TitleStatus.Cancelled}>Скасовано</option>
           </select>
         </div>
 
@@ -101,7 +101,7 @@ export const CatalogFilters = ({
             onClick={handleClear}
             className="w-full px-4 py-2 border border-surface-hover rounded-md shadow-sm text-sm font-medium text-text-primary bg-surface hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
-            Clear Filters
+            Очистити фільтри
           </button>
         </div>
       </div>
