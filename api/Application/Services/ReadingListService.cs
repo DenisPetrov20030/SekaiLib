@@ -34,6 +34,12 @@ public class ReadingListService : IReadingListService
         ));
     }
 
+    public async Task<ReadingStatus?> GetTitleStatusAsync(Guid userId, Guid titleId)
+    {
+        var entry = await _unitOfWork.ReadingLists.GetByUserAndTitleAsync(userId, titleId);
+        return entry?.Status;
+    }
+
     public async Task AddToListAsync(Guid userId, Guid titleId, ReadingStatus status)
     {
         var titleExists = await _unitOfWork.Titles.ExistsAsync(titleId);

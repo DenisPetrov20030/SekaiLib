@@ -26,6 +26,14 @@ public class ReadingListsController : ControllerBase
         return Ok(lists);
     }
 
+    [HttpGet("{titleId}/status")]
+    public async Task<ActionResult<ReadingStatusResponse>> GetTitleStatus(Guid titleId)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var status = await _readingListService.GetTitleStatusAsync(userId, titleId);
+        return Ok(new ReadingStatusResponse(status));
+    }
+
     [HttpPost]
     public async Task<ActionResult> AddToList([FromBody] UpdateReadingStatusRequest request)
     {

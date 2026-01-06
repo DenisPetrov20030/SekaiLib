@@ -16,3 +16,5 @@ public record ReadingListDto(
     ReadingStatus Status,
     DateTime AddedAt
 );
+
+public record ReadingStatusResponse(ReadingStatus? Status);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppSelector } from '../../../app/store/hooks';
 import { axiosInstance } from '../../../core/api';
 import { ReadingStatus } from '../../../core/types/enums';
@@ -10,19 +10,44 @@ interface AddToListButtonProps {
 }
 
 const statusOptions = [
-  { value: String(ReadingStatus.Planned), label: 'Planned' },
   { value: String(ReadingStatus.Reading), label: 'Reading' },
+  { value: String(ReadingStatus.Planned), label: 'Planned' },
   { value: String(ReadingStatus.Completed), label: 'Completed' },
   { value: String(ReadingStatus.Dropped), label: 'Dropped' },
-  { value: String(ReadingStatus.Favorite), label: 'Favorite' },
+  { value: String(ReadingStatus.Favorite), label: 'Favorites' },
 ];
+
+const getStatusLabel = (status: ReadingStatus): string => {
+  const option = statusOptions.find(opt => opt.value === String(status));
+  return option?.label || 'In List';
+};
 
 export function AddToListButton({ titleId, onLoginRequired }: AddToListButtonProps) {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const [showSelect, setShowSelect] = useState(false);
   const [status, setStatus] = useState<ReadingStatus>(ReadingStatus.Planned);
+  const [currentStatus, setCurrentStatus] = useState<ReadingStatus | null>(null);
   const [loading, setLoading] = useState(false);
-  const [added, setAdded] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(false);
+
+  const checkTitleStatus = useCallback(async () => {
+    setCheckingStatus(true);
+    try {
+      const response = await axiosInstance.get<{ status: ReadingStatus | null }>(`/ReadingLists/${titleId}/status`);
+      if (response.data.status !== null) {
+        setCurrentStatus(response.data.status);
+        setStatus(response.data.status);
+      }
+    } finally {
+      setCheckingStatus(false);
+    }
+  }, [titleId]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      checkTitleStatus();
+    }
+  }, [isAuthenticated, checkTitleStatus]);
 
   const handleAdd = async () => {
     if (!isAuthenticated) {
@@ -37,22 +62,48 @@ export function AddToListButton({ titleId, onLoginRequired }: AddToListButtonPro
 
     setLoading(true);
     try {
-      await axiosInstance.post('/ReadingLists', { TitleId: titleId, Status: status });
-      setAdded(true);
+      if (currentStatus !== null) {
+        await axiosInstance.put(`/ReadingLists/${titleId}`, { TitleId: titleId, Status: status });
+      } else {
+        await axiosInstance.post('/ReadingLists', { TitleId: titleId, Status: status });
+      }
+      setCurrentStatus(status);
       setShowSelect(false);
     } finally {
       setLoading(false);
     }
   };
 
-  if (added) {
+  const handleRemove = async () => {
+    setLoading(true);
+    try {
+      await axiosInstance.delete(`/ReadingLists/${titleId}`);
+      setCurrentStatus(null);
+      setShowSelect(false);
+      setStatus(ReadingStatus.Planned);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (checkingStatus) {
     return (
       <Button variant="secondary" disabled>
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-        Added to List
+        <div className="w-5 h-5 border-2 border-text-muted border-t-transparent rounded-full animate-spin" />
       </Button>
+    );
+  }
+
+  if (currentStatus !== null && !showSelect) {
+    return (
+      <div className="flex items-center gap-2">
+        <Button variant="secondary" onClick={() => setShowSelect(true)}>
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+          {getStatusLabel(currentStatus)}
+        </Button>
+      </div>
     );
   }
 
@@ -69,12 +120,19 @@ export function AddToListButton({ titleId, onLoginRequired }: AddToListButtonPro
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
-        {showSelect ? 'Confirm' : 'Add to List'}
+        {showSelect ? 'Save' : 'Add to List'}
       </Button>
       {showSelect && (
-        <Button variant="ghost" onClick={() => setShowSelect(false)}>
-          Cancel
-        </Button>
+        <>
+          {currentStatus !== null && (
+            <Button variant="danger" onClick={handleRemove} loading={loading}>
+              Remove
+            </Button>
+          )}
+          <Button variant="ghost" onClick={() => setShowSelect(false)}>
+            Cancel
+          </Button>
+        </>
       )}
     </div>
   );
