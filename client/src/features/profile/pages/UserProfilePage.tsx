@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { usersApi } from '../../../core/api';
 import { TitleCard } from '../../catalog/components/TitleCard';
 import { Pagination } from '../../catalog/components/Pagination';
 import type { UserProfile } from '../../../core/api/users';
-import type { TitleDto, PagedResponse } from '../../../core/types';
+import type { TitleDto } from '../../../core/types/dtos';
+import type { PagedResponse } from '../../../core/types';
 
 export const UserProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -18,6 +19,7 @@ export const UserProfilePage = () => {
       loadProfile();
       loadTitles(1);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const loadProfile = async () => {
@@ -93,7 +95,13 @@ export const UserProfilePage = () => {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
             {titles.data.map((title) => (
-              <TitleCard key={title.id} title={title} />
+              <TitleCard 
+                key={title.id} 
+                title={{
+                  ...title,
+                  countryOfOrigin: title.countryOfOrigin || '',
+                }} 
+              />
             ))}
           </div>
 

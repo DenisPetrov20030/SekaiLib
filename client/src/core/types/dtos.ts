@@ -60,3 +60,54 @@ export interface UpdateProfileRequest {
   currentPassword?: string;
   newPassword?: string;
 }
+
+export interface PublisherDto {
+  id: string;
+  username: string;
+  avatarUrl?: string;
+}
+
+export interface TitleDetailsDto {
+  id: string;
+  name: string;
+  author: string;
+  description: string;
+  coverImageUrl?: string;
+  status: TitleStatus;
+  countryOfOrigin: string;
+  publisher: PublisherDto;
+  genres: Array<{ id: string; name: string }>;
+  translationTeams: Array<{ id: string; name: string }>;
+  chapters: Array<{ id: string; number: number; name: string; publishedAt: string; isPremium: boolean }>;
+}
+
+export interface CreateTitleRequest {
+  name: string;
+  author: string;
+  description: string;
+  coverImageUrl?: string;
+  status: TitleStatus;
+  countryOfOrigin: string;
+  genreIds: string[];
+}
+
+export interface UpdateTitleRequest {
+  name: string;
+  author: string;
+  description: string;
+  coverImageUrl?: string;
+  status: TitleStatus;
+  countryOfOrigin: string;
+  genreIds: string[];
+}
+
+export interface TitleDto {
+  id: string;
+  name: string;
+  author: string;
+  description: string;
+  coverImageUrl: string;
+  status: TitleStatus;
+  chapterCount: number;
+  countryOfOrigin?: string;
+}

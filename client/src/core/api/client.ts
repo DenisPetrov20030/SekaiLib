@@ -117,6 +117,26 @@ class ApiClient {
   getClient(): AxiosInstance {
     return this.client;
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  get<T = any>(url: string, config?: any) {
+    return this.client.get<T>(url, config);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  post<T = any>(url: string, data?: any, config?: any) {
+    return this.client.post<T>(url, data, config);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  put<T = any>(url: string, data?: any, config?: any) {
+    return this.client.put<T>(url, data, config);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delete<T = any>(url: string, config?: any) {
+    return this.client.delete<T>(url, config);
+  }
 }
 
 export const apiClient = new ApiClient();

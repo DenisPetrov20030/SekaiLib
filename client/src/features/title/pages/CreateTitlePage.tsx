@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { titlesApi, genresApi } from '../../../core/api';
-import { Button, Input, Textarea, Select } from '../../../shared/components';
+import { Button, Input, Textarea } from '../../../shared/components';
 import { TitleStatus } from '../../../core/types/enums';
 import type { Genre } from '../../../core/api/genres';
 
@@ -14,7 +14,7 @@ export const CreateTitlePage = () => {
     author: '',
     description: '',
     coverImageUrl: '',
-    status: TitleStatus.Ongoing,
+    status: TitleStatus.Ongoing as string,
     countryOfOrigin: '',
     genreIds: [] as string[],
   });
@@ -37,7 +37,10 @@ export const CreateTitlePage = () => {
     setLoading(true);
 
     try {
-      const title = await titlesApi.create(formData);
+      const title = await titlesApi.create({
+        ...formData,
+        status: formData.status as TitleStatus,
+      });
       navigate(`/titles/${title.id}`);
     } catch (error) {
       console.error('Failed to create title:', error);
@@ -93,31 +96,41 @@ export const CreateTitlePage = () => {
           placeholder="https://example.com/cover.jpg"
         />
 
-        <Select
-          label="Статус"
-          value={formData.status.toString()}
-          onChange={(e) =>
-            setFormData({ ...formData, status: Number(e.target.value) as TitleStatus })
-          }
-        >
-          <option value={TitleStatus.Ongoing}>Продовжується</option>
-          <option value={TitleStatus.Completed}>Завершено</option>
-          <option value={TitleStatus.Hiatus}>Перерва</option>
-          <option value={TitleStatus.Cancelled}>Скасовано</option>
-        </Select>
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">
+            Статус
+          </label>
+          <select
+            value={formData.status}
+            onChange={(e) =>
+              setFormData({ ...formData, status: e.target.value as TitleStatus })
+            }
+            className="block w-full rounded-md border-surface-hover bg-surface text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500 p-2"
+          >
+            <option value={TitleStatus.Ongoing}>Продовжується</option>
+            <option value={TitleStatus.Completed}>Завершено</option>
+            <option value={TitleStatus.Hiatus}>Перерва</option>
+            <option value={TitleStatus.Cancelled}>Скасовано</option>
+          </select>
+        </div>
 
-        <Select
-          label="Країна походження"
-          value={formData.countryOfOrigin}
-          onChange={(e) => setFormData({ ...formData, countryOfOrigin: e.target.value })}
-          required
-        >
-          <option value="">Виберіть країну</option>
-          <option value="Japan">Японія</option>
-          <option value="China">Китай</option>
-          <option value="Korea">Південна Корея</option>
-          <option value="Other">Інше</option>
-        </Select>
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-1">
+            Країна походження *
+          </label>
+          <select
+            value={formData.countryOfOrigin}
+            onChange={(e) => setFormData({ ...formData, countryOfOrigin: e.target.value })}
+            required
+            className="block w-full rounded-md border-surface-hover bg-surface text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500 p-2"
+          >
+            <option value="">Виберіть країну</option>
+            <option value="Japan">Японія</option>
+            <option value="China">Китай</option>
+            <option value="Korea">Південна Корея</option>
+            <option value="Other">Інше</option>
+          </select>
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">

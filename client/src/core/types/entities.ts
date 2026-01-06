@@ -20,6 +20,11 @@ export interface Title {
 }
 
 export interface TitleDetails extends Title {
+  publisher?: {
+    id: string;
+    username: string;
+    avatarUrl?: string;
+  };
   genres: Genre[];
   translationTeams: TranslationTeam[];
   chapters: Chapter[];
