@@ -2,11 +2,11 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { MainLayout, ProtectedRoute } from '../../shared/components';
 import { RegisterPage } from '../../features/auth/pages';
 import { CatalogPage } from '../../features/catalog/pages';
-import { TitleDetailsPage } from '../../features/title/pages';
+import { TitleDetailsPage, CreateTitlePage } from '../../features/title/pages';
 import { ReaderPage } from '../../features/reader/pages';
 import { ReadingListsPage } from '../../features/reading-lists/pages';
-import { ProfilePage } from '../../features/profile/pages';
-import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage } from '../../features/admin';
+import { ProfilePage, UserProfilePage } from '../../features/profile/pages';
+import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage } from '../../features/admin';
 import { ROUTES } from '../../core/constants';
 
 export const router = createBrowserRouter([
@@ -31,12 +31,20 @@ export const router = createBrowserRouter([
         element: <TitleDetailsPage />,
       },
       {
+        path: ROUTES.USER_PROFILE,
+        element: <UserProfilePage />,
+      },
+      {
         path: ROUTES.READER,
         element: <ReaderPage />,
       },
       {
         element: <ProtectedRoute />,
         children: [
+          {
+            path: ROUTES.TITLE_CREATE,
+            element: <CreateTitlePage />,
+          },
           {
             path: ROUTES.READING_LISTS,
             element: <ReadingListsPage />,
@@ -61,6 +69,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.ADMIN_TITLES,
             element: <AdminTitlesPage />,
+          },
+          {
+            path: ROUTES.ADMIN_GENRES,
+            element: <GenresManagementPage />,
           },
           {
             path: ROUTES.ADMIN_TITLE_CREATE,

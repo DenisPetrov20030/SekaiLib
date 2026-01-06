@@ -9,14 +9,17 @@ export const ROUTES = {
   REGISTER: '/register',
   CATALOG: '/catalog',
   TITLE_DETAILS: '/titles/:id',
+  TITLE_CREATE: '/titles/create',
   READER: '/titles/:titleId/chapters/:chapterNumber',
   READING_LISTS: '/reading-lists',
   READING_LIST_STATUS: '/reading-lists/:status',
   PROFILE: '/profile',
+  USER_PROFILE: '/users/:userId',
   ADMIN: '/admin',
   ADMIN_TITLES: '/admin/titles',
   ADMIN_TITLE_EDIT: '/admin/titles/:id',
   ADMIN_TITLE_CREATE: '/admin/titles/create',
+  ADMIN_GENRES: '/admin/genres',
   NOT_FOUND: '/404',
 } as const;
 

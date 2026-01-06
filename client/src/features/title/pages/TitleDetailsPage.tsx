@@ -59,6 +59,22 @@ export const TitleDetailsPage = () => {
         <div className="md:col-span-2">
           <h1 className="text-3xl font-bold text-text-primary">{currentTitle.name}</h1>
           <p className="mt-2 text-lg text-text-muted">автор: {currentTitle.author}</p>
+          
+          {currentTitle.publisher && (
+            <Link
+              to={`/users/${currentTitle.publisher.id}`}
+              className="mt-2 inline-flex items-center gap-2 text-text-secondary hover:text-primary-400 transition-colors"
+            >
+              {currentTitle.publisher.avatarUrl && (
+                <img
+                  src={currentTitle.publisher.avatarUrl}
+                  alt={currentTitle.publisher.username}
+                  className="w-6 h-6 rounded-full"
+                />
+              )}
+              <span>Опубліковано: {currentTitle.publisher.username}</span>
+            </Link>
+          )}
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-900 text-primary-100">

@@ -18,8 +18,25 @@ export function AdminDashboard() {
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-text-primary">Titles</h2>
-              <p className="text-sm text-text-muted">Manage titles</p>
+              <h2 className="text-lg font-semibold text-text-primary">Твори</h2>
+              <p className="text-sm text-text-muted">Управління творами</p>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          to={ROUTES.ADMIN_GENRES}
+          className="bg-surface-800 rounded-lg p-6 hover:bg-surface-700 transition-colors"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-green-500/20 rounded-lg">
+              <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-text-primary">Жанри</h2>
+              <p className="text-sm text-text-muted">Управління жанрами</p>
             </div>
           </div>
         </Link>
