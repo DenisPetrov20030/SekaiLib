@@ -9,7 +9,7 @@ export const TitleCard = ({ title }: TitleCardProps) => {
   return (
     <Link
       to={`/titles/${title.id}`}
-      className="group block bg-surface rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-200"
+      className="group block bg-surface rounded-lg shadow-md overflow-hidden card-hover animate-fade-in"
     >
       <div className="aspect-w-2 aspect-h-3 bg-surface-hover">
         {title.coverImageUrl ? (
