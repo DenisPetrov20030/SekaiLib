@@ -1,11 +1,26 @@
-import { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchReadingLists } from '../store';
 import { ReadingStatus } from '../../../core/types';
 
+const READING_STATUS_LABELS: Record<ReadingStatus, string> = {
+  [ReadingStatus.Reading]: 'Reading',
+  [ReadingStatus.Planned]: 'Planned',
+  [ReadingStatus.Completed]: 'Completed',
+  [ReadingStatus.Dropped]: 'Dropped',
+  [ReadingStatus.Favorite]: 'Favorites',
+};
+
+const READING_STATUSES = [
+  ReadingStatus.Reading,
+  ReadingStatus.Planned,
+  ReadingStatus.Completed,
+  ReadingStatus.Dropped,
+  ReadingStatus.Favorite,
+] as const;
+
 export const ReadingListsPage = () => {
-  const { status } = useParams<{ status?: string }>();
+  const [selectedStatus, setSelectedStatus] = useState<ReadingStatus>(ReadingStatus.Reading);
   const dispatch = useAppDispatch();
   const { items, loading } = useAppSelector((state) => state.readingLists);
 
@@ -13,11 +28,7 @@ export const ReadingListsPage = () => {
     dispatch(fetchReadingLists());
   }, [dispatch]);
 
-  const selectedStatus: ReadingStatus | undefined = status !== undefined ? (Number(status) as ReadingStatus) : undefined;
-
-  const filteredItems = selectedStatus !== undefined
-    ? items.filter((item) => item.status === selectedStatus)
-    : items;
+  const filteredItems = items.filter((item) => item.status === selectedStatus);
 
   const getCountByStatus = (s: ReadingStatus) => {
     return items.filter((item) => item.status === s).length;
@@ -36,24 +47,25 @@ export const ReadingListsPage = () => {
       <h1 className="text-3xl font-bold text-text-primary mb-8">My Reading Lists</h1>
 
       <div className="mb-6 flex gap-4 border-b border-surface-hover">
-        {Object.values(ReadingStatus).map((s) => (
-          <a
+        {READING_STATUSES.map((s) => (
+          <button
             key={s}
-            href={`/reading-lists/${s}`}
-            className={`px-4 py-2 border-b-2 ${
-              selectedStatus === s || (selectedStatus === undefined && s === ReadingStatus.Reading)
+            type="button"
+            onClick={() => setSelectedStatus(s)}
+            className={`px-4 py-2 border-b-2 transition-colors cursor-pointer ${
+              selectedStatus === s
                 ? 'border-primary-600 text-primary-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
+                : 'border-transparent text-text-muted hover:text-text-primary'
             }`}
           >
-            {s} ({getCountByStatus(s)})
-          </a>
+            {READING_STATUS_LABELS[s]} ({getCountByStatus(s)})
+          </button>
         ))}
       </div>
 
       {filteredItems.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500">No titles in this list</p>
+          <p className="text-text-muted">No titles in this list</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -61,9 +73,9 @@ export const ReadingListsPage = () => {
             <a
               key={item.titleId}
               href={`/titles/${item.titleId}`}
-              className="block bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow"
+              className="block bg-surface rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow"
             >
-              <div className="aspect-w-2 aspect-h-3 bg-gray-200">
+              <div className="aspect-w-2 aspect-h-3 bg-surface-hover">
                 {item.title.coverImageUrl ? (
                   <img
                     src={item.title.coverImageUrl}
@@ -71,16 +83,16 @@ export const ReadingListsPage = () => {
                     className="w-full h-64 object-cover"
                   />
                 ) : (
-                  <div className="w-full h-64 flex items-center justify-center bg-gray-300">
-                    <span className="text-gray-500">No cover</span>
+                  <div className="w-full h-64 flex items-center justify-center bg-surface-hover">
+                    <span className="text-text-muted">No cover</span>
                   </div>
                 )}
               </div>
               <div className="p-4">
-                <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                <h3 className="text-lg font-semibold text-text-primary line-clamp-2">
                   {item.title.name}
                 </h3>
-                <p className="mt-1 text-sm text-gray-600">{item.title.author}</p>
+                <p className="mt-1 text-sm text-text-secondary">{item.title.author}</p>
               </div>
             </a>
           ))}

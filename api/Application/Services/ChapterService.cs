@@ -33,9 +33,31 @@ public class ChapterService : IChapterService
         if (chapter == null)
             throw new NotFoundException("Chapter", chapterId);
 
+        return await BuildChapterContentDto(chapter);
+    }
+
+    public async Task<ChapterContentDto> GetChapterContentByNumberAsync(Guid titleId, int chapterNumber)
+    {
+        var chapter = await _unitOfWork.Chapters.GetByTitleAndNumberAsync(titleId, chapterNumber);
+        if (chapter == null)
+            throw new NotFoundException($"Chapter number {chapterNumber} for Title {titleId} was not found");
+
+        return await BuildChapterContentDto(chapter);
+    }
+
+    private async Task<ChapterContentDto> BuildChapterContentDto(Domain.Entities.Chapter chapter)
+    {
         var title = await _unitOfWork.Titles.GetByIdAsync(chapter.TitleId);
         if (title == null)
             throw new NotFoundException("Title", chapter.TitleId);
+
+        var allChapters = (await _unitOfWork.Chapters.GetByTitleIdAsync(chapter.TitleId))
+            .OrderBy(c => c.Number)
+            .ToList();
+
+        var currentIndex = allChapters.FindIndex(c => c.Number == chapter.Number);
+        int? previousChapterNumber = currentIndex > 0 ? allChapters[currentIndex - 1].Number : null;
+        int? nextChapterNumber = currentIndex < allChapters.Count - 1 ? allChapters[currentIndex + 1].Number : null;
 
         return new ChapterContentDto(
             chapter.Id,
@@ -44,7 +66,9 @@ public class ChapterService : IChapterService
             chapter.Content,
             chapter.PublishedAt,
             title.Id,
-            title.Name
+            title.Name,
+            previousChapterNumber,
+            nextChapterNumber
         );
     }
 }

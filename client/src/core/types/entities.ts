@@ -55,9 +55,17 @@ export interface TranslationTeam {
   name: string;
 }
 
+export interface ReadingListTitle {
+  id: string;
+  name: string;
+  author: string;
+  coverImageUrl?: string;
+  status: TitleStatus;
+}
+
 export interface ReadingListItem {
   titleId: string;
-  title: Title;
+  title: ReadingListTitle;
   status: ReadingStatus;
   addedAt: string;
 }

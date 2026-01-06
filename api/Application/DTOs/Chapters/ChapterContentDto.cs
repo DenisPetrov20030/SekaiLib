@@ -2,10 +2,12 @@ namespace SekaiLib.Application.DTOs.Chapters;
 
 public record ChapterContentDto(
     Guid Id,
-    int Number,
+    int ChapterNumber,
     string Name,
     string Content,
     DateTime PublishedAt,
     Guid TitleId,
-    string TitleName
+    string TitleName,
+    int? PreviousChapterNumber,
+    int? NextChapterNumber
 );

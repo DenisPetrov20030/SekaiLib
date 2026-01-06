@@ -5,6 +5,15 @@
   body {
     @apply bg-background text-text-primary;
   }
+
+  select {
+    color-scheme: dark;
+  }
+
+  option {
+    background-color: #27272a;
+    color: #f4f4f5;
+  }
 }
 
 

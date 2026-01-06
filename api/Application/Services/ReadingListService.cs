@@ -22,7 +22,13 @@ public class ReadingListService : IReadingListService
 
         return readingLists.Select(rl => new ReadingListDto(
             rl.TitleId,
-            rl.Title.Name,
+            new ReadingListTitleDto(
+                rl.Title.Id,
+                rl.Title.Name,
+                rl.Title.Author,
+                rl.Title.CoverImageUrl,
+                rl.Title.Status
+            ),
             rl.Status,
             rl.AddedAt
         ));

@@ -3,19 +3,19 @@ import type { ReadingListItem, UpdateReadingStatusRequest } from '../../../core/
 
 export const readingListsApi = {
   getReadingLists: async (): Promise<ReadingListItem[]> => {
-    const response = await axiosInstance.get<ReadingListItem[]>('/reading-lists');
+    const response = await axiosInstance.get<ReadingListItem[]>('ReadingLists');
     return response.data;
   },
 
   addToList: async (data: UpdateReadingStatusRequest): Promise<void> => {
-    await axiosInstance.post('/reading-lists', data);
+    await axiosInstance.post('ReadingLists', data);
   },
 
   updateStatus: async (titleId: string, data: UpdateReadingStatusRequest): Promise<void> => {
-    await axiosInstance.put(`/reading-lists/${titleId}`, data);
+    await axiosInstance.put(`ReadingLists/${titleId}`, data);
   },
 
   removeFromList: async (titleId: string): Promise<void> => {
-    await axiosInstance.delete(`/reading-lists/${titleId}`);
+    await axiosInstance.delete(`ReadingLists/${titleId}`);
   },
 };
