@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using SekaiLib.Application.DTOs;
 using SekaiLib.Application.DTOs.Titles;
 using SekaiLib.Application.Interfaces;
@@ -35,7 +37,28 @@ public class UsersController : ControllerBase
         );
 
         return Ok(userProfile);
+    }me")]
+    [Authorize]
+    public async Task<ActionResult<UserProfileDto>> GetCurrentUserProfile()
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        
+        if (user == null)
+            return NotFound();
+
+        var userProfile = new UserProfileDto(
+            user.Id,
+            user.Username,
+            user.Email,
+            user.AvatarUrl,
+            user.CreatedAt
+        );
+
+        return Ok(userProfile);
     }
+
+    [HttpGet("
 
     [HttpGet("{id}/titles")]
     public async Task<ActionResult<PagedResponse<TitleDto>>> GetUserTitles(

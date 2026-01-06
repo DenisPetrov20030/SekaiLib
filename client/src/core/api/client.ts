@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosRequestConfig } from 'axios';
 import { API_BASE_URL, TOKEN_STORAGE_KEY, ACCESS_TOKEN_STORAGE_KEY } from '../constants';
 import type { ApiError } from '../types';
 import { storage } from '../utils';
@@ -118,23 +118,19 @@ class ApiClient {
     return this.client;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  get<T = any>(url: string, config?: any) {
+  get<T = unknown>(url: string, config?: AxiosRequestConfig) {
     return this.client.get<T>(url, config);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  post<T = any>(url: string, data?: any, config?: any) {
+  post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) {
     return this.client.post<T>(url, data, config);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  put<T = any>(url: string, data?: any, config?: any) {
+  put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) {
     return this.client.put<T>(url, data, config);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  delete<T = any>(url: string, config?: any) {
+  delete<T = unknown>(url: string, config?: AxiosRequestConfig) {
     return this.client.delete<T>(url, config);
   }
 }

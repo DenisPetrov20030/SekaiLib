@@ -10,6 +10,11 @@ export interface UserProfile {
 }
 
 export const usersApi = {
+  getCurrentProfile: async (): Promise<UserProfile> => {
+    const response = await apiClient.get('/users/me');
+    return response.data;
+  },
+
   getProfile: async (userId: string): Promise<UserProfile> => {
     const response = await apiClient.get(`/users/${userId}`);
     return response.data;
