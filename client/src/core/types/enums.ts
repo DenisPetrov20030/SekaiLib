@@ -17,10 +17,10 @@ export const ReadingStatus = {
 export type ReadingStatus = typeof ReadingStatus[keyof typeof ReadingStatus];
 
 export const TitleStatus = {
-  Ongoing: 'Ongoing',
-  Completed: 'Completed',
-  Hiatus: 'Hiatus',
-  Cancelled: 'Cancelled',
+  Ongoing: 0,
+  Completed: 1,
+  Hiatus: 2,
+  Cancelled: 3,
 } as const;
 
 export type TitleStatus = typeof TitleStatus[keyof typeof TitleStatus];

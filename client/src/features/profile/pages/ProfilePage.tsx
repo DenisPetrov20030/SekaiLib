@@ -130,16 +130,3 @@ export const ProfilePage = () => {
     </div>
   );
 };
-              <p className="text-gray-600 text-sm">Chapters Read</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalChaptersRead}</p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-gray-600 text-sm">Reading Streak</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.readingStreak} days</p>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};

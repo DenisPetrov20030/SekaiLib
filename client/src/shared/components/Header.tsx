@@ -30,12 +30,6 @@ export const Header = () => {
                 {isAuthenticated && (
                   <>
                     <Link
-                      to={ROUTES.TITLE_CREATE}
-                      className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
-                    >
-                      Опублікувати
-                    </Link>
-                    <Link
                       to={ROUTES.READING_LISTS}
                       className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
                     >

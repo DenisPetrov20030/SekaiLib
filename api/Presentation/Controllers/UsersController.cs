@@ -37,7 +37,9 @@ public class UsersController : ControllerBase
         );
 
         return Ok(userProfile);
-    }me")]
+    }
+
+    [HttpGet("me")]
     [Authorize]
     public async Task<ActionResult<UserProfileDto>> GetCurrentUserProfile()
     {
@@ -57,8 +59,6 @@ public class UsersController : ControllerBase
 
         return Ok(userProfile);
     }
-
-    [HttpGet("
 
     [HttpGet("{id}/titles")]
     public async Task<ActionResult<PagedResponse<TitleDto>>> GetUserTitles(

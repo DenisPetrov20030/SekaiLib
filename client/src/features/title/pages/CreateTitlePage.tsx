@@ -14,7 +14,7 @@ export const CreateTitlePage = () => {
     author: '',
     description: '',
     coverImageUrl: '',
-    status: TitleStatus.Ongoing as string,
+    status: TitleStatus.Ongoing,
     countryOfOrigin: '',
     genreIds: [] as string[],
   });
@@ -37,10 +37,7 @@ export const CreateTitlePage = () => {
     setLoading(true);
 
     try {
-      const title = await titlesApi.create({
-        ...formData,
-        status: formData.status as TitleStatus,
-      });
+      const title = await titlesApi.create(formData);
       navigate(`/titles/${title.id}`);
     } catch (error) {
       console.error('Failed to create title:', error);
@@ -103,7 +100,7 @@ export const CreateTitlePage = () => {
           <select
             value={formData.status}
             onChange={(e) =>
-              setFormData({ ...formData, status: e.target.value as TitleStatus })
+              setFormData({ ...formData, status: Number(e.target.value) as TitleStatus })
             }
             className="block w-full rounded-md border-surface-hover bg-surface text-text-primary shadow-sm focus:border-primary-500 focus:ring-primary-500 p-2"
           >
