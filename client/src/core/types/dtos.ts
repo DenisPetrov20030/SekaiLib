@@ -78,7 +78,7 @@ export interface TitleDetailsDto {
   publisher: PublisherDto;
   genres: Array<{ id: string; name: string }>;
   translationTeams: Array<{ id: string; name: string }>;
-  chapters: Array<{ id: string; number: number; name: string; publishedAt: string; isPremium: boolean }>;
+  chapters: Array<{ id: string; chapterNumber: number; name: string; publishedAt: string; isPremium: boolean }>;
 }
 
 export interface CreateTitleRequest {

@@ -5,7 +5,6 @@ import { fetchTitleDetails } from '../store';
 import { RatingButtons, ReviewList, AddToListButton } from '../components';
 import { LoginModal, Button } from '../../../shared/components';
 import { ratingsApi } from '../../../core/api';
-import { ROUTES } from '../../../core/constants';
 import { UserRole } from '../../../core/types/enums';
 import type { TitleRating } from '../../../core/types';
 
@@ -19,7 +18,7 @@ export const TitleDetailsPage = () => {
   const [rating, setRating] = useState<TitleRating | undefined>();
 
   const canManageChapters = user && currentTitle && (
-    user.id === currentTitle.publisher.id || 
+    user.id === currentTitle.publisher?.id || 
     user.role === UserRole.Administrator
   );
 
@@ -145,12 +144,12 @@ export const TitleDetailsPage = () => {
                     className="flex items-center justify-between p-4 bg-surface rounded-lg shadow hover:bg-surface-hover transition-colors"
                   >
                     <a
-                      href={`/titles/${currentTitle.id}/chapters/${chapter.number}`}
+                      href={`/titles/${currentTitle.id}/chapters/${chapter.chapterNumber}`}
                       className="flex-1"
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="font-medium text-text-primary">Глава {chapter.number}</span>
+                          <span className="font-medium text-text-primary">Глава {chapter.chapterNumber}</span>
                           {chapter.name && (
                             <span className="ml-2 text-text-muted">- {chapter.name}</span>
                           )}
