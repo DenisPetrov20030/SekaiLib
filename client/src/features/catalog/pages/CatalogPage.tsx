@@ -21,8 +21,8 @@ export const CatalogPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Каталог</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold text-text-primary">Каталог</h1>
+        <p className="mt-2 text-text-secondary">
           {totalCount} {totalCount === 1 ? 'твір' : 'творів'} знайдено
         </p>
       </div>

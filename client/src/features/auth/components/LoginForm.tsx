@@ -31,7 +31,7 @@ export const LoginForm = () => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-text-secondary">
-          Email
+          Електронна пошта
         </label>
         <input
           {...register('email')}
@@ -46,7 +46,7 @@ export const LoginForm = () => {
 
       <div>
         <label htmlFor="password" className="block text-sm font-medium text-text-secondary">
-          Password
+          Пароль
         </label>
         <input
           {...register('password')}
@@ -70,7 +70,7 @@ export const LoginForm = () => {
         disabled={loading}
         className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? 'Signing in...' : 'Sign in'}
+        {loading ? 'Вхід' : 'Увійти'}
       </button>
     </form>
   );

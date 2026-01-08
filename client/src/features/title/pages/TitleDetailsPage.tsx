@@ -8,6 +8,16 @@ import { ratingsApi } from '../../../core/api';
 import { UserRole } from '../../../core/types/enums';
 import type { TitleRating } from '../../../core/types';
 
+const translateCountry = (country: string): string => {
+  const translations: { [key: string]: string } = {
+    Japan: 'Японія',
+    China: 'Китай',
+    Korea: 'Південна Корея',
+    Other: 'Інше',
+  };
+  return translations[country] || country;
+};
+
 export const TitleDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -89,7 +99,7 @@ export const TitleDetailsPage = () => {
               {currentTitle.status}
             </span>
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-surface-hover text-text-primary">
-              {currentTitle.countryOfOrigin}
+              {translateCountry(currentTitle.countryOfOrigin)}
             </span>
             <RatingButtons
               titleId={currentTitle.id}

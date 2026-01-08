@@ -8,12 +8,12 @@ export const RegisterPage = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-text-primary">
-            Create your account
+            Створити новий аккаунт
           </h2>
           <p className="mt-2 text-center text-sm text-text-secondary">
-            Or{' '}
+            або{' '}
             <Link to={ROUTES.LOGIN} className="font-medium text-primary-500 hover:text-primary-400">
-              sign in to existing account
+              Увійти в існуючий аккаунт
             </Link>
           </p>
         </div>

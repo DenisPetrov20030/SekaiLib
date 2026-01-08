@@ -34,13 +34,13 @@ export function AdminTitlesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this title?')) return;
+    if (!confirm('Ви впевнені, що хочете видалити цей твір?')) return;
 
     try {
       await axiosInstance.delete(`/admin/titles/${id}`);
       setTitles(titles.filter((t) => t.id !== id));
     } catch {
-      alert('Failed to delete title');
+      alert('Не вдалося видалити твір');
     }
   };
 
@@ -55,13 +55,13 @@ export function AdminTitlesPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-text-primary">Manage Titles</h1>
+        <h1 className="text-3xl font-bold text-text-primary">Керувати творами</h1>
         <Link to={ROUTES.ADMIN_TITLE_CREATE}>
           <Button>
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Add Title
+            Додати твір
           </Button>
         </Link>
       </div>
@@ -70,10 +70,10 @@ export function AdminTitlesPage() {
         <table className="w-full">
           <thead className="bg-surface-700">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Title</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Author</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-text-muted uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Твір</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Автор</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider">Статус</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-text-muted uppercase tracking-wider">Дії</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-700">
@@ -100,10 +100,10 @@ export function AdminTitlesPage() {
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Link to={`/admin/titles/${title.id}`}>
-                      <Button size="sm" variant="secondary">Edit</Button>
+                      <Button size="sm" variant="secondary">Редагувати</Button>
                     </Link>
                     <Button size="sm" variant="danger" onClick={() => handleDelete(title.id)}>
-                      Delete
+                      Видалити
                     </Button>
                   </div>
                 </td>
@@ -113,7 +113,7 @@ export function AdminTitlesPage() {
         </table>
 
         {titles.length === 0 && (
-          <div className="text-center py-8 text-text-muted">No titles found</div>
+          <div className="text-center py-8 text-text-muted">Творів не знайдено</div>
         )}
       </div>
     </div>

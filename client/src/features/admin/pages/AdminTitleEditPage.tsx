@@ -17,10 +17,10 @@ interface TitleFormData {
 }
 
 const statusOptions = [
-  { value: TitleStatus.Ongoing, label: 'Ongoing' },
-  { value: TitleStatus.Completed, label: 'Completed' },
-  { value: TitleStatus.Hiatus, label: 'Hiatus' },
-  { value: TitleStatus.Cancelled, label: 'Cancelled' },
+  { value: TitleStatus.Ongoing, label: 'Випускається' },
+  { value: TitleStatus.Completed, label: 'Завершений' },
+  { value: TitleStatus.Hiatus, label: 'Зупинений' },
+  { value: TitleStatus.Cancelled, label: 'Випуск припинено' },
 ];
 
 export function AdminTitleEditPage() {
@@ -96,7 +96,7 @@ export function AdminTitleEditPage() {
       }
       navigate(ROUTES.ADMIN_TITLES);
     } catch {
-      alert('Failed to save title');
+      alert('Не вдалося зберегти твір');
     } finally {
       setLoading(false);
     }
@@ -114,46 +114,46 @@ export function AdminTitleEditPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-text-primary mb-8">
-        {isCreate ? 'Create Title' : 'Edit Title'}
+        {isCreate ? 'Новий твір' : 'Редагувати твір'}
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Input
-          label="Title"
+          label="Назва твору"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required
         />
 
         <Input
-          label="Original Title"
+          label="Оригінальна назва"
           value={formData.originalTitle}
           onChange={(e) => setFormData({ ...formData, originalTitle: e.target.value })}
         />
 
         <Textarea
-          label="Description"
+          label="Опис"
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           rows={5}
         />
 
         <Input
-          label="Cover URL"
+          label="URL обкладинки"
           value={formData.coverUrl}
           onChange={(e) => setFormData({ ...formData, coverUrl: e.target.value })}
           type="url"
         />
 
         <Select
-          label="Status"
+          label="Статус"
           value={formData.status}
           onChange={(v) => setFormData({ ...formData, status: v as TitleStatus })}
           options={statusOptions}
         />
 
         <Input
-          label="Year"
+          label="Рік"
           value={formData.year}
           onChange={(e) => setFormData({ ...formData, year: e.target.value })}
           type="number"
@@ -162,7 +162,7 @@ export function AdminTitleEditPage() {
         />
 
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-2">Genres</label>
+          <label className="block text-sm font-medium text-text-secondary mb-2">Жанри</label>
           <div className="flex flex-wrap gap-2">
             {genres.map((genre) => (
               <button
@@ -183,10 +183,10 @@ export function AdminTitleEditPage() {
 
         <div className="flex gap-4">
           <Button type="submit" loading={loading}>
-            {isCreate ? 'Create' : 'Save'}
+            {isCreate ? 'Новий' : 'Зберегти'}
           </Button>
           <Button type="button" variant="secondary" onClick={() => navigate(ROUTES.ADMIN_TITLES)}>
-            Cancel
+            Скасувати
           </Button>
         </div>
       </form>

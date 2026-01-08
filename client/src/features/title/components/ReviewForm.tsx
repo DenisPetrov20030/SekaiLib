@@ -13,7 +13,7 @@ export function ReviewForm({
   onSubmit,
   initialContent = '',
   initialRating = 5,
-  submitLabel = 'Submit',
+  submitLabel = 'Відправити',
   onCancel,
 }: ReviewFormProps) {
   const [content, setContent] = useState(initialContent);
@@ -39,12 +39,12 @@ export function ReviewForm({
       <Textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="Write your review..."
+        placeholder="Напишіть вашу рецензію..."
         rows={4}
       />
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-text-secondary">Rating:</span>
+          <span className="text-sm text-text-secondary">Рейтинг:</span>
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
               <button
@@ -69,7 +69,7 @@ export function ReviewForm({
         </Button>
         {onCancel && (
           <Button type="button" variant="secondary" onClick={onCancel}>
-            Cancel
+            Скасувати
           </Button>
         )}
       </div>

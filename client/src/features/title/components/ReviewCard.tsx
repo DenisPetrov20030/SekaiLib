@@ -53,7 +53,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
           onSubmit={handleUpdate}
           initialContent={currentReview.content}
           initialRating={currentReview.rating}
-          submitLabel="Save"
+          submitLabel="Зберегти"
           onCancel={() => setEditing(false)}
         />
       </div>

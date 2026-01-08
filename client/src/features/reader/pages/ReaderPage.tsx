@@ -41,7 +41,7 @@ export const ReaderPage = () => {
   const getThemeClasses = () => {
     switch (settings.theme) {
       case ReaderTheme.Dark:
-        return 'bg-gray-900 text-gray-100';
+        return 'bg-gray-900 text-white';
       case ReaderTheme.Sepia:
         return 'bg-amber-50 text-gray-900';
       default:
@@ -79,28 +79,36 @@ export const ReaderPage = () => {
             onClick={() => navigate(`/titles/${titleId}`)}
             className="text-primary-600 hover:text-primary-700"
           >
-            ← Back to title
+            ← Повернутися до твору
           </button>
 
           <div className="flex gap-2">
             <select
               value={settings.theme}
               onChange={(e) => dispatch(setTheme(e.target.value as ReaderTheme))}
-              className="px-3 py-1 rounded border"
+              className={`px-3 py-1 rounded border transition-colors ${
+                settings.theme === ReaderTheme.Dark
+                  ? 'bg-surface-800 text-text-primary border-surface-600 hover:bg-black'
+                  : 'bg-white text-gray-900 border-gray-300'
+              }`}
             >
-              <option value={ReaderTheme.Light}>Light</option>
-              <option value={ReaderTheme.Dark}>Dark</option>
-              <option value={ReaderTheme.Sepia}>Sepia</option>
+              <option value={ReaderTheme.Light}>Світла</option>
+              <option value={ReaderTheme.Dark}>Темна</option>
+              <option value={ReaderTheme.Sepia}>Сепія</option>
             </select>
 
             <select
               value={settings.fontSize}
               onChange={(e) => dispatch(setFontSize(e.target.value as ReaderFontSize))}
-              className="px-3 py-1 rounded border"
+              className={`px-3 py-1 rounded border transition-colors ${
+                settings.theme === ReaderTheme.Dark
+                  ? 'bg-surface-800 text-text-primary border-surface-600 hover:bg-black'
+                  : 'bg-white text-gray-900 border-gray-300'
+              }`}
             >
-              <option value={ReaderFontSize.Small}>Small</option>
-              <option value={ReaderFontSize.Medium}>Medium</option>
-              <option value={ReaderFontSize.Large}>Large</option>
+              <option value={ReaderFontSize.Small}>Маленький</option>
+              <option value={ReaderFontSize.Medium}>Середній</option>
+              <option value={ReaderFontSize.Large}>Великий</option>
             </select>
           </div>
         </div>
@@ -108,12 +116,17 @@ export const ReaderPage = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold">{currentChapter.titleName}</h1>
           <h2 className="text-xl mt-2">
-            Chapter {currentChapter.chapterNumber}
-            {currentChapter.name && `: ${currentChapter.name}`}
+            {currentChapter.name && ` ${currentChapter.name}`}
           </h2>
         </div>
 
-        <div className={`prose max-w-none ${getFontSizeClass()}`}>
+        <div className={`prose max-w-none ${getFontSizeClass()} ${
+          settings.theme === ReaderTheme.Dark 
+            ? 'prose-invert' 
+            : settings.theme === ReaderTheme.Sepia 
+            ? 'prose' 
+            : 'prose'
+        }`}>
           <div dangerouslySetInnerHTML={{ __html: currentChapter.content }} />
         </div>
 
@@ -123,7 +136,7 @@ export const ReaderPage = () => {
               onClick={() => navigateToChapter(currentChapter.previousChapterNumber!)}
               className="px-6 py-2 bg-primary-600 text-white rounded hover:bg-primary-700"
             >
-              ← Previous Chapter
+              ← Попередня глава
             </button>
           ) : (
             <div></div>
@@ -134,7 +147,7 @@ export const ReaderPage = () => {
               onClick={() => navigateToChapter(currentChapter.nextChapterNumber!)}
               className="px-6 py-2 bg-primary-600 text-white rounded hover:bg-primary-700"
             >
-              Next Chapter →
+              Наступна глава →
             </button>
           ) : (
             <div></div>
