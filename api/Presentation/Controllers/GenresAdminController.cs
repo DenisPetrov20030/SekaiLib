@@ -29,10 +29,16 @@ public class GenresAdminController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<GenreDto>> Create([FromBody] CreateGenreRequest request)
     {
+        var slug = request.Name.ToLowerInvariant()
+            .Replace(" ", "-")
+            .Replace("'", "")
+            .Replace("\"", "");
+
         var genre = new Genre
         {
             Id = Guid.NewGuid(),
-            Name = request.Name
+            Name = request.Name,
+            Slug = slug
         };
 
         await _unitOfWork.Genres.AddAsync(genre);
@@ -49,6 +55,11 @@ public class GenresAdminController : ControllerBase
             return NotFound();
 
         genre.Name = request.Name;
+        genre.Slug = request.Name.ToLowerInvariant()
+            .Replace(" ", "-")
+            .Replace("'", "")
+            .Replace("\"", "");
+
         await _unitOfWork.Genres.UpdateAsync(genre);
         await _unitOfWork.SaveChangesAsync();
 
