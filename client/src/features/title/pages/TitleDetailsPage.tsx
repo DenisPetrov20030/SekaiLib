@@ -119,7 +119,14 @@ export const TitleDetailsPage = () => {
                   key={genre.id}
                   className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-surface-hover text-text-primary"
                 >
-             div className="flex items-center justify-between mb-4">
+                  {genre.name}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-text-primary">Розділи</h2>
               {canManageChapters && (
                 <Button
@@ -167,14 +174,7 @@ export const TitleDetailsPage = () => {
                 <p className="text-text-muted text-center py-8">
                   Розділи ще не додані
                 </p>
-                     )}
-                    </div>
-                    {chapter.isPremium && (
-                      <span className="text-xs text-yellow-500 font-medium">Premium</span>
-                    )}
-                  </div>
-                </a>
-              ))}
+              )}
             </div>
           </div>
 
