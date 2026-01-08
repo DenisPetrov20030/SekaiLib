@@ -29,10 +29,27 @@ public class GenresAdminController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<GenreDto>> Create([FromBody] CreateGenreRequest request)
     {
-        var slug = request.Name.ToLowerInvariant()
+        var existingGenres = await _unitOfWork.Genres.GetAllAsync();
+        var existingGenre = existingGenres.FirstOrDefault(g => g.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase));
+        
+        if (existingGenre != null)
+        {
+            return BadRequest(new { message = $"Жанр з назвою '{request.Name}' вже існує" });
+        }
+
+        var baseSlug = request.Name.ToLowerInvariant()
             .Replace(" ", "-")
             .Replace("'", "")
             .Replace("\"", "");
+
+        var slug = baseSlug;
+        var counter = 1;
+        
+        while (existingGenres.Any(g => g.Slug == slug))
+        {
+            slug = $"{baseSlug}-{counter}";
+            counter++;
+        }
 
         var genre = new Genre
         {
