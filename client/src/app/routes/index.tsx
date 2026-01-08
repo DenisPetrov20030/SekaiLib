@@ -3,6 +3,7 @@ import { MainLayout, ProtectedRoute } from '../../shared/components';
 import { RegisterPage } from '../../features/auth/pages';
 import { CatalogPage } from '../../features/catalog/pages';
 import { TitleDetailsPage, CreateTitlePage } from '../../features/title/pages';
+import { ChapterEditorPage } from '../../features/chapter';
 import { ReaderPage } from '../../features/reader/pages';
 import { ReadingListsPage } from '../../features/reading-lists/pages';
 import { ProfilePage, UserProfilePage } from '../../features/profile/pages';
@@ -44,6 +45,14 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.TITLE_CREATE,
             element: <CreateTitlePage />,
+          },
+          {
+            path: ROUTES.CHAPTER_CREATE,
+            element: <ChapterEditorPage />,
+          },
+          {
+            path: ROUTES.CHAPTER_EDIT,
+            element: <ChapterEditorPage />,
           },
           {
             path: ROUTES.READING_LISTS,

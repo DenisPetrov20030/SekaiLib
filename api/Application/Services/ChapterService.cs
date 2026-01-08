@@ -2,6 +2,8 @@ using SekaiLib.Application.DTOs.Chapters;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Application.Exceptions;
 using SekaiLib.Domain.Interfaces;
+using SekaiLib.Domain.Entities;
+using SekaiLib.Domain.Enums;
 
 namespace SekaiLib.Application.Services;
 
@@ -70,5 +72,95 @@ public class ChapterService : IChapterService
             previousChapterNumber,
             nextChapterNumber
         );
+    }
+
+    public async Task<ChapterContentDto> CreateAsync(Guid userId, Guid titleId, CreateChapterRequest request)
+    {
+        var title = await _unitOfWork.Titles.GetByIdAsync(titleId);
+        if (title == null)
+            throw new NotFoundException("Title", titleId);
+
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+            throw new UnauthorizedException();
+
+        if (title.PublisherId != userId && user.Role != UserRole.Administrator)
+            throw new ForbiddenException();
+
+        var existingChapter = await _unitOfWork.Chapters.GetByTitleAndNumberAsync(titleId, request.ChapterNumber);
+        if (existingChapter != null)
+            throw new ValidationException($"Глава з номером {request.ChapterNumber} вже існує");
+
+        var chapter = new Chapter
+        {
+            Id = Guid.NewGuid(),
+            TitleId = titleId,
+            Number = request.ChapterNumber,
+            Name = request.Name,
+            Content = request.Content,
+            IsPremium = request.IsPremium,
+            PublishedAt = DateTime.UtcNow
+        };
+
+        await _unitOfWork.Chapters.AddAsync(chapter);
+        await _unitOfWork.SaveChangesAsync();
+
+        return await BuildChapterContentDto(chapter);
+    }
+
+    public async Task<ChapterContentDto> UpdateAsync(Guid userId, Guid chapterId, UpdateChapterRequest request)
+    {
+        var chapter = await _unitOfWork.Chapters.GetByIdAsync(chapterId);
+        if (chapter == null)
+            throw new NotFoundException("Chapter", chapterId);
+
+        var title = await _unitOfWork.Titles.GetByIdAsync(chapter.TitleId);
+        if (title == null)
+            throw new NotFoundException("Title", chapter.TitleId);
+
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+            throw new UnauthorizedException();
+
+        if (title.PublisherId != userId && user.Role != UserRole.Administrator)
+            throw new ForbiddenException();
+
+        if (chapter.Number != request.ChapterNumber)
+        {
+            var existingChapter = await _unitOfWork.Chapters.GetByTitleAndNumberAsync(chapter.TitleId, request.ChapterNumber);
+            if (existingChapter != null && existingChapter.Id != chapterId)
+                throw new ValidationException($"Глава з номером {request.ChapterNumber} вже існує");
+        }
+
+        chapter.Number = request.ChapterNumber;
+        chapter.Name = request.Name;
+        chapter.Content = request.Content;
+        chapter.IsPremium = request.IsPremium;
+
+        await _unitOfWork.Chapters.UpdateAsync(chapter);
+        await _unitOfWork.SaveChangesAsync();
+
+        return await BuildChapterContentDto(chapter);
+    }
+
+    public async Task DeleteAsync(Guid userId, Guid chapterId)
+    {
+        var chapter = await _unitOfWork.Chapters.GetByIdAsync(chapterId);
+        if (chapter == null)
+            throw new NotFoundException("Chapter", chapterId);
+
+        var title = await _unitOfWork.Titles.GetByIdAsync(chapter.TitleId);
+        if (title == null)
+            throw new NotFoundException("Title", chapter.TitleId);
+
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+            throw new UnauthorizedException();
+
+        if (title.PublisherId != userId && user.Role != UserRole.Administrator)
+            throw new ForbiddenException();
+
+        await _unitOfWork.Chapters.DeleteAsync(chapter);
+        await _unitOfWork.SaveChangesAsync();
     }
 }

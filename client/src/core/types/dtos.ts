@@ -111,3 +111,29 @@ export interface TitleDto {
   chapterCount: number;
   countryOfOrigin?: string;
 }
+
+export interface ChapterContentDto {
+  id: string;
+  number: number;
+  name: string;
+  content: string;
+  publishedAt: string;
+  titleId: string;
+  titleName: string;
+  previousChapterNumber?: number;
+  nextChapterNumber?: number;
+}
+
+export interface CreateChapterRequest {
+  chapterNumber: number;
+  name: string;
+  content: string;
+  isPremium: boolean;
+}
+
+export interface UpdateChapterRequest {
+  chapterNumber: number;
+  name: string;
+  content: string;
+  isPremium: boolean;
+}

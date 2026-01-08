@@ -1,18 +1,27 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchTitleDetails } from '../store';
 import { RatingButtons, ReviewList, AddToListButton } from '../components';
-import { LoginModal } from '../../../shared/components';
+import { LoginModal, Button } from '../../../shared/components';
 import { ratingsApi } from '../../../core/api';
+import { ROUTES } from '../../../core/constants';
+import { UserRole } from '../../../core/types/enums';
 import type { TitleRating } from '../../../core/types';
 
 export const TitleDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { currentTitle, loading, error } = useAppSelector((state) => state.title);
+  const { user } = useAppSelector((state) => state.auth);
   const [showLogin, setShowLogin] = useState(false);
   const [rating, setRating] = useState<TitleRating | undefined>();
+
+  const canManageChapters = user && currentTitle && (
+    user.id === currentTitle.publisher.id || 
+    user.role === UserRole.Administrator
+  );
 
   useEffect(() => {
     if (id) {
@@ -110,27 +119,55 @@ export const TitleDetailsPage = () => {
                   key={genre.id}
                   className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-surface-hover text-text-primary"
                 >
-                  {genre.name}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-text-primary">Розділи</h2>
-            <div className="mt-4 space-y-2">
-              {currentTitle.chapters.map((chapter) => (
-                <a
-                  key={chapter.id}
-                  href={`/titles/${currentTitle.id}/chapters/${chapter.chapterNumber}`}
-                  className="block p-4 bg-surface rounded-lg shadow hover:bg-surface-hover transition-colors"
+             div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-text-primary">Розділи</h2>
+              {canManageChapters && (
+                <Button
+                  onClick={() => navigate(`/titles/${id}/chapters/create`)}
+                  size="sm"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-medium text-text-primary">Chapter {chapter.chapterNumber}</span>
-                      {chapter.name && (
-                        <span className="ml-2 text-text-muted">- {chapter.name}</span>
-                      )}
+                  Додати розділ
+                </Button>
+              )}
+            </div>
+            <div className="mt-4 space-y-2">
+              {currentTitle.chapters.length > 0 ? (
+                currentTitle.chapters.map((chapter) => (
+                  <div
+                    key={chapter.id}
+                    className="flex items-center justify-between p-4 bg-surface rounded-lg shadow hover:bg-surface-hover transition-colors"
+                  >
+                    <a
+                      href={`/titles/${currentTitle.id}/chapters/${chapter.number}`}
+                      className="flex-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="font-medium text-text-primary">Глава {chapter.number}</span>
+                          {chapter.name && (
+                            <span className="ml-2 text-text-muted">- {chapter.name}</span>
+                          )}
+                        </div>
+                        {chapter.isPremium && (
+                          <span className="text-xs text-yellow-500 font-medium">Premium</span>
+                        )}
+                      </div>
+                    </a>
+                    {canManageChapters && (
+                      <button
+                        onClick={() => navigate(`/titles/${id}/chapters/${chapter.id}/edit`)}
+                        className="ml-4 px-3 py-1 text-sm text-primary-400 hover:text-primary-300 transition-colors"
+                      >
+                        Редагувати
+                      </button>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-text-muted text-center py-8">
+                  Розділи ще не додані
+                </p>
+                     )}
                     </div>
                     {chapter.isPremium && (
                       <span className="text-xs text-yellow-500 font-medium">Premium</span>

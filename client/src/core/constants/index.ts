@@ -10,6 +10,8 @@ export const ROUTES = {
   CATALOG: '/catalog',
   TITLE_DETAILS: '/titles/:id',
   TITLE_CREATE: '/titles/create',
+  CHAPTER_CREATE: '/titles/:titleId/chapters/create',
+  CHAPTER_EDIT: '/titles/:titleId/chapters/:chapterId/edit',
   READER: '/titles/:titleId/chapters/:chapterNumber',
   READING_LISTS: '/reading-lists',
   READING_LIST_STATUS: '/reading-lists/:status',
