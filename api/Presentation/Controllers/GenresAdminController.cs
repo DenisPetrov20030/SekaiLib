@@ -8,7 +8,7 @@ namespace SekaiLib.Presentation.Controllers;
 
 [ApiController]
 [Route("api/admin/genres")]
-[Authorize(Roles = "Administrator")]
+[Authorize]
 public class GenresAdminController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
