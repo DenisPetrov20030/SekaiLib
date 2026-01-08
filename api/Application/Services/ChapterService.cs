@@ -89,7 +89,10 @@ public class ChapterService : IChapterService
 
         var existingChapter = await _unitOfWork.Chapters.GetByTitleAndNumberAsync(titleId, request.ChapterNumber);
         if (existingChapter != null)
-            throw new ValidationException($"Глава з номером {request.ChapterNumber} вже існує");
+            throw new ValidationException(new Dictionary<string, string[]>
+            {
+                { nameof(request.ChapterNumber), new[] { $"Глава з номером {request.ChapterNumber} вже існує" } }
+            });
 
         var chapter = new Chapter
         {
