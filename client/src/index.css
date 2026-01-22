@@ -8,7 +8,7 @@
   }
 
   select {
-    color-scheme: dark;
+    color-scheme: light dark;
   }
 
   option {
@@ -17,5 +17,34 @@
   }
 }
 
+@layer components {
+  .novel-paragraph {
+    @apply mb-3 leading-relaxed text-justify; 
+    
+    font-size: inherit; 
+    
+    color: inherit; 
+    
+    font-family: 'Georgia', serif;
+    hyphens: auto; 
+    
+    text-indent: 2rem;
+  }
 
+  .novel-paragraph.is-dialog,
+  .novel-paragraph.is-footnote {
+    text-indent: 0;
+  }
 
+  .novel-paragraph.is-footnote {
+    @apply italic opacity-80;
+    font-size: 0.95em; 
+  }
+
+  .novel-paragraph.is-scene-divider {
+    text-indent: 0;
+    @apply text-center my-8 font-bold opacity-100;
+    font-size: 1.5em; 
+    letter-spacing: 0.5em; 
+  }
+}

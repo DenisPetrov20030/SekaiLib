@@ -100,7 +100,8 @@ public class ChapterService : IChapterService
             TitleId = titleId,
             Number = request.ChapterNumber,
             Name = request.Name,
-            Content = request.Content,
+            // Автоматичне форматування контенту при створенні
+            Content = PrepareTextForDb(request.Content), 
             IsPremium = request.IsPremium,
             PublishedAt = DateTime.UtcNow
         };
@@ -137,7 +138,8 @@ public class ChapterService : IChapterService
 
         chapter.Number = request.ChapterNumber;
         chapter.Name = request.Name;
-        chapter.Content = request.Content;
+        // Автоматичне форматування контенту при оновленні
+        chapter.Content = PrepareTextForDb(request.Content); 
         chapter.IsPremium = request.IsPremium;
 
         await _unitOfWork.Chapters.UpdateAsync(chapter);
@@ -165,5 +167,17 @@ public class ChapterService : IChapterService
 
         await _unitOfWork.Chapters.DeleteAsync(chapter);
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    private string PrepareTextForDb(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return input;
+
+        return input
+            .Replace("\r\n", "\n")           
+            .Replace("\r", "\n")             
+            .Replace(" - ", " — ")           
+            .Replace("...", "…")             
+            .Trim();                         
     }
 }
