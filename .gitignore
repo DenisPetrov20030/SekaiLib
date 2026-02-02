@@ -36,8 +36,6 @@ coverage/
 *.tmp
 *.lock
 
-# Ignore EF Core migrations
-Migrations/
 
 # Ignore bin and obj folders
 bin/

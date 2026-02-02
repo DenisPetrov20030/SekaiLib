@@ -4,23 +4,23 @@ import { useAppSelector } from '../../../app/store/hooks';
 import { usersApi } from '../../../core/api';
 import { TitleCard } from '../../catalog/components/TitleCard';
 import { Pagination } from '../../catalog/components/Pagination';
-import { Button } from '../../../shared/components';
-import { formatDate } from '../../../core/utils';
+import { Button, Modal } from '../../../shared/components';
 import { ROUTES } from '../../../core/constants';
-import type { UserProfile } from '../../../core/api/users';
 import type { TitleDto } from '../../../core/types/dtos';
-import type { PagedResponse } from '../../../core/types';
+import type { PagedResponse, UserList, UserProfile } from '../../../core/types';
 
 export const ProfilePage = () => {
   const { user: authUser } = useAppSelector((state) => state.auth);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [titles, setTitles] = useState<PagedResponse<TitleDto> | null>(null);
+  const [customLists, setCustomLists] = useState<UserList[]>([]); 
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadProfile();
     loadTitles(1);
+    loadCustomLists();
   }, []);
 
   const loadProfile = async () => {
@@ -28,7 +28,16 @@ export const ProfilePage = () => {
       const data = await usersApi.getCurrentProfile();
       setProfile(data);
     } catch (error) {
-      console.error('Failed to load profile:', error);
+      console.error('Не вдалося завантажити профіль:', error);
+    }
+  };
+
+  const loadCustomLists = async () => {
+    try {
+      const data = await usersApi.getCustomLists();
+      setCustomLists(data);
+    } catch (error) {
+      console.error('Не вдалося завантажити кастомні списки:', error);
     }
   };
 
@@ -41,9 +50,34 @@ export const ProfilePage = () => {
       setTitles(data);
       setPage(pageNum);
     } catch (error) {
-      console.error('Failed to load titles:', error);
+      console.error('Не вдалося завантажити назви:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateList = async () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newListName, setNewListName] = useState('');
+
+  const submitCreateList = async () => {
+    if (customLists.length >= 5) {
+      alert('Ви досягли ліміту: можна створити не більше 5 кастомних списків.');
+      return;
+    }
+    const name = newListName?.trim();
+    if (!name) return;
+    try {
+      await usersApi.createCustomList(name);
+      setIsCreateModalOpen(false);
+      setNewListName('');
+      await loadCustomLists();
+    } catch (error) {
+      console.error('Помилка при створенні списку:', error);
+      alert('Не вдалося створити список. Можливо, назва занадто довга або виникла помилка на сервері.');
     }
   };
 
@@ -55,19 +89,28 @@ export const ProfilePage = () => {
     );
   }
 
+  const getLocalizedRegistrationDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('uk-UA', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(date).replace(' р.', '');
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="bg-surface rounded-lg p-6 mb-8">
-        <div className="flex items-center justify-between">
+      <div className="bg-surface rounded-lg p-6 mb-8 shadow-sm">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-6">
             {profile.avatarUrl ? (
               <img
                 src={profile.avatarUrl}
                 alt={profile.username}
-                className="w-24 h-24 rounded-full object-cover"
+                className="w-24 h-24 rounded-full object-cover ring-2 ring-primary-500"
               />
             ) : (
-              <div className="w-24 h-24 rounded-full bg-surface-hover flex items-center justify-center">
+              <div className="w-24 h-24 rounded-full bg-surface-hover flex items-center justify-center border-2 border-dashed border-text-muted">
                 <span className="text-4xl text-text-muted">
                   {profile.username.charAt(0).toUpperCase()}
                 </span>
@@ -77,25 +120,79 @@ export const ProfilePage = () => {
               <h1 className="text-3xl font-bold text-text-primary">{profile.username}</h1>
               <p className="text-text-secondary mt-1">{profile.email}</p>
               <p className="text-text-muted text-sm mt-2">
-                На сайті з {formatDate(profile.createdAt)}
+                На сайті з {getLocalizedRegistrationDate(profile.createdAt)}
               </p>
             </div>
           </div>
-          <Link to={ROUTES.TITLE_CREATE}>
-            <Button>Опублікувати твір</Button>
-          </Link>
+          <div className="flex gap-3">
+             <Link to={ROUTES.TITLE_CREATE}>
+              <Button variant="secondary">Опублікувати твір</Button>
+            </Link>
+          </div>
         </div>
       </div>
 
+      <div className="mb-12 bg-surface rounded-lg p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-text-primary">
+            Мої списки <span className="text-lg font-normal text-text-muted ml-2">({customLists.length}/5)</span>
+          </h2>
+          {customLists.length < 5 && (
+            <Button onClick={handleCreateList} className="text-sm">
+              + Створити список
+            </Button>
+          )}
+        </div>
+
+        {customLists.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {customLists.map((list) => (
+              <Link key={list.id} to={`/user-lists/${list.id}`} className="p-4 bg-surface-hover rounded-lg border border-divider hover:border-primary-500 transition-colors group">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-bold text-lg text-text-primary group-hover:text-primary-500">{list.name}</h3>
+                  <span className="text-xs bg-surface p-1 rounded border border-divider">
+                    {list.titlesCount || 0} творів
+                  </span>
+                </div>
+                <p className="text-text-muted text-sm mt-2 line-clamp-1">
+                  {list.description || 'Немає опису'}
+                </p>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 border-2 border-dashed border-divider rounded-lg">
+            <p className="text-text-muted">У вас ще немає кастомних списків</p>
+          </div>
+        )}
+      </div>
+
+      {/* Create List Modal */}
+      <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} title="Створити новий список">
+        <div>
+          <input
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+            placeholder="Назва списку"
+            className="w-full p-2 border rounded mb-4 bg-surface-800"
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>Скасувати</Button>
+            <Button onClick={submitCreateList}>Створити</Button>
+          </div>
+        </div>
+      </Modal>
+
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-text-primary">
-          Мої твори ({titles?.totalCount || 0})
+          Мої твори <span className="text-lg font-normal text-text-muted ml-2">({titles?.totalCount || 0})</span>
         </h2>
       </div>
 
       {loading ? (
         <div className="text-center py-12">
-          <p className="text-text-muted">Завантаження...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+          <p className="text-text-muted mt-2">Завантаження творів...</p>
         </div>
       ) : titles && titles.data.length > 0 ? (
         <>
@@ -120,7 +217,7 @@ export const ProfilePage = () => {
           )}
         </>
       ) : (
-        <div className="text-center py-12 bg-surface rounded-lg">
+        <div className="text-center py-12 bg-surface rounded-lg shadow-sm">
           <p className="text-text-muted mb-4">Ви ще не опублікували жодного твору</p>
           <Link to={ROUTES.TITLE_CREATE}>
             <Button>Опублікувати перший твір</Button>

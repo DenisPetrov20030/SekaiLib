@@ -12,7 +12,7 @@ public class ChapterRepository : Repository<Chapter>, IChapterRepository
 
     public async Task<IEnumerable<Chapter>> GetByTitleIdAsync(Guid titleId)
     {
-        return await DbSet
+        return await _dbSet
             .Where(c => c.TitleId == titleId)
             .OrderBy(c => c.Number)
             .ToListAsync();
@@ -20,7 +20,7 @@ public class ChapterRepository : Repository<Chapter>, IChapterRepository
 
     public async Task<Chapter?> GetByTitleAndNumberAsync(Guid titleId, int number)
     {
-        return await DbSet
+        return await _dbSet
             .FirstOrDefaultAsync(c => c.TitleId == titleId && c.Number == number);
     }
 }

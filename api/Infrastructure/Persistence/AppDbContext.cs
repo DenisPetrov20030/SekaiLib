@@ -8,8 +8,8 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
-
     public DbSet<User> Users { get; set; }
+    public DbSet<UserList> UserLists { get; set; }
     public DbSet<Title> Titles { get; set; }
     public DbSet<Chapter> Chapters { get; set; }
     public DbSet<Genre> Genres { get; set; }
@@ -23,10 +23,20 @@ public class AppDbContext : DbContext
     public DbSet<ReviewReaction> ReviewReactions { get; set; }
     public DbSet<TitleRating> TitleRatings { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
+   protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    base.OnModelCreating(modelBuilder);
 
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
-    }
+    modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+    // Нова конфігурація для кастомних списків
+    modelBuilder.Entity<UserList>(entity =>
+    {
+        entity.HasMany(ul => ul.ReadingListItems)
+            .WithOne(rl => rl.UserList)
+            .HasForeignKey(rl => rl.UserListId)
+            .OnDelete(DeleteBehavior.SetNull); // Якщо список видалять, тайтл лишиться в бібліотеці, але без прив'язки до папки
+    });
+}
+    
 }

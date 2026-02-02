@@ -16,6 +16,7 @@ export const ROUTES = {
   READING_LISTS: '/reading-lists',
   READING_LIST_STATUS: '/reading-lists/:status',
   PROFILE: '/profile',
+  USER_LIST: '/user-lists/:id',
   USER_PROFILE: '/users/:userId',
   ADMIN: '/admin',
   ADMIN_TITLES: '/admin/titles',

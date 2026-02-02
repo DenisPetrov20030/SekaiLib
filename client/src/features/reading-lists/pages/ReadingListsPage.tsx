@@ -28,10 +28,11 @@ export const ReadingListsPage = () => {
     dispatch(fetchReadingLists());
   }, [dispatch]);
 
-  const filteredItems = items.filter((item) => item.status === selectedStatus);
+  // Показуємо тільки системні записи (без userListId) у вкладках статусів
+  const filteredItems = items.filter((item) => item.status === selectedStatus && !item.userListId);
 
   const getCountByStatus = (s: ReadingStatus) => {
-    return items.filter((item) => item.status === s).length;
+    return items.filter((item) => item.status === s && !item.userListId).length;
   };
 
   if (loading) {

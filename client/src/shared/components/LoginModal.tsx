@@ -81,7 +81,7 @@ export const LoginModal = ({ isOpen, onClose, onSuccess }: LoginModalProps) => {
 
         <div className="p-8">
           <h2 className="text-2xl font-bold text-text-primary text-center mb-2">
-            Sign in to your account
+            Увійти в акаунт
           </h2>
           <p className="text-center text-sm text-text-secondary mb-8">
             Or{' '}
@@ -90,14 +90,14 @@ export const LoginModal = ({ isOpen, onClose, onSuccess }: LoginModalProps) => {
               onClick={onClose}
               className="font-medium text-primary-500 hover:text-primary-400"
             >
-              create a new account
+              Створити новий акаунт
             </Link>
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
               <label htmlFor="modal-email" className="block text-sm font-medium text-text-secondary mb-1">
-                Email
+                Пошта
               </label>
               <input
                 {...register('email')}
@@ -113,7 +113,7 @@ export const LoginModal = ({ isOpen, onClose, onSuccess }: LoginModalProps) => {
 
             <div>
               <label htmlFor="modal-password" className="block text-sm font-medium text-text-secondary mb-1">
-                Password
+                  Пароль
               </label>
               <input
                 {...register('password')}
@@ -138,7 +138,7 @@ export const LoginModal = ({ isOpen, onClose, onSuccess }: LoginModalProps) => {
               disabled={loading}
               className="w-full py-2.5 px-4 rounded-lg text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? 'Входжу...' : 'Увійти'}
             </button>
           </form>
         </div>

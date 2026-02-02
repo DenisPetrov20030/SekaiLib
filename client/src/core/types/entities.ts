@@ -73,6 +73,7 @@ export interface ReadingListItem {
   title: ReadingListTitle;
   status: ReadingStatus;
   addedAt: string;
+  userListId?: string | null;
 }
 
 export interface ReadingProgress {
@@ -108,4 +109,13 @@ export interface TitleRating {
   likesCount: number;
   dislikesCount: number;
   userRating?: ReactionType;
+}
+export interface UserList {
+  id: string;
+  userId: string;
+  name: string;
+  createdAt: string;
+  titles?: Title[];
+  titlesCount?: number;
+  description?: string;
 }

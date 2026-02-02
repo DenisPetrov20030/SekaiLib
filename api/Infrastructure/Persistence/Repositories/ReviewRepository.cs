@@ -13,7 +13,7 @@ public class ReviewRepository : Repository<Review>, IReviewRepository
 
     public async Task<IEnumerable<Review>> GetByTitleIdAsync(Guid titleId)
     {
-        return await Context.Reviews
+        return await _context.Reviews
             .Include(r => r.User)
             .Include(r => r.Reactions)
             .Where(r => r.TitleId == titleId)
@@ -23,25 +23,25 @@ public class ReviewRepository : Repository<Review>, IReviewRepository
 
     public async Task<Review?> GetByUserAndTitleAsync(Guid userId, Guid titleId)
     {
-        return await Context.Reviews
+        return await _context.Reviews
             .Include(r => r.Reactions)
             .FirstOrDefaultAsync(r => r.UserId == userId && r.TitleId == titleId);
     }
 
     public async Task<ReviewReaction?> GetReactionAsync(Guid userId, Guid reviewId)
     {
-        return await Context.ReviewReactions
+        return await _context.ReviewReactions
             .FirstOrDefaultAsync(r => r.UserId == userId && r.ReviewId == reviewId);
     }
 
     public async Task AddReactionAsync(ReviewReaction reaction)
     {
-        await Context.ReviewReactions.AddAsync(reaction);
+        await _context.ReviewReactions.AddAsync(reaction);
     }
 
     public async Task RemoveReactionAsync(ReviewReaction reaction)
     {
-        Context.ReviewReactions.Remove(reaction);
+        _context.ReviewReactions.Remove(reaction);
         await Task.CompletedTask;
     }
 }

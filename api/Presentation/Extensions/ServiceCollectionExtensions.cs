@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<ITitleRatingService, TitleRatingService>();
+        services.AddScoped<UserListService>();
 
         return services;
     }
@@ -38,6 +39,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IReadingListRepository, ReadingListRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<ITitleRatingRepository, TitleRatingRepository>();
+        services.AddScoped<IUserListRepository, UserListRepository>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

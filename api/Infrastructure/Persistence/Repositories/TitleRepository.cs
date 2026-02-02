@@ -13,7 +13,7 @@ public class TitleRepository : Repository<Title>, ITitleRepository
 
     public async Task<PagedResult<Title>> GetCatalogAsync(CatalogFilter filter, int page, int pageSize)
     {
-        var query = DbSet
+        var query = _dbSet
             .Include(t => t.Chapters)
             .Include(t => t.TitleGenres)
                 .ThenInclude(tg => tg.Genre)
@@ -58,7 +58,7 @@ public class TitleRepository : Repository<Title>, ITitleRepository
 
     public async Task<Title?> GetWithChaptersAsync(Guid id)
     {
-        return await DbSet
+        return await _dbSet
             .Include(t => t.Publisher)
             .Include(t => t.Chapters)
             .Include(t => t.TitleGenres)
@@ -70,7 +70,7 @@ public class TitleRepository : Repository<Title>, ITitleRepository
 
     public async Task<IEnumerable<Title>> SearchByNameAsync(string query)
     {
-        return await DbSet
+        return await _dbSet
             .Include(t => t.Chapters)
             .Where(t => t.Name.Contains(query))
             .OrderBy(t => t.Name)
@@ -80,7 +80,7 @@ public class TitleRepository : Repository<Title>, ITitleRepository
 
     public async Task<PagedResult<Title>> GetByPublisherAsync(Guid publisherId, int page, int pageSize)
     {
-        var query = DbSet
+        var query = _dbSet
             .Include(t => t.Chapters)
             .Include(t => t.TitleGenres)
                 .ThenInclude(tg => tg.Genre)

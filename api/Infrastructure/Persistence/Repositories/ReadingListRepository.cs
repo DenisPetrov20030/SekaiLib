@@ -12,7 +12,7 @@ public class ReadingListRepository : Repository<ReadingList>, IReadingListReposi
 
     public async Task<IEnumerable<ReadingList>> GetByUserIdAsync(Guid userId)
     {
-        return await DbSet
+        return await _dbSet
             .Include(rl => rl.Title)
             .Where(rl => rl.UserId == userId)
             .OrderByDescending(rl => rl.UpdatedAt)
@@ -21,7 +21,7 @@ public class ReadingListRepository : Repository<ReadingList>, IReadingListReposi
 
     public async Task<ReadingList?> GetByUserAndTitleAsync(Guid userId, Guid titleId)
     {
-        return await DbSet
+        return await _dbSet
             .Include(rl => rl.Title)
             .FirstOrDefaultAsync(rl => rl.UserId == userId && rl.TitleId == titleId);
     }

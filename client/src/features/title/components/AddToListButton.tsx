@@ -7,47 +7,84 @@ import { Button, Select } from '../../../shared/components';
 interface AddToListButtonProps {
   titleId: string;
   onLoginRequired: () => void;
+  alwaysVisible?: boolean;
 }
 
-const statusOptions = [
-  { value: String(ReadingStatus.Reading), label: 'Читаю' },
-  { value: String(ReadingStatus.Planned), label: 'Заплановано' },
-  { value: String(ReadingStatus.Completed), label: 'Завершено' },
-  { value: String(ReadingStatus.Dropped), label: 'Припинено' },
-  { value: String(ReadingStatus.Favorite), label: 'Улюблені' },
-];
+// Інтерфейс для отримання ваших кастомних списків з БД
+interface CustomList {
+  id: string;
+  name: string;
+}
 
-const getStatusLabel = (status: ReadingStatus): string => {
-  const option = statusOptions.find(opt => opt.value === String(status));
-  return option?.label || 'У списку';
-};
-
-export function AddToListButton({ titleId, onLoginRequired }: AddToListButtonProps) {
+export function AddToListButton({ titleId, onLoginRequired, alwaysVisible = false }: AddToListButtonProps) {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const [showSelect, setShowSelect] = useState(false);
-  const [status, setStatus] = useState<ReadingStatus>(ReadingStatus.Planned);
-  const [currentStatus, setCurrentStatus] = useState<ReadingStatus | null>(null);
+  
+  // Використовуємо string, бо ID кастомного списку — це GUID (рядок)
+  const [status, setStatus] = useState<string>(String(ReadingStatus.Planned));
+  const [currentStatus, setCurrentStatus] = useState<string | null>(null);
+  
+  const [customLists, setCustomLists] = useState<CustomList[]>([]);
   const [loading, setLoading] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(false);
 
-  const checkTitleStatus = useCallback(async () => {
+  // Функція для завантаження кастомних списків та поточного статусу тайтла
+  const loadData = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
     setCheckingStatus(true);
     try {
-      const response = await axiosInstance.get<{ status: ReadingStatus | null }>(`/ReadingLists/${titleId}/status`);
-      if (response.data.status !== null) {
-        setCurrentStatus(response.data.status);
-        setStatus(response.data.status);
+      // 1. Отримуємо кастомні списки користувача (створені вами в профілі)
+      const customRes = await axiosInstance.get<CustomList[]>('/UserLists');
+      setCustomLists(customRes.data);
+
+      // 2. Перевіряємо, чи доданий цей тайтл кудись
+      const statusRes = await axiosInstance.get<{ status: any, userListId: any }>(`/ReadingLists/${titleId}/status`);
+      if (statusRes.data) {
+          const userListId = statusRes.data.userListId;
+          const sysStatus = statusRes.data.status;
+          // Встановлюємо currentStatus тільки якщо реально є запис в БД
+          if (userListId) {
+            setCurrentStatus(String(userListId));
+            setStatus(String(userListId));
+          } else if (sysStatus !== null && sysStatus !== undefined) {
+            setCurrentStatus(String(sysStatus));
+            setStatus(String(sysStatus));
+          } else {
+            // Немає запису — тримаємо null
+            setCurrentStatus(null);
+          }
       }
+    } catch (err) {
+      console.error("Помилка завантаження списків:", err);
     } finally {
       setCheckingStatus(false);
     }
-  }, [titleId]);
+  }, [isAuthenticated, titleId]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      checkTitleStatus();
-    }
-  }, [isAuthenticated, checkTitleStatus]);
+    loadData();
+  }, [loadData]);
+
+  // Формуємо загальний список опцій для випадаючого меню
+  const allOptions = [
+    // Стандартні системні статуси
+    { value: String(ReadingStatus.Reading), label: '📖 Читаю' },
+    { value: String(ReadingStatus.Planned), label: '⏳ Заплановано' },
+    { value: String(ReadingStatus.Completed), label: '✅ Завершено' },
+    { value: String(ReadingStatus.Dropped), label: '❌ Припинено' },
+    { value: String(ReadingStatus.Favorite), label: '⭐ Улюблені' },
+    // Ваші персональні списки з бази даних
+    ...customLists.map(list => ({
+      value: list.id,
+      label: `📁 ${list.name}`
+    }))
+  ];
+
+  const getStatusLabel = (val: string): string => {
+    const option = allOptions.find(opt => opt.value === val);
+    return option?.label || 'Додано';
+  };
 
   const handleAdd = async () => {
     if (!isAuthenticated) {
@@ -55,20 +92,32 @@ export function AddToListButton({ titleId, onLoginRequired }: AddToListButtonPro
       return;
     }
 
-    if (!showSelect) {
+    if (!showSelect && !alwaysVisible) {
       setShowSelect(true);
       return;
     }
 
     setLoading(true);
     try {
+      const isCustomList = isNaN(Number(status)); // Перевірка: якщо не число, то це GUID списку
+
+const payload = {
+    TitleId: titleId,
+    Status: isCustomList ? null : Number(status),
+    UserListId: isCustomList ? status : null // Використовуйте актуальну змінну тут
+};
+
       if (currentStatus !== null) {
-        await axiosInstance.put(`/ReadingLists/${titleId}`, { TitleId: titleId, Status: status });
+        await axiosInstance.put(`/ReadingLists/${titleId}`, payload);
       } else {
-        await axiosInstance.post('/ReadingLists', { TitleId: titleId, Status: status });
+        await axiosInstance.post('/ReadingLists', payload);
       }
+      
       setCurrentStatus(status);
       setShowSelect(false);
+    } catch (err) {
+      alert("Помилка при збереженні. Перевірте консоль.");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -80,7 +129,7 @@ export function AddToListButton({ titleId, onLoginRequired }: AddToListButtonPro
       await axiosInstance.delete(`/ReadingLists/${titleId}`);
       setCurrentStatus(null);
       setShowSelect(false);
-      setStatus(ReadingStatus.Planned);
+      setStatus(String(ReadingStatus.Planned));
     } finally {
       setLoading(false);
     }
@@ -89,50 +138,48 @@ export function AddToListButton({ titleId, onLoginRequired }: AddToListButtonPro
   if (checkingStatus) {
     return (
       <Button variant="secondary" disabled>
-        <div className="w-5 h-5 border-2 border-text-muted border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
       </Button>
     );
   }
-
-  if (currentStatus !== null && !showSelect) {
-    return (
-      <div className="flex items-center gap-2">
-        <Button variant="secondary" onClick={() => setShowSelect(true)}>
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-          </svg>
-          {getStatusLabel(currentStatus)}
-        </Button>
-      </div>
-    );
-  }
+  const shouldShowSelect = alwaysVisible || showSelect;
 
   return (
-    <div className="flex items-center gap-2">
-      {showSelect && (
-        <Select
-          value={String(status)}
-          onChange={(v) => setStatus(Number(v) as ReadingStatus)}
-          options={statusOptions}
-        />
-      )}
-      <Button onClick={handleAdd} loading={loading}>
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-        </svg>
-        {showSelect ? 'Зберегти' : 'Додати до списку'}
-      </Button>
-      {showSelect && (
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+      {shouldShowSelect ? (
         <>
-          {currentStatus !== null && (
-            <Button variant="danger" onClick={handleRemove} loading={loading}>
-              Видалити
+          <Select
+            value={status}
+            onChange={(v) => setStatus(v)}
+            options={allOptions}
+            className="min-w-[200px]"
+          />
+          <div className="flex gap-2">
+            <Button onClick={handleAdd} loading={loading}>
+              Зберегти
             </Button>
-          )}
-          <Button variant="ghost" onClick={() => setShowSelect(false)}>
-            Скасувати
-          </Button>
+            {!alwaysVisible && (
+              <Button variant="ghost" onClick={() => setShowSelect(false)}>
+                Скасувати
+              </Button>
+            )}
+            {currentStatus !== null && (
+              <Button variant="danger" onClick={handleRemove} loading={loading}>
+                Видалити
+              </Button>
+            )}
+          </div>
         </>
+      ) : (
+        <Button 
+          variant={currentStatus ? "secondary" : "danger"} 
+          onClick={() => setShowSelect(true)}
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+          {currentStatus ? getStatusLabel(currentStatus) : 'Додати до списку'}
+        </Button>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-@SekaiLib_HostAddress = http://localhost:5284
+@SekaiLib_HostAddress = http://localhost:5173
 
 GET {{SekaiLib_HostAddress}}/weatherforecast/
 Accept: application/json

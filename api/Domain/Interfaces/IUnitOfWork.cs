@@ -15,5 +15,6 @@ public interface IUnitOfWork
     IRepository<TitleGenre> TitleGenres { get; }
     IRepository<TranslationTeam> TranslationTeams { get; }
     IRepository<RefreshToken> RefreshTokens { get; }
+    IUserListRepository UserLists { get; }
     Task<int> SaveChangesAsync();
 }

@@ -12,11 +12,11 @@ public class UserRepository : Repository<User>, IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        return await DbSet.FirstOrDefaultAsync(u => u.Email == email);
+        return await _dbSet.FirstOrDefaultAsync(u => u.Email == email);
     }
 
     public async Task<User?> GetByUsernameAsync(string username)
     {
-        return await DbSet.FirstOrDefaultAsync(u => u.Username == username);
+        return await _dbSet.FirstOrDefaultAsync(u => u.Username == username);
     }
 }

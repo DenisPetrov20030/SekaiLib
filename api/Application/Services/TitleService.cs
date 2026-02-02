@@ -159,7 +159,7 @@ public class TitleService : ITitleService
         var existingGenres = await _unitOfWork.TitleGenres.GetByTitleIdAsync(titleId);
         foreach (var genre in existingGenres)
         {
-            _unitOfWork.TitleGenres.Remove(genre);
+            await _unitOfWork.TitleGenres.DeleteAsync(genre);
         }
 
         foreach (var genreId in request.GenreIds)

@@ -23,7 +23,6 @@ export const LoginForm = () => {
       await login(data);
       navigate(ROUTES.CATALOG);
     } catch {
-      // Error handled in store
     }
   };
 

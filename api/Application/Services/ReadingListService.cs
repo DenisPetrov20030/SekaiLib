@@ -30,52 +30,61 @@ public class ReadingListService : IReadingListService
                 rl.Title.Status
             ),
             rl.Status,
-            rl.AddedAt
+            rl.UserListId, 
+            rl.AddedAt     
         ));
     }
 
-    public async Task<ReadingStatus?> GetTitleStatusAsync(Guid userId, Guid titleId)
-    {
-        var entry = await _unitOfWork.ReadingLists.GetByUserAndTitleAsync(userId, titleId);
-        return entry?.Status;
-    }
+   public async Task<ReadingStatusResponse> GetTitleStatusAsync(Guid userId, Guid titleId)
+{
+    var item = await _unitOfWork.ReadingLists.GetByUserAndTitleAsync(userId, titleId);
+    // Повертаємо і системний статус, і ID кастомного списку
+    return new ReadingStatusResponse(item?.Status, item?.UserListId);
+}
 
-    public async Task AddToListAsync(Guid userId, Guid titleId, ReadingStatus status)
+    public async Task AddToListAsync(Guid userId, UpdateReadingStatusRequest request)
     {
-        var titleExists = await _unitOfWork.Titles.ExistsAsync(titleId);
+        var titleExists = await _unitOfWork.Titles.ExistsAsync(request.TitleId);
         if (!titleExists)
-            throw new NotFoundException("Title", titleId);
+            throw new NotFoundException("Title", request.TitleId);
 
-        var existing = await _unitOfWork.ReadingLists.GetByUserAndTitleAsync(userId, titleId);
+        var existing = await _unitOfWork.ReadingLists.GetByUserAndTitleAsync(userId, request.TitleId);
         if (existing != null)
             throw new ValidationException("Title", "Title is already in your reading list");
 
-        var readingList = new ReadingList
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            TitleId = titleId,
-            Status = status,
-            AddedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+      var readingList = new ReadingList
+    {
+        Id = Guid.NewGuid(),
+        UserId = userId,
+        TitleId = request.TitleId,
+        Status = request.Status ?? ReadingStatus.Planned, // Ставимо дефолт, якщо це кастомний список
+        UserListId = request.UserListId, // ТЕПЕР ЦЕ ЗБЕРЕЖЕТЬСЯ
+        AddedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+    };
 
         await _unitOfWork.ReadingLists.AddAsync(readingList);
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task UpdateStatusAsync(Guid userId, Guid titleId, ReadingStatus status)
-    {
-        var readingList = await _unitOfWork.ReadingLists.GetByUserAndTitleAsync(userId, titleId);
-        if (readingList == null)
-            throw new NotFoundException("Reading list entry not found");
+    public async Task UpdateStatusAsync(Guid userId, Guid titleId, UpdateReadingStatusRequest request)
+{
+    var readingList = await _unitOfWork.ReadingLists.GetByUserAndTitleAsync(userId, titleId);
+    if (readingList == null) throw new NotFoundException("Reading list entry not found");
 
-        readingList.Status = status;
-        readingList.UpdatedAt = DateTime.UtcNow;
+    // Якщо прийшов новий статус — оновлюємо, якщо null — залишаємо старий
+    if (request.Status.HasValue) 
+        readingList.Status = request.Status.Value;
 
-        await _unitOfWork.ReadingLists.UpdateAsync(readingList);
-        await _unitOfWork.SaveChangesAsync();
-    }
+    // Якщо прийшов ID списку — оновлюємо, якщо null — залишаємо старий
+    if (request.UserListId.HasValue)
+        readingList.UserListId = request.UserListId.Value;
+
+    readingList.UpdatedAt = DateTime.UtcNow;
+
+    await _unitOfWork.ReadingLists.UpdateAsync(readingList);
+    await _unitOfWork.SaveChangesAsync();
+}
 
     public async Task RemoveFromListAsync(Guid userId, Guid titleId)
     {

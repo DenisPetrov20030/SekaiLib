@@ -19,7 +19,8 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<TitleGenre> TitleGenres { get; }
     public IRepository<TranslationTeam> TranslationTeams { get; }
     public IRepository<RefreshToken> RefreshTokens { get; }
-
+    public IUserListRepository UserLists { get; } 
+    
     public UnitOfWork(
         AppDbContext context,
         IUserRepository users,
@@ -31,7 +32,8 @@ public class UnitOfWork : IUnitOfWork
         IRepository<Genre> genres,
         IRepository<TitleGenre> titleGenres,
         IRepository<TranslationTeam> translationTeams,
-        IRepository<RefreshToken> refreshTokens)
+        IRepository<RefreshToken> refreshTokens,
+        IUserListRepository userLists) 
     {
         _context = context;
         Users = users;
@@ -44,10 +46,16 @@ public class UnitOfWork : IUnitOfWork
         TitleGenres = titleGenres;
         TranslationTeams = translationTeams;
         RefreshTokens = refreshTokens;
+        UserLists = userLists; 
     }
 
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync();
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
     }
 }

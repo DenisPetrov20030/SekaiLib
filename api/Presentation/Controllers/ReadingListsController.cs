@@ -30,23 +30,24 @@ public class ReadingListsController : ControllerBase
     public async Task<ActionResult<ReadingStatusResponse>> GetTitleStatus(Guid titleId)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var status = await _readingListService.GetTitleStatusAsync(userId, titleId);
-        return Ok(new ReadingStatusResponse(status));
+        var response = await _readingListService.GetTitleStatusAsync(userId, titleId);
+        return Ok(response);
     }
 
     [HttpPost]
     public async Task<ActionResult> AddToList([FromBody] UpdateReadingStatusRequest request)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        await _readingListService.AddToListAsync(userId, request.TitleId, request.Status);
-        return Ok();
+    var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    // Переконайся, що твій сервіс тепер приймає об'єкт request або окремий UserListId
+    await _readingListService.AddToListAsync(userId, request); 
+    return Ok();
     }
-
+    
     [HttpPut("{titleId}")]
     public async Task<ActionResult> UpdateStatus(Guid titleId, [FromBody] UpdateReadingStatusRequest request)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        await _readingListService.UpdateStatusAsync(userId, titleId, request.Status);
+        await _readingListService.UpdateStatusAsync(userId, titleId, request);
         return Ok();
     }
 

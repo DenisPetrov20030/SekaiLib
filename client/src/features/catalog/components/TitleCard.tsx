@@ -16,10 +16,10 @@ export const TitleCard = ({ title }: TitleCardProps) => {
           <img
             src={title.coverImageUrl}
             alt={title.name}
-            className="w-full h-64 object-cover"
+            className="w-full h-full object-contain object-center"
           />
         ) : (
-          <div className="w-full h-64 flex items-center justify-center bg-surface-hover">
+          <div className="w-full h-full flex items-center justify-center bg-surface-hover">
             <span className="text-text-muted">No cover</span>
           </div>
         )}

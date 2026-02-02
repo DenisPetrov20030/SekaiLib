@@ -6,6 +6,7 @@ import { TitleDetailsPage, CreateTitlePage } from '../../features/title/pages';
 import { ChapterEditorPage } from '../../features/chapter';
 import { ReaderPage } from '../../features/reader/pages';
 import { ReadingListsPage } from '../../features/reading-lists/pages';
+import { UserListPage } from '../../features/userlists/pages/UserListPage';
 import { ProfilePage, UserProfilePage } from '../../features/profile/pages';
 import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage } from '../../features/admin';
 import { ROUTES } from '../../core/constants';
@@ -57,6 +58,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.READING_LISTS,
             element: <ReadingListsPage />,
+          },
+          {
+            path: ROUTES.USER_LIST,
+            element: <UserListPage />,
           },
           {
             path: ROUTES.READING_LIST_STATUS,

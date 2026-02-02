@@ -17,6 +17,8 @@ public class Title
     public Guid PublisherId { get; set; }
     public User Publisher { get; set; } = null!;
     
+    public virtual ICollection<ReadingList> ReadingListEntries { get; set; } = new List<ReadingList>();
+    
     public ICollection<Chapter> Chapters { get; set; } = new List<Chapter>();
     public ICollection<TitleGenre> TitleGenres { get; set; } = new List<TitleGenre>();
     public ICollection<TitleTranslator> TitleTranslators { get; set; } = new List<TitleTranslator>();

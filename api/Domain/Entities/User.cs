@@ -12,6 +12,7 @@ public class User
     public UserRole Role { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public ICollection<UserList> CustomLists { get; set; } = new List<UserList>();
     public ICollection<ReadingList> ReadingLists { get; set; } = new List<ReadingList>();
     public ICollection<ReadingProgress> ReadingProgresses { get; set; } = new List<ReadingProgress>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
