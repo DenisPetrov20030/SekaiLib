@@ -9,5 +9,6 @@ public interface IChapterService
     Task<ChapterContentDto> GetChapterContentByNumberAsync(Guid titleId, int chapterNumber);
     Task<ChapterContentDto> CreateAsync(Guid userId, Guid titleId, CreateChapterRequest request);
     Task<ChapterContentDto> UpdateAsync(Guid userId, Guid chapterId, UpdateChapterRequest request);
+    Task<IEnumerable<LatestChapterDto>> GetLatestChaptersAsync(int count);
     Task DeleteAsync(Guid userId, Guid chapterId);
 }

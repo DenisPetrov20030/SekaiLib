@@ -10,6 +10,7 @@ import { UserListPage } from '../../features/userlists/pages/UserListPage';
 import { ProfilePage, UserProfilePage } from '../../features/profile/pages';
 import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage } from '../../features/admin';
 import { ROUTES } from '../../core/constants';
+import { HomePage } from '../../features/home/pages/HomePage.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -18,7 +19,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to={ROUTES.CATALOG} replace />,
+        element: <HomePage />,
       },
       {
         path: ROUTES.REGISTER,

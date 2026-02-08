@@ -10,6 +10,7 @@ public interface ITitleService
     Task<IEnumerable<TitleDto>> SearchAsync(string query);
     Task<TitleDetailsDto> CreateAsync(Guid userId, CreateTitleRequest request);
     Task<TitleDetailsDto> UpdateAsync(Guid userId, Guid titleId, UpdateTitleRequest request);
+    Task<IEnumerable<TitleDto>> GetLatestTitlesAsync(int count);
     Task DeleteAsync(Guid userId, Guid titleId);
     Task<PagedResponse<TitleDto>> GetUserTitlesAsync(Guid userId, int page, int pageSize);
 }

@@ -83,4 +83,17 @@ public class TitlesController : ControllerBase
         await _titleService.DeleteAsync(userId, id);
         return NoContent();
     }
+    [HttpGet("latest")]
+    public async Task<ActionResult<IEnumerable<TitleDto>>> GetLatestTitles()
+    {
+        var titles = await _titleService.GetLatestTitlesAsync(10);
+        return Ok(titles);
+    }
+
+    [HttpGet("latest-chapters")]
+    public async Task<ActionResult<IEnumerable<LatestChapterDto>>> GetLatestChapters()
+    {
+        var chapters = await _chapterService.GetLatestChaptersAsync(15);
+        return Ok(chapters);
+    }
 }

@@ -13,13 +13,15 @@ export const Header = () => {
 
   return (
     <>
-      <header className="bg-surface shadow-sm">
+     <header className="bg-surface shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
-              <Link to={ROUTES.CATALOG} className="text-2xl font-bold text-primary-500">
+              
+              <Link to="/" className="text-2xl font-bold text-primary-500">
                 SekaiLib
               </Link>
+              
               <nav className="flex space-x-4">
                 <Link
                   to={ROUTES.CATALOG}

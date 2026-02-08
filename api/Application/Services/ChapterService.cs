@@ -1,4 +1,5 @@
 using SekaiLib.Application.DTOs.Chapters;
+using SekaiLib.Application.DTOs.Titles;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Application.Exceptions;
 using SekaiLib.Domain.Interfaces;
@@ -100,10 +101,10 @@ public class ChapterService : IChapterService
             TitleId = titleId,
             Number = request.ChapterNumber,
             Name = request.Name,
-            // Автоматичне форматування контенту при створенні
             Content = PrepareTextForDb(request.Content), 
             IsPremium = request.IsPremium,
-            PublishedAt = DateTime.UtcNow
+            PublishedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow // Додано поле CreatedAt
         };
 
         await _unitOfWork.Chapters.AddAsync(chapter);
@@ -138,7 +139,6 @@ public class ChapterService : IChapterService
 
         chapter.Number = request.ChapterNumber;
         chapter.Name = request.Name;
-        // Автоматичне форматування контенту при оновленні
         chapter.Content = PrepareTextForDb(request.Content); 
         chapter.IsPremium = request.IsPremium;
 
@@ -169,6 +169,31 @@ public class ChapterService : IChapterService
         await _unitOfWork.SaveChangesAsync();
     }
 
+    public async Task<IEnumerable<LatestChapterDto>> GetLatestChaptersAsync(int count)
+{
+        var chapters = await _unitOfWork.Chapters.GetAllAsync();
+
+        return chapters
+            .Where(c => c.Title != null)
+            .OrderByDescending(c => c.PublishedAt)
+            .Take(count)
+        .Select(c => new LatestChapterDto
+        {
+            Id = c.Id,
+            Number = c.Number,
+            CreatedAt = c.CreatedAt,
+            Title = new TitleDto(
+                c.Title.Id,
+                c.Title.Name,
+                c.Title.Author ?? "",
+                c.Title.CoverImageUrl ?? "",
+                c.Title.Description ?? "",
+                c.Title.CountryOfOrigin ?? string.Empty,
+                c.Title.Status,
+                0
+            )
+        });
+}
     private string PrepareTextForDb(string input)
     {
         if (string.IsNullOrWhiteSpace(input)) return input;

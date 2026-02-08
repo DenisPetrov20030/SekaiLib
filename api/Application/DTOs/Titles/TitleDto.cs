@@ -6,8 +6,9 @@ public record TitleDto(
     Guid Id,
     string Name,
     string Author,
-    string Description,
     string CoverImageUrl,
+    string Description,
+    string CountryOfOrigin,
     TitleStatus Status,
-    int ChapterCount
+    int TitlesCount 
 );

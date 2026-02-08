@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchReadingLists } from '../store';
 import { ReadingStatus } from '../../../core/types';
+import { Button } from '../../../shared/components';
+import { ROUTES } from '../../../core/constants';
 
 const READING_STATUS_LABELS: Record<ReadingStatus, string> = {
   [ReadingStatus.Reading]: 'Читаю',
@@ -45,7 +48,12 @@ export const ReadingListsPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-text-primary mb-8">Мої списки читання</h1>
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-text-primary">Мої списки читання</h1>
+        <Link to={ROUTES.PROFILE}>
+          <Button variant="danger" size="md">Перейти в профіль</Button>
+        </Link>
+      </div>
 
       <div className="mb-6 flex gap-4 border-b border-surface-hover">
         {READING_STATUSES.map((s) => (

@@ -11,4 +11,5 @@ public class Chapter
     public bool IsPremium { get; set; }
     public DateTime? EarlyAccessUntil { get; set; }
     public Title Title { get; set; } = null!;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

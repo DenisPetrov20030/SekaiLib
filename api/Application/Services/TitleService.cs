@@ -36,11 +36,12 @@ public class TitleService : ITitleService
         var titleDtos = result.Data.Select(t => new TitleDto(
             t.Id,
             t.Name,
-            t.Author,
-            t.Description,
-            t.CoverImageUrl,
+            t.Author ?? "",
+            t.CoverImageUrl ?? "",
+            t.Description ?? "",
+            t.CountryOfOrigin ?? string.Empty,
             t.Status,
-            t.Chapters.Count
+            0 // TitlesCount
         ));
 
         return new PagedResponse<TitleDto>(
@@ -92,11 +93,12 @@ public class TitleService : ITitleService
         return titles.Select(t => new TitleDto(
             t.Id,
             t.Name,
-            t.Author,
-            t.Description,
-            t.CoverImageUrl,
+            t.Author ?? "",
+            t.CoverImageUrl ?? "",
+            t.Description ?? "",
+            t.CountryOfOrigin ?? string.Empty,
             t.Status,
-            t.Chapters.Count
+            t.Chapters?.Count ?? 0
         ));
     }
 
@@ -201,11 +203,12 @@ public class TitleService : ITitleService
         var titleDtos = result.Data.Select(t => new TitleDto(
             t.Id,
             t.Name,
-            t.Author,
-            t.Description,
-            t.CoverImageUrl,
+            t.Author ?? "",
+            t.CoverImageUrl ?? "",
+            t.Description ?? "",
+            t.CountryOfOrigin ?? string.Empty,
             t.Status,
-            t.Chapters.Count
+            t.Chapters?.Count ?? 0
         ));
 
         return new PagedResponse<TitleDto>(
@@ -215,5 +218,23 @@ public class TitleService : ITitleService
             result.PageSize,
             result.TotalPages
         );
+    }
+
+    public async Task<IEnumerable<TitleDto>> GetLatestTitlesAsync(int count)
+    {
+        var titles = await _unitOfWork.Titles.GetAllAsync();
+        return titles
+            .OrderByDescending(t => t.CreatedAt)
+            .Take(count)
+            .Select(t => new TitleDto(
+                t.Id,
+                t.Name,
+                t.Author ?? "",
+                t.CoverImageUrl ?? "",
+                t.Description ?? "",
+                t.CountryOfOrigin ?? string.Empty,
+                t.Status,
+                0
+            ));
     }
 }
