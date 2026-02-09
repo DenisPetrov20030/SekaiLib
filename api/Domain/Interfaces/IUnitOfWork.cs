@@ -16,5 +16,6 @@ public interface IUnitOfWork
     IRepository<TranslationTeam> TranslationTeams { get; }
     IRepository<RefreshToken> RefreshTokens { get; }
     IUserListRepository UserLists { get; }
+    IRepository<UserReadingProgress> UserReadingProgresses { get; }
     Task<int> SaveChangesAsync();
 }

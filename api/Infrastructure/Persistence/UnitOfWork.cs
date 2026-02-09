@@ -48,6 +48,9 @@ public class UnitOfWork : IUnitOfWork
         RefreshTokens = refreshTokens;
         UserLists = userLists; 
     }
+    private IRepository<UserReadingProgress>? _userReadingProgresses;
+    public IRepository<UserReadingProgress> UserReadingProgresses =>
+        _userReadingProgresses ??= new Repository<UserReadingProgress>(_context);
 
     public async Task<int> SaveChangesAsync()
     {

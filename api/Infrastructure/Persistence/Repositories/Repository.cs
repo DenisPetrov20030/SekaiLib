@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using SekaiLib.Domain.Interfaces.Repositories;
 using System.Linq.Expressions;
 
@@ -13,6 +14,11 @@ public class Repository<T> : IRepository<T> where T : class
     {
         _context = context;
         _dbSet = context.Set<T>();
+    }
+
+    public virtual IQueryable<T> Query()
+    {
+        return _dbSet;
     }
 
     public virtual async Task<T?> GetByIdAsync(Guid id)

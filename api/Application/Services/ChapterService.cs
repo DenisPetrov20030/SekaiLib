@@ -5,6 +5,7 @@ using SekaiLib.Application.Exceptions;
 using SekaiLib.Domain.Interfaces;
 using SekaiLib.Domain.Entities;
 using SekaiLib.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace SekaiLib.Application.Services;
 
@@ -194,6 +195,29 @@ public class ChapterService : IChapterService
             )
         });
 }
+    public async Task UpdateReadingProgressAsync(Guid userId, Guid titleId, int chapterNumber, int page)
+{
+        var progress = await _unitOfWork.UserReadingProgresses
+            .Query()
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.TitleId == titleId);
+
+        if (progress == null)
+        {
+            progress = new UserReadingProgress
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TitleId = titleId
+            };
+            await _unitOfWork.UserReadingProgresses.AddAsync(progress);
+        }
+
+        progress.ChapterNumber = chapterNumber;
+        progress.CurrentPage = page;
+        progress.LastReadAt = DateTime.UtcNow;
+
+        await _unitOfWork.SaveChangesAsync();
+    }
     private string PrepareTextForDb(string input)
     {
         if (string.IsNullOrWhiteSpace(input)) return input;

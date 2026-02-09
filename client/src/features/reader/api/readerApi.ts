@@ -10,6 +10,6 @@ export const readerApi = {
   },
 
   updateReadingProgress: async (data: UpdateReadingProgressRequest): Promise<void> => {
-    await axiosInstance.post('/reading-progress', data);
+    await axiosInstance.post('/users/update-progress', data);
   },
 };

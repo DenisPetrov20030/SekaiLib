@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<Review> Reviews { get; set; }
     public DbSet<ReviewReaction> ReviewReactions { get; set; }
     public DbSet<TitleRating> TitleRatings { get; set; }
+    public DbSet<UserReadingProgress> UserReadingProgresses { get; set; }
 
    protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
