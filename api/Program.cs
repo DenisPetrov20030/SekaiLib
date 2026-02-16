@@ -32,8 +32,18 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-        context.Database.Migrate();
-        logger.LogInformation("Database migrations applied successfully.");
+        var pendingMigrations = context.Database.GetPendingMigrations();
+        // If there are migrations, apply them; otherwise ensure schema is created
+        if (pendingMigrations.Any())
+        {
+            context.Database.Migrate();
+            logger.LogInformation("Database migrations applied successfully.");
+        }
+        else
+        {
+            logger.LogInformation("No migrations found; ensuring database is created.");
+            context.Database.EnsureCreated();
+        }
     }
     catch (Exception ex)
     {

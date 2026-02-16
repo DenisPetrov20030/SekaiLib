@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SekaiLib.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using SekaiLib.Infrastructure.Persistence;
 namespace SekaiLib.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260216121516_EnsureReviewCommentReactions")]
+    partial class EnsureReviewCommentReactions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -235,9 +238,6 @@ namespace SekaiLib.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("ParentCommentId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("ReviewId")
                         .HasColumnType("uuid");
 
@@ -245,8 +245,6 @@ namespace SekaiLib.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ParentCommentId");
 
                     b.HasIndex("ReviewId");
 
@@ -631,11 +629,6 @@ namespace SekaiLib.Migrations
 
             modelBuilder.Entity("SekaiLib.Domain.Entities.ReviewComment", b =>
                 {
-                    b.HasOne("SekaiLib.Domain.Entities.ReviewComment", "ParentComment")
-                        .WithMany("Replies")
-                        .HasForeignKey("ParentCommentId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("SekaiLib.Domain.Entities.Review", "Review")
                         .WithMany("Comments")
                         .HasForeignKey("ReviewId")
@@ -647,8 +640,6 @@ namespace SekaiLib.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ParentComment");
 
                     b.Navigation("Review");
 
@@ -798,8 +789,6 @@ namespace SekaiLib.Migrations
             modelBuilder.Entity("SekaiLib.Domain.Entities.ReviewComment", b =>
                 {
                     b.Navigation("Reactions");
-
-                    b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("SekaiLib.Domain.Entities.Title", b =>

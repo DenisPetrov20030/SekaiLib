@@ -19,16 +19,21 @@ export function ReviewForm({
   const [content, setContent] = useState(initialContent);
   const [rating, setRating] = useState(initialRating);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
 
     setLoading(true);
+    setError(null);
     try {
       await onSubmit(content, rating);
       setContent('');
       setRating(5);
+    } catch (e: any) {
+      const message = e?.message || 'Не вдалося відправити рецензію';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -63,6 +68,9 @@ export function ReviewForm({
           </div>
         </div>
       </div>
+      {error && (
+        <p className="text-sm text-red-500">{error}</p>
+      )}
       <div className="flex gap-2">
         <Button type="submit" loading={loading} disabled={!content.trim()}>
           {submitLabel}

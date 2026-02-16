@@ -1,19 +1,17 @@
-using SekaiLib.Domain.Enums;
-
 namespace SekaiLib.Application.DTOs.Reviews;
 
-public record ReviewResponse(
+using SekaiLib.Domain.Enums;
+
+public record ReviewCommentResponse(
     Guid Id,
     Guid UserId,
     string Username,
     string? AvatarUrl,
-    Guid TitleId,
     string Content,
-    int Rating,
+    DateTime CreatedAt,
     int LikesCount,
     int DislikesCount,
     ReactionType? UserReaction,
-    DateTime CreatedAt,
-    DateTime UpdatedAt,
-    IEnumerable<ReviewCommentResponse> Comments
+    Guid? ParentCommentId,
+    IEnumerable<ReviewCommentResponse>? Replies
 );

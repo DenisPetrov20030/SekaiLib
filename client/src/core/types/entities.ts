@@ -103,6 +103,21 @@ export interface Review {
   userReaction?: ReactionType;
   createdAt: string;
   updatedAt: string;
+  comments?: ReviewComment[];
+}
+
+export interface ReviewComment {
+  id: string;
+  parentCommentId?: string | null;
+  userId: string;
+  username: string;
+  avatarUrl?: string;
+  content: string;
+  createdAt: string;
+  likesCount: number;
+  dislikesCount: number;
+  userReaction?: ReactionType;
+  replies?: ReviewComment[];
 }
 
 export interface TitleRating {

@@ -11,4 +11,9 @@ public interface IReviewService
     Task DeleteAsync(Guid userId, Guid reviewId, bool isAdmin);
     Task<ReviewResponse> SetReactionAsync(Guid userId, Guid reviewId, ReactionType type);
     Task RemoveReactionAsync(Guid userId, Guid reviewId);
+    Task<ReviewCommentResponse> AddCommentAsync(Guid userId, Guid reviewId, CreateReviewCommentRequest request);
+    Task<ReviewCommentResponse> UpdateCommentAsync(Guid userId, Guid commentId, UpdateReviewCommentRequest request);
+    Task<ReviewCommentResponse> SetCommentReactionAsync(Guid userId, Guid commentId, ReactionType type);
+    Task RemoveCommentReactionAsync(Guid userId, Guid commentId);
+    Task DeleteCommentAsync(Guid userId, Guid commentId, bool isAdmin);
 }

@@ -12,4 +12,5 @@ public class Review
     public User User { get; set; } = null!;
     public Title Title { get; set; } = null!;
     public ICollection<ReviewReaction> Reactions { get; set; } = new List<ReviewReaction>();
+    public ICollection<ReviewComment> Comments { get; set; } = new List<ReviewComment>();
 }

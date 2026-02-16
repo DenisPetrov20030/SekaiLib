@@ -1,5 +1,6 @@
 import { axiosInstance } from './client';
 import type { Review, TitleRating } from '../types';
+import type { ReviewComment } from '../types';
 import type { ReactionType } from '../types/enums';
 
 export interface CreateReviewRequest {
@@ -14,6 +15,11 @@ export interface UpdateReviewRequest {
 
 export interface SetRatingRequest {
   type: ReactionType;
+}
+
+export interface CreateReviewCommentRequest {
+  content: string;
+  parentCommentId?: string;
 }
 
 export const reviewsApi = {
@@ -43,6 +49,27 @@ export const reviewsApi = {
 
   removeReaction: async (titleId: string, reviewId: string): Promise<void> => {
     await axiosInstance.delete(`/titles/${titleId}/reviews/${reviewId}/reactions`);
+  },
+
+  addComment: async (titleId: string, reviewId: string, data: CreateReviewCommentRequest): Promise<ReviewComment> => {
+    const response = await axiosInstance.post<ReviewComment>(`/titles/${titleId}/reviews/${reviewId}/comments`, data);
+    return response.data;
+  },
+
+  setCommentReaction: async (titleId: string, reviewId: string, commentId: string, data: SetRatingRequest): Promise<ReviewComment> => {
+    const response = await axiosInstance.post<ReviewComment>(`/titles/${titleId}/reviews/${reviewId}/comments/${commentId}/reactions`, data);
+    return response.data;
+  },
+
+  removeCommentReaction: async (titleId: string, reviewId: string, commentId: string): Promise<void> => {
+    await axiosInstance.delete(`/titles/${titleId}/reviews/${reviewId}/comments/${commentId}/reactions`);
+  },
+  deleteComment: async (titleId: string, reviewId: string, commentId: string): Promise<void> => {
+    await axiosInstance.delete(`/titles/${titleId}/reviews/${reviewId}/comments/${commentId}`);
+  },
+  updateComment: async (titleId: string, reviewId: string, commentId: string, data: { content: string }): Promise<ReviewComment> => {
+    const response = await axiosInstance.put<ReviewComment>(`/titles/${titleId}/reviews/${reviewId}/comments/${commentId}`, data);
+    return response.data;
   },
 };
 

@@ -88,6 +88,67 @@ public class ReviewsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{reviewId}/comments")]
+    [Authorize]
+    public async Task<ActionResult<ReviewCommentResponse>> AddComment(Guid titleId, Guid reviewId, [FromBody] CreateReviewCommentRequest request)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized();
+
+        var comment = await _reviewService.AddCommentAsync(userId.Value, reviewId, request);
+        return Ok(comment);
+    }
+
+    [HttpPost("{reviewId}/comments/{commentId}/reactions")]
+    [Authorize]
+    public async Task<ActionResult<ReviewCommentResponse>> SetCommentReaction(Guid titleId, Guid reviewId, Guid commentId, [FromBody] SetRatingRequest request)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized();
+
+        var comment = await _reviewService.SetCommentReactionAsync(userId.Value, commentId, request.Type);
+        return Ok(comment);
+    }
+
+    [HttpDelete("{reviewId}/comments/{commentId}/reactions")]
+    [Authorize]
+    public async Task<ActionResult> RemoveCommentReaction(Guid titleId, Guid reviewId, Guid commentId)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized();
+
+        await _reviewService.RemoveCommentReactionAsync(userId.Value, commentId);
+        return NoContent();
+    }
+
+    [HttpDelete("{reviewId}/comments/{commentId}")]
+    [Authorize]
+    public async Task<ActionResult> DeleteComment(Guid titleId, Guid reviewId, Guid commentId)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized();
+
+        var isAdmin = User.IsInRole(UserRole.Administrator.ToString()) || User.IsInRole(UserRole.Moderator.ToString());
+        await _reviewService.DeleteCommentAsync(userId.Value, commentId, isAdmin);
+        return NoContent();
+    }
+
+    [HttpPut("{reviewId}/comments/{commentId}")]
+    [Authorize]
+    public async Task<ActionResult<ReviewCommentResponse>> UpdateComment(Guid titleId, Guid reviewId, Guid commentId, [FromBody] UpdateReviewCommentRequest request)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized();
+
+        var updated = await _reviewService.UpdateCommentAsync(userId.Value, commentId, request);
+        return Ok(updated);
+    }
+
     private Guid? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
