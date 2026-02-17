@@ -12,10 +12,23 @@ export const UserListPage = () => {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    axiosInstance.get(`/UserLists/${id}`)
-      .then(res => setList(res.data))
-      .catch(() => setList(null))
-      .finally(() => setLoading(false));
+    const load = async () => {
+      try {
+        const res = await axiosInstance.get(`/userlists/public/${id}`);
+        setList(res.data);
+      } catch (e) {
+        try {
+          // Фолбэк: якщо публічний шлях не знайшов, спробуємо авторизований для власника
+          const res2 = await axiosInstance.get(`/userlists/${id}`);
+          setList(res2.data);
+        } catch {
+          setList(null);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, [id]);
 
   if (loading) return <div className="text-center py-12">Завантаження...</div>;

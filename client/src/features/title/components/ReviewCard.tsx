@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../../app/store/hooks';
 import type { Review, ReviewComment } from '../../../core/types';
 import { ReactionType } from '../../../core/types/enums';
@@ -148,14 +149,18 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
         <div className="flex items-start gap-3">
           <div className="w-8 h-8 rounded-full bg-surface-600 flex items-center justify-center">
             {comment.avatarUrl ? (
-              <img src={comment.avatarUrl} alt={comment.username} className="w-8 h-8 rounded-full" />
+              <Link to={`/users/${comment.userId}`}>
+                <img src={comment.avatarUrl} alt={comment.username} className="w-8 h-8 rounded-full" />
+              </Link>
             ) : (
-              <span className="text-sm font-medium text-text-primary">{comment.username[0].toUpperCase()}</span>
+              <Link to={`/users/${comment.userId}`} className="text-sm font-medium text-text-primary hover:underline">
+                {comment.username[0].toUpperCase()}
+              </Link>
             )}
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-text-primary">{comment.username}</span>
+              <Link to={`/users/${comment.userId}`} className="text-sm font-medium text-text-primary hover:underline">{comment.username}</Link>
               <span className="text-xs text-text-muted">{formatRelativeTime(comment.createdAt)}</span>
             </div>
             {!isEditing ? (
@@ -389,19 +394,21 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-surface-600 flex items-center justify-center">
             {currentReview.avatarUrl ? (
-              <img
-                src={currentReview.avatarUrl}
-                alt={currentReview.username}
-                className="w-10 h-10 rounded-full"
-              />
+              <Link to={`/users/${currentReview.userId}`}>
+                <img
+                  src={currentReview.avatarUrl}
+                  alt={currentReview.username}
+                  className="w-10 h-10 rounded-full"
+                />
+              </Link>
             ) : (
-              <span className="text-lg font-medium text-text-primary">
+              <Link to={`/users/${currentReview.userId}`} className="text-lg font-medium text-text-primary hover:underline">
                 {currentReview.username[0].toUpperCase()}
-              </span>
+              </Link>
             )}
           </div>
           <div>
-            <p className="font-medium text-text-primary">{currentReview.username}</p>
+            <Link to={`/users/${currentReview.userId}`} className="font-medium text-text-primary hover:underline">{currentReview.username}</Link>
             <p className="text-sm text-text-muted">
               {new Date(currentReview.createdAt).toLocaleDateString()}
             </p>

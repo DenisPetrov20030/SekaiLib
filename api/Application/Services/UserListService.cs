@@ -87,4 +87,30 @@ public class UserListService // Додав інтерфейс, якщо він �
 
         return dto;
     }
+
+    public async Task<UserListDto?> GetUserListByIdPublicAsync(Guid listId)
+    {
+        var list = await _unitOfWork.UserLists.GetUserListWithTitlesByIdAsync(listId);
+        if (list == null) return null;
+
+        var dto = new UserListDto(
+            list.Id,
+            list.Name,
+            list.UserId,
+            list.Description,
+            list.ReadingListItems.Count(ri => ri.Title != null),
+            list.CreatedAt,
+            list.ReadingListItems
+                .Where(ri => ri.Title != null)
+                .Select(ri => new ReadingListTitleDto(
+                    ri.Title.Id,
+                    ri.Title.Name,
+                    ri.Title.Author,
+                    ri.Title.CoverImageUrl,
+                    ri.Title.Status
+                )).ToList()
+        );
+
+        return dto;
+    }
 }

@@ -1,13 +1,24 @@
 using Microsoft.EntityFrameworkCore;
 using SekaiLib.Presentation.Extensions;
 using SekaiLib.Infrastructure.Persistence;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    // Map IFormFile to file upload schema to avoid Swagger generation errors
+    c.MapType<IFormFile>(() => new Microsoft.OpenApi.Models.OpenApiSchema
+    {
+        Type = "string",
+        Format = "binary"
+    });
+});
 
+// Real-time messaging
+builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -76,9 +87,26 @@ app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 
+// Serve static files (for uploaded avatars, covers, etc.)
+app.UseStaticFiles();
+
+var uploadsRoot = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+    "SekaiLib",
+    "uploads");
+Directory.CreateDirectory(uploadsRoot);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsRoot),
+    RequestPath = "/uploads"
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// SignalR hubs
+app.MapHub<SekaiLib.Presentation.Hubs.ChatHub>("/hubs/chat");
 
 app.Run();

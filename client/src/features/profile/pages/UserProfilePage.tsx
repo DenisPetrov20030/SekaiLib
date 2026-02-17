@@ -1,23 +1,31 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usersApi } from '../../../core/api';
 import { TitleCard } from '../../catalog/components/TitleCard';
 import { Pagination } from '../../catalog/components/Pagination';
-import type { UserProfile } from '../../../core/api/users';
+import { Button } from '../../../shared/components';
+import { ROUTES } from '../../../core/constants';
+import type { UserProfile } from '../../../core/types';
 import type { TitleDto } from '../../../core/types/dtos';
 import type { PagedResponse } from '../../../core/types';
+import type { UserList } from '../../../core/types';
 
 export const UserProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [titles, setTitles] = useState<PagedResponse<TitleDto> | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [lists, setLists] = useState<UserList[]>([]);
+  const [listsLoading, setListsLoading] = useState(true);
+  const [listsError, setListsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (userId) {
       loadProfile();
       loadTitles(1);
+      loadCustomLists();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
@@ -28,6 +36,21 @@ export const UserProfilePage = () => {
       setProfile(data);
     } catch (error) {
       console.error('Failed to load profile:', error);
+    }
+  };
+
+  const loadCustomLists = async () => {
+    try {
+      setListsLoading(true);
+      setListsError(null);
+      const data = await usersApi.getUserCustomLists(userId!);
+      setLists(data);
+    } catch (e) {
+      console.error('Не вдалося завантажити списки користувача:', e);
+      setListsError('Не вдалося завантажити списки користувача');
+      setLists([]);
+    } finally {
+      setListsLoading(false);
     }
   };
 
@@ -57,7 +80,8 @@ export const UserProfilePage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="bg-surface rounded-lg p-6 mb-8">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
           {profile.avatarUrl ? (
             <img
               src={profile.avatarUrl}
@@ -78,7 +102,45 @@ export const UserProfilePage = () => {
               На сайті з {new Date(profile.createdAt).toLocaleDateString('uk-UA')}
             </p>
           </div>
+          </div>
+          <div className="shrink-0">
+            <Link to={`/users/${userId}/reading-lists`}>
+              <Button>Перейти до списків</Button>
+            </Link>
+            <div className="mt-2">
+              <Button variant="primary" onClick={() => navigate(`/messages/to/${userId}`)}>Написати повідомлення</Button>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-text-primary mb-4">Списки користувача</h2>
+        {listsLoading ? (
+          <div className="text-text-muted">Завантаження...</div>
+        ) : listsError ? (
+          <div className="text-red-500">{listsError}</div>
+        ) : lists.length === 0 ? (
+          <div className="text-text-muted">Списків поки немає</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {lists.map((list) => (
+              <Link
+                key={list.id}
+                to={`/user-lists/${list.id}`}
+                className="p-4 bg-surface-800 rounded-lg border border-surface-700 hover:border-primary-500 transition-colors group"
+              >
+                <div className="flex justify-between items-start">
+                  <h3 className="font-semibold text-text-primary group-hover:text-primary-500">{list.name}</h3>
+                  <span className="text-xs bg-surface-700 px-2 py-0.5 rounded">{list.titlesCount ?? 0} творів</span>
+                </div>
+                {list.description && (
+                  <p className="text-text-muted text-sm mt-2 line-clamp-1">{list.description}</p>
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="mb-6">
@@ -118,6 +180,7 @@ export const UserProfilePage = () => {
           <p className="text-text-muted">Користувач ще не опублікував жодного твору</p>
         </div>
       )}
+
     </div>
   );
 };

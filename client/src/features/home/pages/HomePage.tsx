@@ -71,10 +71,23 @@ export const HomePage = () => {
         // Підпишемося на кастомне подія із ReaderPage
         window.addEventListener('reading-progress-updated', onFocus);
 
+        const onAuthChanged = (e: Event) => {
+            const ev = e as CustomEvent<{ token: string | null }>;
+            // Якщо розлогін — очищаємо прогрес; якщо логін — перечитуємо
+            if (!ev.detail?.token) {
+                setReadingProgress([]);
+            } else {
+                refreshProgress();
+            }
+        };
+
+        window.addEventListener('auth-token-changed', onAuthChanged as EventListener);
+
         return () => {
             window.removeEventListener('focus', onFocus);
             document.removeEventListener('visibilitychange', onVisibility);
             window.removeEventListener('reading-progress-updated', onFocus);
+            window.removeEventListener('auth-token-changed', onAuthChanged as EventListener);
         };
     }, []);
 

@@ -137,3 +137,27 @@ export interface UpdateChapterRequest {
   content: string;
   isPremium: boolean;
 }
+
+// Messaging DTOs
+export interface SendMessageRequest {
+  text: string;
+}
+
+export interface MessageDto {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface ConversationDto {
+  id: string;
+  otherUserId: string;
+  otherUsername: string;
+  otherAvatarUrl?: string | null;
+  lastMessageText?: string | null;
+  lastMessageSenderId?: string | null;
+  lastMessageAt?: string | null;
+  unreadCount: number;
+}

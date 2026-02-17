@@ -17,7 +17,6 @@ public class UsersController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITitleService _titleService;
-
     public UsersController(IUnitOfWork unitOfWork, ITitleService titleService)
     {
         _unitOfWork = unitOfWork;
@@ -216,4 +215,43 @@ public async Task<IActionResult> ClearReadingProgressForTitle(Guid titleId)
     // Допоміжний клас для запиту (можна додати в кінець файлу контролера)
     public record UpdateProgressRequest(Guid TitleId, int ChapterNumber, int Page);
 
+    [Authorize]
+    [HttpPost("me/avatar")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+    {
+        if (avatar == null || avatar.Length == 0)
+            return BadRequest("Файл аватару відсутній або порожній.");
+
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null) return NotFound();
+
+        var uploadsRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "SekaiLib",
+            "uploads",
+            "avatars");
+        if (!Directory.Exists(uploadsRoot)) Directory.CreateDirectory(uploadsRoot);
+
+        var ext = Path.GetExtension(avatar.FileName).ToLowerInvariant();
+        var allowed = new[] { ".png", ".jpg", ".jpeg", ".webp" };
+        if (!allowed.Contains(ext)) return BadRequest("Підтримуються лише PNG/JPG/JPEG/WEBP.");
+
+        var fileName = $"{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(uploadsRoot, fileName);
+        using (var stream = System.IO.File.Create(filePath))
+        {
+            await avatar.CopyToAsync(stream);
+        }
+
+        // Build absolute URL
+        var request = HttpContext.Request;
+        var baseUrl = $"{request.Scheme}://{request.Host}";
+        var relativePath = $"/uploads/avatars/{fileName}";
+        user.AvatarUrl = baseUrl + relativePath;
+
+        await _unitOfWork.SaveChangesAsync();
+        return Ok(new { avatarUrl = user.AvatarUrl });
+    }
 }

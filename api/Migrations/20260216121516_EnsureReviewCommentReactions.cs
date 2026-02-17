@@ -10,7 +10,30 @@ namespace SekaiLib.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Create missing table for ReviewCommentReactions
+            // Ensure parent table exists before creating FK from ReviewCommentReactions.
+            migrationBuilder.Sql(@"
+                CREATE TABLE IF NOT EXISTS ""ReviewComments"" (
+                    ""Id"" uuid NOT NULL,
+                    ""ReviewId"" uuid NOT NULL,
+                    ""UserId"" uuid NOT NULL,
+                    ""Content"" text NOT NULL,
+                    ""CreatedAt"" timestamp with time zone NOT NULL,
+                    CONSTRAINT ""PK_ReviewComments"" PRIMARY KEY (""Id""),
+                    CONSTRAINT ""FK_ReviewComments_Reviews_ReviewId"" FOREIGN KEY (""ReviewId"") REFERENCES ""Reviews"" (""Id"") ON DELETE CASCADE,
+                    CONSTRAINT ""FK_ReviewComments_Users_UserId"" FOREIGN KEY (""UserId"") REFERENCES ""Users"" (""Id"") ON DELETE CASCADE
+                );
+            ");
+
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_ReviewComments_ReviewId""
+                ON ""ReviewComments"" (""ReviewId"");
+            ");
+
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_ReviewComments_UserId""
+                ON ""ReviewComments"" (""UserId"");
+            ");
+
             migrationBuilder.CreateTable(
                 name: "ReviewCommentReactions",
                 columns: table => new

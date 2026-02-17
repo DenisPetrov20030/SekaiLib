@@ -3,7 +3,7 @@ import type { User, UserStatistics, UpdateProfileRequest } from '../../../core/t
 
 export const profileApi = {
   getProfile: async (): Promise<User> => {
-    const response = await axiosInstance.get<User>('/users/profile');
+    const response = await axiosInstance.get<User>('/users/me');
     return response.data;
   },
 

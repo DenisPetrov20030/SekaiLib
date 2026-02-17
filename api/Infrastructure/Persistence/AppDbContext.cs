@@ -27,6 +27,9 @@ public class AppDbContext : DbContext
     public DbSet<ChapterCommentReaction> ChapterCommentReactions { get; set; }
     public DbSet<TitleRating> TitleRatings { get; set; }
     public DbSet<UserReadingProgress> UserReadingProgresses { get; set; }
+    public DbSet<Conversation> Conversations { get; set; }
+    public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
+    public DbSet<Message> Messages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
@@ -103,6 +106,38 @@ public class AppDbContext : DbContext
         entity.HasOne(r => r.User)
             .WithMany()
             .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    // Messaging: conversations, participants, messages
+    modelBuilder.Entity<Conversation>(entity =>
+    {
+        entity.HasMany(c => c.Participants)
+            .WithOne(p => p.Conversation)
+            .HasForeignKey(p => p.ConversationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasMany(c => c.Messages)
+            .WithOne(m => m.Conversation)
+            .HasForeignKey(m => m.ConversationId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<ConversationParticipant>(entity =>
+    {
+        entity.HasIndex(p => new { p.ConversationId, p.UserId }).IsUnique();
+
+        entity.HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<Message>(entity =>
+    {
+        entity.HasOne(m => m.Sender)
+            .WithMany()
+            .HasForeignKey(m => m.SenderId)
             .OnDelete(DeleteBehavior.Cascade);
     });
 }

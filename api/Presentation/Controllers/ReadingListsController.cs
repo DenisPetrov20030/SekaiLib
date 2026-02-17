@@ -26,6 +26,15 @@ public class ReadingListsController : ControllerBase
         return Ok(lists);
     }
 
+    // Публічний перегляд стандартних списків іншого користувача
+    [AllowAnonymous]
+    [HttpGet("by-user/{userId:guid}")]
+    public async Task<ActionResult<IEnumerable<ReadingListDto>>> GetUserListsByUser(Guid userId)
+    {
+        var lists = await _readingListService.GetUserListsAsync(userId);
+        return Ok(lists);
+    }
+
     [HttpGet("{titleId}/status")]
     public async Task<ActionResult<ReadingStatusResponse>> GetTitleStatus(Guid titleId)
     {

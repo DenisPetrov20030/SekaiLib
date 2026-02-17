@@ -103,8 +103,15 @@ class ApiClient {
     this.accessToken = token;
     if (token) {
       storage.set(ACCESS_TOKEN_STORAGE_KEY, token);
+      // Повідомляємо додаток про зміну токена, щоб оновити авторизовані дані
+      try {
+        window.dispatchEvent(new CustomEvent('auth-token-changed', { detail: { token } }));
+      } catch {}
     } else {
       storage.remove(ACCESS_TOKEN_STORAGE_KEY);
+      try {
+        window.dispatchEvent(new CustomEvent('auth-token-changed', { detail: { token: null } }));
+      } catch {}
     }
   }
 
@@ -112,6 +119,9 @@ class ApiClient {
     this.accessToken = null;
     storage.remove(TOKEN_STORAGE_KEY);
     storage.remove(ACCESS_TOKEN_STORAGE_KEY);
+    try {
+      window.dispatchEvent(new CustomEvent('auth-token-changed', { detail: { token: null } }));
+    } catch {}
   }
 
   getClient(): AxiosInstance {

@@ -11,49 +11,27 @@ namespace SekaiLib.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "ReviewComments",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ReviewId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Content = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ReviewComments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ReviewComments_Reviews_ReviewId",
-                        column: x => x.ReviewId,
-                        principalTable: "Reviews",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ReviewComments_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_ReviewComments_ReviewId""
+                ON ""ReviewComments"" (""ReviewId"");
+            ");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ReviewComments_ReviewId",
-                table: "ReviewComments",
-                column: "ReviewId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ReviewComments_UserId",
-                table: "ReviewComments",
-                column: "UserId");
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS ""IX_ReviewComments_UserId""
+                ON ""ReviewComments"" (""UserId"");
+            ");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "ReviewComments");
+            migrationBuilder.Sql(@"
+                DROP INDEX IF EXISTS ""IX_ReviewComments_ReviewId"";
+            ");
+
+            migrationBuilder.Sql(@"
+                DROP INDEX IF EXISTS ""IX_ReviewComments_UserId"";
+            ");
         }
     }
 }

@@ -20,6 +20,9 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<TranslationTeam> TranslationTeams { get; }
     public IRepository<RefreshToken> RefreshTokens { get; }
     public IUserListRepository UserLists { get; } 
+    private IRepository<Conversation>? _conversations;
+    private IRepository<ConversationParticipant>? _conversationParticipants;
+    private IRepository<Message>? _messages;
     
     public UnitOfWork(
         AppDbContext context,
@@ -51,6 +54,15 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<UserReadingProgress>? _userReadingProgresses;
     public IRepository<UserReadingProgress> UserReadingProgresses =>
         _userReadingProgresses ??= new Repository<UserReadingProgress>(_context);
+
+    public IRepository<Conversation> Conversations =>
+        _conversations ??= new Repository<Conversation>(_context);
+
+    public IRepository<ConversationParticipant> ConversationParticipants =>
+        _conversationParticipants ??= new Repository<ConversationParticipant>(_context);
+
+    public IRepository<Message> Messages =>
+        _messages ??= new Repository<Message>(_context);
 
     public async Task<int> SaveChangesAsync()
     {

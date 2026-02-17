@@ -16,7 +16,10 @@
       "launchUrl": "swagger",
       "applicationUrl": "http://localhost:5284",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_MODIFIABLE_ASSEMBLIES": "0",
+        "DOTNET_WATCH_SUPPRESS_BROWSER_REFRESH": "1",
+        "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": ""
       }
     },
     "https": {
@@ -26,7 +29,10 @@
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:7054;http://localhost:5284",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_MODIFIABLE_ASSEMBLIES": "0",
+        "DOTNET_WATCH_SUPPRESS_BROWSER_REFRESH": "1",
+        "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": ""
       }
     },
     "IIS Express": {
@@ -34,7 +40,10 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_MODIFIABLE_ASSEMBLIES": "0",
+        "DOTNET_WATCH_SUPPRESS_BROWSER_REFRESH": "1",
+        "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": ""
       }
     }
   }

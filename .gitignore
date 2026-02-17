@@ -41,3 +41,4 @@ coverage/
 bin/
 obj/
 .env.*
+api/wwwroot/avatars/

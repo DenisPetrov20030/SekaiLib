@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import { MainLayout, ProtectedRoute } from '../../shared/components';
 import { RegisterPage } from '../../features/auth/pages';
 import { CatalogPage } from '../../features/catalog/pages';
@@ -6,8 +6,11 @@ import { TitleDetailsPage, CreateTitlePage } from '../../features/title/pages';
 import { ChapterEditorPage } from '../../features/chapter';
 import { ReaderPage } from '../../features/reader/pages';
 import { ReadingListsPage } from '../../features/reading-lists/pages';
+import { UserReadingListsPage } from '../../features/reading-lists/pages/UserReadingListsPage';
 import { UserListPage } from '../../features/userlists/pages/UserListPage';
+import { UserCustomListsPage } from '../../features/userlists/pages/UserCustomListsPage';
 import { ProfilePage, UserProfilePage } from '../../features/profile/pages';
+import { ChatPage } from '../../features/messages/pages/ChatPage';
 import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage } from '../../features/admin';
 import { ROUTES } from '../../core/constants';
 import { HomePage } from '../../features/home/pages/HomePage.tsx';
@@ -36,6 +39,14 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.USER_PROFILE,
         element: <UserProfilePage />,
+      },
+      {
+        path: '/users/:userId/reading-lists',
+        element: <UserReadingListsPage />,
+      },
+      {
+        path: '/users/:userId/lists',
+        element: <UserCustomListsPage />,
       },
       {
         path: ROUTES.READER,
@@ -71,6 +82,14 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.PROFILE,
             element: <ProfilePage />,
+          },
+          {
+            path: ROUTES.MESSAGES,
+            element: <ChatPage />,
+          },
+          {
+            path: ROUTES.DIRECT_MESSAGE,
+            element: <ChatPage />,
           },
         ],
       },

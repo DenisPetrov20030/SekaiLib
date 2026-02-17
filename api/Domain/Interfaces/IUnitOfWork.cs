@@ -17,5 +17,8 @@ public interface IUnitOfWork
     IRepository<RefreshToken> RefreshTokens { get; }
     IUserListRepository UserLists { get; }
     IRepository<UserReadingProgress> UserReadingProgresses { get; }
+    IRepository<Conversation> Conversations { get; }
+    IRepository<ConversationParticipant> ConversationParticipants { get; }
+    IRepository<Message> Messages { get; }
     Task<int> SaveChangesAsync();
 }

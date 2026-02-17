@@ -3,9 +3,11 @@ using SekaiLib.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
+namespace SekaiLib.Presentation.Controllers;
+
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/userlists")]
 public class UserListsController : ControllerBase
 {
     private readonly UserListService _service;
@@ -27,11 +29,29 @@ public class UserListsController : ControllerBase
         return Ok(lists);
     }
 
+    [AllowAnonymous]
+    [HttpGet("by-user/{userId:guid}")]
+    public async Task<IActionResult> GetListsByUser(Guid userId)
+    {
+        var lists = await _service.GetUserListsAsync(userId);
+        return Ok(lists);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(Guid id)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var list = await _service.GetUserListByIdAsync(userId, id);
+        if (list == null) return NotFound();
+        return Ok(list);
+    }
+
+    // Публічний перегляд кастомного списку за id (без прив'язки до власника)
+    [AllowAnonymous]
+    [HttpGet("public/{id:guid}")]
+    public async Task<IActionResult> GetPublic(Guid id)
+    {
+        var list = await _service.GetUserListByIdPublicAsync(id);
         if (list == null) return NotFound();
         return Ok(list);
     }

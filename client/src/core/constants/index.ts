@@ -18,6 +18,8 @@ export const ROUTES = {
   PROFILE: '/profile',
   USER_LIST: '/user-lists/:id',
   USER_PROFILE: '/users/:userId',
+  MESSAGES: '/messages',
+  DIRECT_MESSAGE: '/messages/to/:userId',
   ADMIN: '/admin',
   ADMIN_TITLES: '/admin/titles',
   ADMIN_TITLE_EDIT: '/admin/titles/:id',

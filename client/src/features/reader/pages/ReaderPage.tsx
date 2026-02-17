@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchChapterContent, setTheme, setFontSize } from '../store';
 import { ReaderTheme, ReaderFontSize, ReaderWidth } from '../../../core/types';
@@ -538,20 +537,22 @@ function CommentItem({ comment, chapterId, theme, onDelete }: { comment: ReviewC
       <div className="flex items-start gap-3">
         <div className="w-8 h-8 rounded-full bg-surface-600 flex items-center justify-center overflow-hidden">
           {localComment.avatarUrl ? (
-            <img
-              src={localComment.avatarUrl}
-              alt={localComment.username}
-              className="w-8 h-8 rounded-full object-cover"
-            />
+            <Link to={`/users/${localComment.userId}`}>
+              <img
+                src={localComment.avatarUrl}
+                alt={localComment.username}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            </Link>
           ) : (
-            <span className={`text-sm font-medium ${txt.name}`}>
+            <Link to={`/users/${localComment.userId}`} className={`text-sm font-medium ${txt.name} hover:underline`}>
               {localComment.username?.[0]?.toUpperCase()}
-            </span>
+            </Link>
           )}
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className={`text-sm font-medium ${txt.name}`}>{localComment.username}</span>
+            <Link to={`/users/${localComment.userId}`} className={`text-sm font-medium ${txt.name} hover:underline`}>{localComment.username}</Link>
             <span className={`text-xs ${txt.time}`}>{formatRelativeTime(localComment.createdAt)}</span>
           </div>
           {!isEditing ? (

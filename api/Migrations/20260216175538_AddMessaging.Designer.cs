@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SekaiLib.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using SekaiLib.Infrastructure.Persistence;
 namespace SekaiLib.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260216175538_AddMessaging")]
+    partial class AddMessaging
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -232,6 +235,9 @@ namespace SekaiLib.Migrations
                     b.Property<Guid>("TitleId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("TitleId1")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -244,6 +250,8 @@ namespace SekaiLib.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("TitleId");
+
+                    b.HasIndex("TitleId1");
 
                     b.HasIndex("UserListId");
 
@@ -761,10 +769,14 @@ namespace SekaiLib.Migrations
             modelBuilder.Entity("SekaiLib.Domain.Entities.ReadingList", b =>
                 {
                     b.HasOne("SekaiLib.Domain.Entities.Title", "Title")
-                        .WithMany("ReadingListEntries")
+                        .WithMany()
                         .HasForeignKey("TitleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("SekaiLib.Domain.Entities.Title", null)
+                        .WithMany("ReadingListEntries")
+                        .HasForeignKey("TitleId1");
 
                     b.HasOne("SekaiLib.Domain.Entities.User", "User")
                         .WithMany("ReadingLists")

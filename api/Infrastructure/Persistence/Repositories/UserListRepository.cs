@@ -20,4 +20,13 @@ public class UserListRepository : Repository<UserList>, IUserListRepository
             .Where(x => x.UserId == userId)
             .ToListAsync();
     }
+
+    public async Task<UserList?> GetUserListWithTitlesByIdAsync(Guid listId)
+    {
+        return await _context.UserLists
+            .AsNoTracking()
+            .Include(x => x.ReadingListItems)
+                .ThenInclude(rl => rl.Title)
+            .FirstOrDefaultAsync(x => x.Id == listId);
+    }
 }

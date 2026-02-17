@@ -18,7 +18,7 @@ public class ReadingListConfiguration : IEntityTypeConfiguration<ReadingList>
             .HasForeignKey(rl => rl.UserId);
 
         builder.HasOne(rl => rl.Title)
-            .WithMany()
+            .WithMany(t => t.ReadingListEntries)
             .HasForeignKey(rl => rl.TitleId);
     }
 }
