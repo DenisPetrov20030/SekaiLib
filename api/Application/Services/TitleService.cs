@@ -1,6 +1,7 @@
 using SekaiLib.Application.DTOs;
 using SekaiLib.Application.DTOs.Titles;
 using SekaiLib.Application.DTOs.Chapters;
+using SekaiLib.Application.DTOs.Notifications;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Application.Exceptions;
 using SekaiLib.Application.Common;
@@ -15,10 +16,12 @@ namespace SekaiLib.Application.Services;
 public class TitleService : ITitleService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationService _notifications;
 
-    public TitleService(IUnitOfWork unitOfWork)
+    public TitleService(IUnitOfWork unitOfWork, INotificationService notifications)
     {
         _unitOfWork = unitOfWork;
+        _notifications = notifications;
     }
 
     public async Task<PagedResponse<TitleDto>> GetCatalogAsync(CatalogFilterDto filter, int page, int pageSize)
@@ -150,6 +153,8 @@ public class TitleService : ITitleService
         if (title.PublisherId != userId && user.Role != UserRole.Administrator)
             throw new ForbiddenException();
 
+        var previousStatus = title.Status;
+
         title.Name = request.Name;
         title.Author = request.Author;
         title.Description = request.Description;
@@ -175,6 +180,28 @@ public class TitleService : ITitleService
 
         await _unitOfWork.Titles.UpdateAsync(title);
         await _unitOfWork.SaveChangesAsync();
+
+        if (previousStatus != TitleStatus.Completed && title.Status == TitleStatus.Completed)
+        {
+            var followerIds = await _unitOfWork.ReadingLists.Query()
+                .Where(rl => rl.TitleId == titleId)
+                .Select(rl => rl.UserId)
+                .Distinct()
+                .ToListAsync();
+
+            foreach (var followerId in followerIds.Where(id => id != userId))
+            {
+                await _notifications.CreateAsync(new CreateNotificationRequest(
+                    followerId,
+                    NotificationType.TitleCompleted,
+                    "Тайтл завершено",
+                    $"{title.Name} отримав статус завершено",
+                    $"/titles/{titleId}",
+                    userId,
+                    titleId
+                ));
+            }
+        }
 
         return await GetByIdAsync(title.Id);
     }

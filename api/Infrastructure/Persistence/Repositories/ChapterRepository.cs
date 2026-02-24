@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SekaiLib.Domain.Entities;
 using SekaiLib.Domain.Interfaces.Repositories;
 
@@ -33,7 +33,6 @@ public class ChapterRepository : Repository<Chapter>, IChapterRepository
             .FirstOrDefaultAsync(c => c.TitleId == titleId && c.Number == number);
     }
 
-    // Chapter comments
     public async Task<IEnumerable<ChapterComment>> GetCommentsByChapterIdAsync(Guid chapterId)
     {
         return await _context.ChapterComments

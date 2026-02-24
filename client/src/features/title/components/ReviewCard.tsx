@@ -145,7 +145,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
       setShowChildReply(false);
     };
     return (
-      <div className="flex flex-col gap-2">
+      <div id={`comment-${comment.id}`} className="flex flex-col gap-2 p-2 rounded-lg transition-all duration-500">
         <div className="flex items-start gap-3">
           <div className="w-8 h-8 rounded-full bg-surface-600 flex items-center justify-center">
             {comment.avatarUrl ? (

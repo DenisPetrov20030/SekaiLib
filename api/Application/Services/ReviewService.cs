@@ -1,4 +1,5 @@
-using SekaiLib.Application.DTOs.Reviews;
+﻿using SekaiLib.Application.DTOs.Reviews;
+using SekaiLib.Application.DTOs.Notifications;
 using SekaiLib.Application.Exceptions;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Domain.Entities;
@@ -11,10 +12,12 @@ namespace SekaiLib.Application.Services;
 public class ReviewService : IReviewService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationService _notifications;
 
-    public ReviewService(IUnitOfWork unitOfWork)
+    public ReviewService(IUnitOfWork unitOfWork, INotificationService notifications)
     {
         _unitOfWork = unitOfWork;
+        _notifications = notifications;
     }
 
     public async Task<IEnumerable<ReviewResponse>> GetByTitleAsync(Guid titleId, Guid? currentUserId)
@@ -152,7 +155,6 @@ public class ReviewService : IReviewService
             ? review.Reactions?.FirstOrDefault(r => r.UserId == currentUserId.Value)?.Type
             : null;
 
-        // Build nested comments tree
         var allComments = (review.Comments ?? new List<ReviewComment>())
             .OrderByDescending(c => c.CreatedAt)
             .ToList();
@@ -227,8 +229,35 @@ public class ReviewService : IReviewService
         await _unitOfWork.Reviews.AddCommentAsync(comment);
         await _unitOfWork.SaveChangesAsync();
 
-        // Load user to populate response
         var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (comment.ParentCommentId.HasValue && user != null)
+        {
+            var parent = await _unitOfWork.Reviews.GetCommentByIdAsync(comment.ParentCommentId.Value);
+            if (parent != null && parent.UserId != userId)
+            {
+                await _notifications.CreateAsync(new CreateNotificationRequest(
+                    parent.UserId,
+                    NotificationType.CommentReply,
+                    "Відповідь на коментар",
+                    $"{user.Username} відповів(ла) на ваш коментар",
+                    $"/titles/{review.TitleId}#comment-{comment.Id}",
+                    userId,
+                    review.TitleId
+                ));
+            }
+        }
+        else if (!comment.ParentCommentId.HasValue && user != null && review.UserId != userId)
+        {
+            await _notifications.CreateAsync(new CreateNotificationRequest(
+                review.UserId,
+                NotificationType.CommentReply,
+                "Новий коментар до рецензії",
+                $"{user.Username} відповів(ла) на вашу рецензію",
+                $"/titles/{review.TitleId}#comment-{comment.Id}",
+                userId,
+                review.TitleId
+            ));
+        }
         return new ReviewCommentResponse(
             comment.Id,
             comment.UserId,
@@ -278,7 +307,6 @@ public class ReviewService : IReviewService
 
     public async Task<ReviewCommentResponse> SetCommentReactionAsync(Guid userId, Guid commentId, ReactionType type)
     {
-        // Fetch single comment by id via repository query
         var entity = await _unitOfWork.Reviews.Query()
             .SelectMany(r => r.Comments)
             .FirstOrDefaultAsync(c => c.Id == commentId);

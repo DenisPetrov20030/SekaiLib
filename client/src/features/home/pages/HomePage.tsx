@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
@@ -12,7 +12,6 @@ export const HomePage = () => {
     const navigate = useNavigate();
     const [latestChapters, setLatestChapters] = useState<any[]>([]);
     const [latestTitles, setLatestTitles] = useState<any[]>([]);
-    // Додаємо стан для прогресу читання
     const [readingProgress, setReadingProgress] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -21,11 +20,11 @@ export const HomePage = () => {
     };
 
     const getCountryLabel = (country?: string) => {
-        if (!country) return 'Інше';
+        if (!country) return 'інше';
         const c = country.toLowerCase();
-        if (c.includes('korea') || c.includes('коре')) return 'Південна Корея';
-        if (c.includes('japan') || c.includes('япон')) return 'Японія';
-        if (c.includes('china') || c.includes('кит')) return 'Китай';
+        if (c.includes('korea') || c.includes('корея')) return 'Південна Корея';
+        if (c.includes('japan') || c.includes('японія')) return 'Японія';
+        if (c.includes('china') || c.includes('китай')) return 'Китай';
         return 'Інше';
     };
 
@@ -33,11 +32,9 @@ export const HomePage = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                // Додаємо запит до API для отримання прогресу (якщо користувач авторизований)
                 const [chaptersRes, titlesRes, progressRes] = await Promise.all([
                     axios.get('https://localhost:7054/api/titles/latest-chapters'),
                     axios.get('https://localhost:7054/api/titles/latest'),
-                    // ВАЖЛИВО: використовуємо авторизований клієнт для токена
                     apiClient.get('/users/reading-progress').catch(() => ({ data: [] as any[] }))
                 ]);
 
@@ -56,24 +53,19 @@ export const HomePage = () => {
                 const res = await apiClient.get('/users/reading-progress');
                 setReadingProgress(Array.isArray(res.data) ? res.data : []);
             } catch (e) {
-                // ігноруємо якщо неавторизований
             }
         };
 
         fetchData();
 
-        // Додатково підписуємося на повернення фокусу/видимість сторінки,
-        // щоб прогрес оновлювався після виходу з рідера
         const onFocus = () => refreshProgress();
         const onVisibility = () => { if (document.visibilityState === 'visible') refreshProgress(); };
         window.addEventListener('focus', onFocus);
         document.addEventListener('visibilitychange', onVisibility);
-        // Підпишемося на кастомне подія із ReaderPage
         window.addEventListener('reading-progress-updated', onFocus);
 
         const onAuthChanged = (e: Event) => {
             const ev = e as CustomEvent<{ token: string | null }>;
-            // Якщо розлогін — очищаємо прогрес; якщо логін — перечитуємо
             if (!ev.detail?.token) {
                 setReadingProgress([]);
             } else {
@@ -105,11 +97,9 @@ export const HomePage = () => {
     };
 
     const handleRemoveItem = async (titleId: string) => {
-        // Оптимістично прибираємо з локального стану
         setReadingProgress((prev) => prev.filter((x) => x.titleId !== titleId));
         try {
             await apiClient.delete(`/users/reading-progress/${titleId}`);
-            // Перечитуємо актуальні дані з сервера, щоб виключити повернення після перезавантаження
             const res = await apiClient.get('/users/reading-progress');
             setReadingProgress(Array.isArray(res.data) ? res.data : []);
         } catch (e) {
@@ -120,11 +110,10 @@ export const HomePage = () => {
     return (
         <div className="container mx-auto px-4 py-8 space-y-12">
 
-            {/* СЕКЦІЯ 1: СЛАЙДЕР ГЛАВ */}
             <section>
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-white">
                     <span className="w-1 h-8 bg-orange-500 rounded-full"></span>
-                    Останні переклади глав
+                    Останні додані глав
                 </h2>
                 <Swiper
                     modules={[Navigation]}
@@ -164,11 +153,10 @@ export const HomePage = () => {
                 </Swiper>
             </section>
 
-            {/* НОВА СЕКЦІЯ: ПРОДОВЖИТИ ЧИТАТИ */}
             {readingProgress?.length > 0 && (
                 <section className="bg-gray-900/50 rounded-2xl p-6 border border-gray-800">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-white">Продовжити читати</h2>
+                        <h2 className="text-xl font-bold text-white">Продовжити читання</h2>
                         <button onClick={handleClearProgress} className="text-xs text-gray-500 hover:text-orange-500 uppercase tracking-wider transition">
                             очистити
                         </button>
@@ -191,7 +179,7 @@ export const HomePage = () => {
                                             {item.titleName}
                                         </h3>
                                         <p className="text-gray-400 text-sm mt-1">
-                                            Глава {item.chapterNumber} — {item.totalPages > 0 ? Math.round((Math.min((item.currentPage ?? 0) + 1, item.totalPages) / item.totalPages) * 100) : 0}%
+                                            Глава {item.chapterNumber} —  {item.totalPages > 0 ? Math.round((Math.min((item.currentPage ?? 0) + 1, item.totalPages) / item.totalPages) * 100) : 0}%
                                         </p>
                                         <div className="w-full bg-gray-700 h-1.5 rounded-full mt-3 overflow-hidden">
                                             <div
@@ -216,7 +204,7 @@ export const HomePage = () => {
                 </section>
             )}
 
-            {/* СЕКЦІЯ 2: ОСТАННІ ДОДАНІ ТАЙТЛИ */}
+ 
             <section>
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-white">
                     <span className="w-1 h-8 bg-blue-500 rounded-full"></span>

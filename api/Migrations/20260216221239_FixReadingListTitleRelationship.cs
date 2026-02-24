@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace SekaiLib.Migrations
 {
-    /// <inheritdoc />
     public partial class FixReadingListTitleRelationship : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
@@ -24,7 +22,6 @@ namespace SekaiLib.Migrations
                 table: "ReadingLists");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<Guid>(

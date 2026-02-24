@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SekaiLib.Domain.Entities;
 
 namespace SekaiLib.Infrastructure.Persistence;
@@ -30,6 +30,9 @@ public class AppDbContext : DbContext
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<ConversationParticipant> ConversationParticipants { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<Friendship> Friendships { get; set; }
+    public DbSet<FriendRequest> FriendRequests { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
@@ -37,13 +40,12 @@ public class AppDbContext : DbContext
 
     modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
-    // Нова конфігурація для кастомних списків
     modelBuilder.Entity<UserList>(entity =>
     {
         entity.HasMany(ul => ul.ReadingListItems)
             .WithOne(rl => rl.UserList)
             .HasForeignKey(rl => rl.UserListId)
-            .OnDelete(DeleteBehavior.SetNull); // Якщо список видалять, тайтл лишиться в бібліотеці, але без прив'язки до папки
+            .OnDelete(DeleteBehavior.SetNull); 
     });
     modelBuilder.Entity<ReviewComment>(entity =>
     {
@@ -57,7 +59,6 @@ public class AppDbContext : DbContext
             .HasForeignKey(rc => rc.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Self-referencing relation for nested replies
         entity.HasOne(rc => rc.ParentComment)
             .WithMany(p => p.Replies)
             .HasForeignKey(rc => rc.ParentCommentId)
@@ -77,7 +78,6 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
     });
 
-    // Chapter comments configuration
     modelBuilder.Entity<ChapterComment>(entity =>
     {
         entity.HasOne(cc => cc.Chapter)
@@ -109,7 +109,6 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
     });
 
-    // Messaging: conversations, participants, messages
     modelBuilder.Entity<Conversation>(entity =>
     {
         entity.HasMany(c => c.Participants)

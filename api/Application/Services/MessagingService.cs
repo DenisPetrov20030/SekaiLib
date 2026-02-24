@@ -1,9 +1,11 @@
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using SekaiLib.Presentation.Hubs;
 using Microsoft.EntityFrameworkCore;
 using SekaiLib.Application.DTOs.Messages;
+using SekaiLib.Application.DTOs.Notifications;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Domain.Entities;
+using SekaiLib.Domain.Enums;
 using SekaiLib.Domain.Interfaces;
 
 namespace SekaiLib.Application.Services;
@@ -12,17 +14,18 @@ namespace SekaiLib.Application.Services;
     {
         private readonly IHubContext<ChatHub> _hub;
     private readonly IUnitOfWork _uow;
-        public MessagingService(IUnitOfWork uow, IHubContext<ChatHub> hub)
+        private readonly INotificationService _notifications;
+        public MessagingService(IUnitOfWork uow, IHubContext<ChatHub> hub, INotificationService notifications)
         {
             _uow = uow;
             _hub = hub;
+            _notifications = notifications;
         }
 
     public async Task<MessageDto> SendDirectMessageAsync(Guid senderId, Guid recipientId, string text)
     {
         if (senderId == recipientId) throw new Exception("Неможливо відправити повідомлення самому собі.");
 
-        // Знайти існуючу приватну розмову між двома користувачами
         var conversation = await _uow.Conversations.Query()
             .Include(c => c.Participants)
             .FirstOrDefaultAsync(c => c.Participants.Count == 2 &&
@@ -71,9 +74,21 @@ namespace SekaiLib.Application.Services;
 
         var dto = new MessageDto(message.Id, message.ConversationId, message.SenderId, message.Text, message.CreatedAt);
 
-        // Broadcast to sender and recipient
         await _hub.Clients.Group(ChatHub.UserGroup(senderId.ToString())).SendAsync("MessageReceived", dto);
         await _hub.Clients.Group(ChatHub.UserGroup(recipientId.ToString())).SendAsync("MessageReceived", dto);
+
+        var sender = await _uow.Users.GetByIdAsync(senderId);
+        if (sender != null)
+        {
+            await _notifications.CreateAsync(new CreateNotificationRequest(
+                recipientId,
+                NotificationType.DirectMessage,
+                "Нове повідомлення",
+                BuildMessagePreview(sender.Username, text),
+                $"/messages?conversationId={conversation.Id}",
+                senderId
+            ));
+        }
 
         return dto;
     }
@@ -122,7 +137,6 @@ namespace SekaiLib.Application.Services;
 
     public async Task<IEnumerable<MessageDto>> GetConversationMessagesAsync(Guid userId, Guid conversationId, int skip = 0, int take = 50)
     {
-        // Переконатися, що користувач учасник розмови
         var isParticipant = await _uow.ConversationParticipants.Query()
             .AnyAsync(p => p.ConversationId == conversationId && p.UserId == userId);
         if (!isParticipant) throw new Exception("Доступ заборонено.");
@@ -173,7 +187,6 @@ namespace SekaiLib.Application.Services;
 
         var dto = new MessageDto(message.Id, message.ConversationId, message.SenderId, message.Text, message.CreatedAt);
 
-        // Notify all participants in the conversation
         var participantIds = await _uow.ConversationParticipants.Query()
             .Where(p => p.ConversationId == conversationId)
             .Select(p => p.UserId)
@@ -184,12 +197,37 @@ namespace SekaiLib.Application.Services;
             await _hub.Clients.Group(ChatHub.UserGroup(uid.ToString())).SendAsync("MessageReceived", dto);
         }
 
+        var sender = await _uow.Users.GetByIdAsync(userId);
+        if (sender != null)
+        {
+            foreach (var uid in participantIds.Where(id => id != userId))
+            {
+                await _notifications.CreateAsync(new CreateNotificationRequest(
+                    uid,
+                    NotificationType.DirectMessage,
+                    "Нове повідомлення",
+                    BuildMessagePreview(sender.Username, text),
+                    $"/messages?conversationId={conversationId}",
+                    userId
+                ));
+            }
+        }
+
         return dto;
+    }
+
+    private static string BuildMessagePreview(string senderUsername, string text)
+    {
+        var trimmed = text.Trim();
+        if (trimmed.Length > 80)
+        {
+            trimmed = trimmed.Substring(0, 77) + "...";
+        }
+        return $"{senderUsername}: {trimmed}";
     }
 
     public async Task DeleteConversationAsync(Guid userId, Guid conversationId)
     {
-        // Ensure the user is a participant
         var conversation = await _uow.Conversations.Query()
             .Include(c => c.Participants)
             .Include(c => c.Messages)
@@ -200,19 +238,16 @@ namespace SekaiLib.Application.Services;
         if (!conversation.Participants.Any(p => p.UserId == userId))
             throw new Exception("Доступ заборонено.");
 
-        // Delete messages
         foreach (var m in conversation.Messages.ToList())
         {
             await _uow.Messages.DeleteAsync(m);
         }
 
-        // Delete participants
         foreach (var p in conversation.Participants.ToList())
         {
             await _uow.ConversationParticipants.DeleteAsync(p);
         }
 
-        // Delete conversation
         await _uow.Conversations.DeleteAsync(conversation);
         await _uow.SaveChangesAsync();
     }
@@ -228,7 +263,6 @@ namespace SekaiLib.Application.Services;
         var convId = message.ConversationId;
         await _uow.Messages.DeleteAsync(message);
 
-        // Recalculate LastMessageAt
         var latest = await _uow.Messages.Query()
             .Where(m => m.ConversationId == convId)
             .OrderByDescending(m => m.CreatedAt)
@@ -241,7 +275,6 @@ namespace SekaiLib.Application.Services;
 
         await _uow.SaveChangesAsync();
 
-        // Notify all participants about deletion
         var participantIds = await _uow.ConversationParticipants.Query()
             .Where(p => p.ConversationId == convId)
             .Select(p => p.UserId)
@@ -264,7 +297,6 @@ namespace SekaiLib.Application.Services;
         await _uow.SaveChangesAsync();
         var dto = new MessageDto(message.Id, message.ConversationId, message.SenderId, message.Text, message.CreatedAt);
 
-        // Notify participants about edit
         var participantIds = await _uow.ConversationParticipants.Query()
             .Where(p => p.ConversationId == message.ConversationId)
             .Select(p => p.UserId)

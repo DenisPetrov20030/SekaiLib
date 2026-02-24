@@ -153,8 +153,8 @@ export const TitleDetailsPage = () => {
                     key={chapter.id}
                     className="flex items-center justify-between p-4 bg-surface rounded-lg shadow hover:bg-surface-hover transition-colors"
                   >
-                    <a
-                      href={`/titles/${currentTitle.id}/chapters/${chapter.chapterNumber}`}
+                    <Link
+                      to={`/titles/${currentTitle.id}/chapters/${chapter.chapterNumber}`}
                       className="flex-1"
                     >
                       <div className="flex items-center justify-between">
@@ -168,7 +168,7 @@ export const TitleDetailsPage = () => {
                           <span className="text-xs text-yellow-500 font-medium">Premium</span>
                         )}
                       </div>
-                    </a>
+                    </Link>
                     {canManageChapters && (
                       <button
                         onClick={() => navigate(`/titles/${id}/chapters/${chapter.id}/edit`)}

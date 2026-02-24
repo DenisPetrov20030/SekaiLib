@@ -1,4 +1,4 @@
-using SekaiLib.Application.DTOs.ReadingLists;
+﻿using SekaiLib.Application.DTOs.ReadingLists;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Application.Exceptions;
 using SekaiLib.Domain.Entities;
@@ -38,7 +38,6 @@ public class ReadingListService : IReadingListService
    public async Task<ReadingStatusResponse> GetTitleStatusAsync(Guid userId, Guid titleId)
 {
     var item = await _unitOfWork.ReadingLists.GetByUserAndTitleAsync(userId, titleId);
-    // Повертаємо і системний статус, і ID кастомного списку
     return new ReadingStatusResponse(item?.Status, item?.UserListId);
 }
 
@@ -57,8 +56,8 @@ public class ReadingListService : IReadingListService
         Id = Guid.NewGuid(),
         UserId = userId,
         TitleId = request.TitleId,
-        Status = request.Status ?? ReadingStatus.Planned, // Ставимо дефолт, якщо це кастомний список
-        UserListId = request.UserListId, // ТЕПЕР ЦЕ ЗБЕРЕЖЕТЬСЯ
+        Status = request.Status ?? ReadingStatus.Planned, 
+        UserListId = request.UserListId, 
         AddedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow
     };
@@ -72,11 +71,9 @@ public class ReadingListService : IReadingListService
     var readingList = await _unitOfWork.ReadingLists.GetByUserAndTitleAsync(userId, titleId);
     if (readingList == null) throw new NotFoundException("Reading list entry not found");
 
-    // Якщо прийшов новий статус — оновлюємо, якщо null — залишаємо старий
     if (request.Status.HasValue) 
         readingList.Status = request.Status.Value;
 
-    // Якщо прийшов ID списку — оновлюємо, якщо null — залишаємо старий
     if (request.UserListId.HasValue)
         readingList.UserListId = request.UserListId.Value;
 

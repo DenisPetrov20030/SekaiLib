@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { messagesApi } from '../../../core/api';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchProfile } from '../../profile/store/profileSlice';
@@ -43,7 +43,6 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientUsername, rec
     return conversations.filter(c => c.otherUsername.toLowerCase().startsWith(q));
   }, [query, conversations]);
 
-  // Load conversations and messages logic remains the same...
   useEffect(() => {
     if (!isOpen) return;
     const load = async () => {
@@ -53,10 +52,7 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientUsername, rec
         setConversations(list);
         const existing = list.find(c => c.otherUserId === recipientId);
         if (existing) {
-          setActiveConversationId(existing.id);
-          await loadMessages(existing.id);
-          await messagesApi.markRead(existing.id);
-          setConversations((prev) => prev.map((cv) => cv.id === existing.id ? { ...cv, unreadCount: 0 } : cv));
+          await openConversation(existing.id);
         } else {
           setActiveConversationId(null);
           setMessages([]);
@@ -117,6 +113,17 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientUsername, rec
     }
   };
 
+  const openConversation = async (conversationId: string) => {
+    setActiveConversationId(conversationId);
+    await loadMessages(conversationId);
+    try {
+      await messagesApi.markRead(conversationId);
+      setConversations((prev) => prev.map((cv) => cv.id === conversationId ? { ...cv, unreadCount: 0 } : cv));
+    } catch (e) {
+      console.warn('Failed to mark conversation as read', e);
+    }
+  };
+
   const send = async () => {
     const payload = text.trim();
     if (!payload) return;
@@ -141,7 +148,6 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientUsername, rec
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md transition-all duration-300" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="relative w-full max-w-6xl mx-4 bg-zinc-950 rounded-2xl border border-white/10 shadow-[0_0_50px_-12px_rgba(220,38,38,0.3)] overflow-hidden flex flex-col h-[85vh]">
         
-        {/* Header Section */}
         <header className="flex items-center justify-between px-6 py-4 bg-zinc-900/50 border-b border-white/5 backdrop-blur-sm">
           <div className="flex items-center gap-4">
             <button onClick={onClose} className="p-2 -ml-2 rounded-full text-white/40 hover:text-red-500 hover:bg-red-500/10 transition-all">
@@ -167,7 +173,6 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientUsername, rec
         </header>
 
         <div className="flex flex-1 min-h-0">
-          {/* Sidebar Section */}
           <aside className="w-[320px] bg-zinc-950 border-r border-white/5 flex flex-col">
             <div className="p-4">
               <div className="relative">
@@ -194,8 +199,7 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientUsername, rec
                       <button
                         className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-200 group ${activeConversationId === c.id ? 'bg-red-600/10 border border-red-600/30' : 'hover:bg-white/[0.03] border border-transparent'}`}
                         onClick={async () => {
-                          setActiveConversationId(c.id);
-                          await loadMessages(c.id);
+                          await openConversation(c.id);
                         }}
                       >
                         <div className={`w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center overflow-hidden border-2 transition-all ${activeConversationId === c.id ? 'border-red-600' : 'border-white/5 group-hover:border-white/20'}`}>
@@ -216,7 +220,6 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientUsername, rec
             </div>
           </aside>
 
-          {/* Main Chat Section */}
           <section className="flex-1 flex flex-col bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 via-black to-black">
             <div ref={viewportRef} className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-thin scrollbar-thumb-white/5">
               {loadingMessages ? (
@@ -251,7 +254,6 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientUsername, rec
               )}
             </div>
 
-            {/* Input Bar */}
             <div className="p-6 bg-black border-t border-white/5">
               <div className="max-w-4xl mx-auto flex gap-3 items-center">
                 <div className="relative flex-1 group">

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SekaiLib.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
@@ -46,7 +46,6 @@ public class UserListsController : ControllerBase
         return Ok(list);
     }
 
-    // Публічний перегляд кастомного списку за id (без прив'язки до власника)
     [AllowAnonymous]
     [HttpGet("public/{id:guid}")]
     public async Task<IActionResult> GetPublic(Guid id)

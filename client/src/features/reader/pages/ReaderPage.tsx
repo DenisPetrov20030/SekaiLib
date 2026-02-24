@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchChapterContent, setTheme, setFontSize } from '../store';
@@ -64,19 +64,14 @@ export const ReaderPage = () => {
     };
   const [newCommentText, setNewCommentText] = useState('');
   
-  // Отримуємо дані про главу та налаштування зі стору
   const { currentChapter, settings, loading, error } = useAppSelector((state) => state.reader);
-  // Отримуємо дані користувача для перевірки авторизації перед збереженням
-  // auth стан не використовується для збереження прогресу
 
-  // 1. Завантаження контенту глави при зміні параметрів URL
   useEffect(() => {
     if (titleId && chapterNumber) {
       dispatch(fetchChapterContent({ titleId, chapterNumber: parseInt(chapterNumber) }));
     }
   }, [dispatch, titleId, chapterNumber]);
 
-  // Load chapter comments when chapter changes
   useEffect(() => {
     const loadComments = async () => {
       if (!currentChapter) return;
@@ -86,27 +81,42 @@ export const ReaderPage = () => {
     loadComments();
   }, [currentChapter?.id]);
 
-  // 2. ЗБЕРЕЖЕННЯ ПРОГРЕСУ ЧИТАННЯ
-  // Викликається кожного разу, коли завантажується нова глава
+  useEffect(() => {
+    if (!comments.length) return;
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#comment-')) {
+      const scrollToComment = () => {
+        const element = document.querySelector(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-2', 'ring-primary-500');
+          setTimeout(() => element.classList.remove('ring-2', 'ring-primary-500'), 2000);
+        }
+      };
+      
+      setTimeout(scrollToComment, 300);
+      setTimeout(scrollToComment, 800);
+      setTimeout(scrollToComment, 1500);
+    }
+  }, [comments]);
+
   useEffect(() => {
     if (!currentChapter) return;
 
     const pageParam = searchParams.get('page');
     const paragraphs = Array.from(document.querySelectorAll<HTMLParagraphElement>('.novel-paragraph'));
 
-    // Прокрутка до збереженої позиції
     if (pageParam) {
       const idx = Math.max(0, Math.min(parseInt(pageParam), paragraphs.length - 1));
       const target = paragraphs[idx];
       if (target) {
-        const y = window.scrollY + target.getBoundingClientRect().top - 80; // невеликий відступ зверху
+        const y = window.scrollY + target.getBoundingClientRect().top - 80; 
         window.scrollTo({ top: y, behavior: 'smooth' });
         if (idx > 0) setShowGoToStart(true);
       }
     }
 
     const getCurrentParagraphIndex = () => {
-      // Якщо користувач практично внизу сторінки — вважаємо, що він на останньому абзаці
       const doc = document.documentElement;
       const distanceToBottom = doc.scrollHeight - (window.scrollY + window.innerHeight);
       if (distanceToBottom <= 20 && paragraphs.length > 0) {
@@ -118,9 +128,8 @@ export const ReaderPage = () => {
       let bestScore = Infinity;
       paragraphs.forEach((p, i) => {
         const rect = p.getBoundingClientRect();
-        // Центр абзацу відносно в'юпорта
         const center = rect.top + rect.height / 2;
-        const score = Math.abs(center - viewportTop - 100); // тяжіємо до верхньої частини екрана
+        const score = Math.abs(center - viewportTop - 100); 
         if (center >= viewportTop && center <= viewportBottom) {
           if (score < bestScore) {
             bestScore = score;
@@ -137,18 +146,14 @@ export const ReaderPage = () => {
       if (saveTimerRef.current) {
         window.clearTimeout(saveTimerRef.current);
       }
-      // дебаунс 500мс
       saveTimerRef.current = window.setTimeout(async () => {
         try {
-          // Не залежимо від стану user у сторі — пробуємо зберегти.
-          // Авторизація здійснюється інтерцепторами apiClient.
           if (titleId) {
             await apiClient.post('/users/update-progress', {
               titleId: titleId,
               chapterNumber: currentChapter!.chapterNumber,
               page: index,
             });
-            // Оповістимо головну сторінку, щоб вона оновила блок "Продовжити читати"
             window.dispatchEvent(new CustomEvent('reading-progress-updated'));
           }
         } catch (err) {
@@ -160,7 +165,6 @@ export const ReaderPage = () => {
     const onScroll = () => {
       const idx = getCurrentParagraphIndex();
       scheduleSave(idx);
-      // Показувати стрілку, якщо користувач не на самому верху сторінки
       if (window.scrollY > 80) {
         setShowGoToStart(true);
       } else {
@@ -168,7 +172,6 @@ export const ReaderPage = () => {
       }
     };
 
-    // Ініціальна фіксація позиції
     scheduleSave(getCurrentParagraphIndex());
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
@@ -179,7 +182,6 @@ export const ReaderPage = () => {
 
   const handleGoToStart = () => {
     setShowGoToStart(false);
-    // Прибрали параметр page з URL, щоб закріпити перехід до початку
     if (searchParams.get('page')) {
       const np = new URLSearchParams(searchParams);
       np.delete('page');
@@ -188,7 +190,6 @@ export const ReaderPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 3. Оновлення тайтла сторінки в браузері
   useEffect(() => {
     if (currentChapter) {
       document.title = `${currentChapter.titleName} - Глава ${currentChapter.chapterNumber} | SekaiLib`;
@@ -224,7 +225,6 @@ export const ReaderPage = () => {
     );
   }
 
-  // Функції для визначення стилів залежно від налаштувань користувача
   const getThemeClasses = () => {
     switch (settings.theme) {
       case ReaderTheme.Dark: return 'bg-gray-900 text-gray-100';
@@ -295,9 +295,9 @@ export const ReaderPage = () => {
                 settings.theme === ReaderTheme.Dark ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-300'
               }`}
             >
-              <option value={ReaderFontSize.Small}>А-</option>
-              <option value={ReaderFontSize.Medium}>Стандарт</option>
-              <option value={ReaderFontSize.Large}>А+</option>
+              <option value={ReaderFontSize.Small}>Маленький</option>
+              <option value={ReaderFontSize.Medium}>Стандартний</option>
+              <option value={ReaderFontSize.Large}>Великий</option>
             </select>
           </div>
         </div>
@@ -405,7 +405,6 @@ function CommentItem({ comment, chapterId, theme, onDelete }: { comment: ReviewC
 
   useEffect(() => setLocalComment(comment), [comment]);
 
-  // Локальна дедуплікація гілки відповідей для уникнення дублювань
   const dedupeTreeLocal = (items: ReviewComment[] = []): ReviewComment[] => {
     const seen = new Set<string>();
     const walk = (arr: ReviewComment[]): ReviewComment[] => {
@@ -491,7 +490,6 @@ function CommentItem({ comment, chapterId, theme, onDelete }: { comment: ReviewC
   }, [menuOpen]);
 
   const handleLikeDislike = async (type: ReactionType) => {
-    // Якщо користувач клікає на вже активну реакцію — знімаємо її
     if (localComment.userReaction === type) {
       await chapterCommentsApi.removeReaction(chapterId, localComment.id);
       const cleanedReplies = localComment.replies ? dedupeTreeLocal(localComment.replies) : [];
@@ -505,7 +503,6 @@ function CommentItem({ comment, chapterId, theme, onDelete }: { comment: ReviewC
       return;
     }
 
-    // Інакше встановлюємо нову реакцію (або перемикаємо з протилежної)
     const updated = await chapterCommentsApi.setReaction(chapterId, localComment.id, { type });
     const cleanedReplies = localComment.replies ? dedupeTreeLocal(localComment.replies) : [];
     setLocalComment({ ...updated, replies: cleanedReplies });
@@ -533,7 +530,7 @@ function CommentItem({ comment, chapterId, theme, onDelete }: { comment: ReviewC
   };
 
   return (
-    <div className="bg-surface-800 rounded-lg p-4">
+    <div id={`comment-${localComment.id}`} className="bg-surface-800 rounded-lg p-4 transition-all duration-500">
       <div className="flex items-start gap-3">
         <div className="w-8 h-8 rounded-full bg-surface-600 flex items-center justify-center overflow-hidden">
           {localComment.avatarUrl ? (

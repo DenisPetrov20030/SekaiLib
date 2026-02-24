@@ -1,4 +1,4 @@
-using SekaiLib.Application.DTOs.Chapters;
+﻿using SekaiLib.Application.DTOs.Chapters;
 using SekaiLib.Domain.Enums;
 
 namespace SekaiLib.Application.Interfaces;
@@ -13,7 +13,6 @@ public interface IChapterService
     Task<IEnumerable<LatestChapterDto>> GetLatestChaptersAsync(int count);
     Task DeleteAsync(Guid userId, Guid chapterId);
 
-    // Comments
     Task<IEnumerable<ChapterCommentResponse>> GetCommentsAsync(Guid chapterId, Guid? currentUserId);
     Task<ChapterCommentResponse> AddCommentAsync(Guid userId, Guid chapterId, CreateChapterCommentRequest request);
     Task<ChapterCommentResponse> UpdateCommentAsync(Guid userId, Guid commentId, UpdateChapterCommentRequest request);

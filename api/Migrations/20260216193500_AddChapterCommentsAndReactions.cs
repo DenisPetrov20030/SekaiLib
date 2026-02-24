@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -8,12 +8,10 @@ using SekaiLib.Infrastructure.Persistence;
 
 namespace SekaiLib.Migrations
 {
-    /// <inheritdoc />
     [DbContext(typeof(AppDbContext))]
     [Migration("20260216193500_AddChapterCommentsAndReactions")]
     public partial class AddChapterCommentsAndReactions : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -105,7 +103,6 @@ namespace SekaiLib.Migrations
                 column: "UserId");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(name: "ChapterCommentReactions");

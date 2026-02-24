@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { messagesApi, usersApi } from '../../../core/api';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchProfile } from '../../profile/store/profileSlice';
 import * as signalR from '@microsoft/signalr';
-import { API_BASE_URL, ACCESS_TOKEN_STORAGE_KEY } from '../../../core/constants';
+import { API_BASE_URL, ACCESS_TOKEN_STORAGE_KEY, ROUTES } from '../../../core/constants';
 import { storage } from '../../../core/utils/storage';
 import type { ConversationDto, MessageDto } from '../../../core/types/dtos';
-// Removed unused Button import
 
 export const ChatPage = () => {
     const navigate = useNavigate();
@@ -48,6 +47,19 @@ export const ChatPage = () => {
         return conversations.filter(c => c.otherUsername.toLowerCase().startsWith(q));
     }, [query, conversations]);
 
+    const profileTargetUserId = useMemo(() => {
+        if (activeConversationId) {
+            const conv = conversations.find(c => c.id === activeConversationId);
+            return conv?.otherUserId;
+        }
+        return recipientInfo.id;
+    }, [activeConversationId, conversations, recipientInfo.id]);
+
+    const openUserProfile = () => {
+        if (!profileTargetUserId) return;
+        navigate(ROUTES.USER_PROFILE.replace(':userId', profileTargetUserId));
+    };
+
     useEffect(() => {
         const load = async () => {
             try {
@@ -57,17 +69,14 @@ export const ChatPage = () => {
                 if (initialRecipient) {
                     const existing = list.find(c => c.otherUserId === initialRecipient);
                     if (existing) {
-                        setActiveConversationId(existing.id);
-                        await loadMessages(existing.id);
-                        await messagesApi.markRead(existing.id);
+                        await openConversation(existing.id);
                     } else {
                         setRecipientInfo({ id: initialRecipient });
                     }
                 } else if (initialConversationId) {
                     const exists = list.find(c => c.id === initialConversationId);
                     if (exists) {
-                        setActiveConversationId(exists.id);
-                        await loadMessages(exists.id);
+                        await openConversation(exists.id);
                     }
                 }
             } finally {
@@ -77,7 +86,6 @@ export const ChatPage = () => {
         load();
     }, [initialRecipient, initialConversationId]);
 
-    // Підвантаження профілю співрозмовника
     useEffect(() => {
         if (recipientInfo.id && (!recipientInfo.username || recipientInfo.avatarUrl == null)) {
             (async () => {
@@ -95,7 +103,6 @@ export const ChatPage = () => {
         }
     }, [authUser?.id, profileUser, dispatch]);
 
-    // Розширений SignalR Hub
     useEffect(() => {
         const apiBase = API_BASE_URL.replace(/\/api$/, '');
         const token = storage.get<string>(ACCESS_TOKEN_STORAGE_KEY) || undefined;
@@ -109,12 +116,22 @@ export const ChatPage = () => {
 
         connection.on('MessageReceived', (msg: MessageDto) => {
             const isMe = msg.senderId === authUser?.id;
-            // Уникаємо дублю: свої повідомлення додаємо оптимістично, тому тут їх не додаємо
             if (!isMe && activeConversationId && msg.conversationId === activeConversationId) {
                 setMessages(prev => (prev.some(p => p.id === msg.id) ? prev : [...prev, msg]));
             }
-            // Оновлення списку чатів при отриманні повідомлення
-            messagesApi.getConversations().then(setConversations);
+            (async () => {
+                const list = await messagesApi.getConversations();
+                if (!isMe && activeConversationId && msg.conversationId === activeConversationId) {
+                    try {
+                        await messagesApi.markRead(msg.conversationId);
+                        setConversations(list.map(cv => cv.id === msg.conversationId ? { ...cv, unreadCount: 0 } : cv));
+                        return;
+                    } catch (e) {
+                        console.warn('Failed to mark conversation as read', e);
+                    }
+                }
+                setConversations(list);
+            })().catch((e) => console.error(e));
         });
 
         connection.on('MessageDeleted', (payload: { messageId: string }) => {
@@ -141,6 +158,17 @@ export const ChatPage = () => {
         } finally { setLoadingMessages(false); }
     };
 
+    const openConversation = async (id: string) => {
+        setActiveConversationId(id);
+        await loadMessages(id);
+        try {
+            await messagesApi.markRead(id);
+            setConversations(prev => prev.map(cv => cv.id === id ? { ...cv, unreadCount: 0 } : cv));
+        } catch (e) {
+            console.warn('Failed to mark conversation as read', e);
+        }
+    };
+
     const send = async () => {
         const payload = text.trim();
         if (!payload) return;
@@ -152,7 +180,6 @@ export const ChatPage = () => {
                 msg = await messagesApi.sendToUser(recipientInfo.id, payload);
                 setActiveConversationId(msg.conversationId);
             } else return;
-            // Оптимістичне додавання з перевіркою на дубль по id
             setMessages(prev => (prev.some(p => p.id === msg.id) ? prev : [...prev, msg]));
             setText('');
             messagesApi.getConversations().then(setConversations);
@@ -167,12 +194,19 @@ export const ChatPage = () => {
                     <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full text-white/40 hover:text-red-500 hover:bg-red-500/10 transition-all">
                         <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/></svg>
                     </button>
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-red-600 to-red-700 p-[1px]">
+                    <button
+                        type="button"
+                        onClick={openUserProfile}
+                        disabled={!profileTargetUserId}
+                        className="w-10 h-10 rounded-full bg-gradient-to-tr from-red-600 to-red-700 p-[1px] cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
+                    >
                         <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
                             {headerInfo.avatarUrl ? <img src={headerInfo.avatarUrl} className="w-full h-full object-cover" /> : <span className="text-lg font-bold text-red-500">{headerInfo.username?.[0]?.toUpperCase()}</span>}
                         </div>
-                    </div>
-                    <h1 className="text-lg font-bold text-white">{headerInfo.username}</h1>
+                    </button>
+                    <button type="button" onClick={openUserProfile} disabled={!profileTargetUserId} className="text-lg font-bold text-white cursor-pointer hover:text-red-400 transition-colors disabled:cursor-not-allowed disabled:hover:text-white">
+                        {headerInfo.username}
+                    </button>
                 </div>
             </header>
 
@@ -190,7 +224,7 @@ export const ChatPage = () => {
                             <ul className="space-y-1">
                                 {filteredConversations.map(c => (
                                     <li key={c.id} className="group relative">
-                                        <button className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${activeConversationId === c.id ? 'bg-red-600/10 border border-red-600/30' : 'hover:bg-white/[0.03] border border-transparent'}`} onClick={() => { setActiveConversationId(c.id); loadMessages(c.id); }}>
+                                        <button className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${activeConversationId === c.id ? 'bg-red-600/10 border border-red-600/30' : 'hover:bg-white/[0.03] border border-transparent'}`} onClick={() => { openConversation(c.id); }}>
                                             <div className={`w-11 h-11 rounded-full bg-zinc-900 flex items-center justify-center overflow-hidden border-2 ${activeConversationId === c.id ? 'border-red-600' : 'border-white/5'}`}>
                                                 {c.otherAvatarUrl ? <img src={c.otherAvatarUrl} className="w-full h-full object-cover" /> : <span className="text-sm font-bold text-white/20">{c.otherUsername[0]}</span>}
                                             </div>
@@ -258,7 +292,7 @@ export const ChatPage = () => {
                                             });
                                         }}>
                                             <div className="w-9 h-9 rounded-full bg-zinc-900 border border-white/10 overflow-hidden shrink-0">
-                                                {avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] text-white/20">{isMe ? 'Я' : ' '}</div>}
+                                                {avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] text-white/20">{isMe ? 'РЇ' : ' '}</div>}
                                             </div>
                                             <div className={`max-w-[70%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-lg ${isMe ? 'bg-gradient-to-br from-red-600 to-red-700 text-white rounded-tr-none' : 'bg-black text-white/90 rounded-tl-none border border-white/5'}`}> 
                                                 {m.text}

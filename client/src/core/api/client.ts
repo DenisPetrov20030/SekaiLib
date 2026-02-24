@@ -1,4 +1,4 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosRequestConfig } from 'axios';
 import { API_BASE_URL, TOKEN_STORAGE_KEY, ACCESS_TOKEN_STORAGE_KEY } from '../constants';
 import type { ApiError } from '../types';
@@ -103,7 +103,6 @@ class ApiClient {
     this.accessToken = token;
     if (token) {
       storage.set(ACCESS_TOKEN_STORAGE_KEY, token);
-      // Повідомляємо додаток про зміну токена, щоб оновити авторизовані дані
       try {
         window.dispatchEvent(new CustomEvent('auth-token-changed', { detail: { token } }));
       } catch {}

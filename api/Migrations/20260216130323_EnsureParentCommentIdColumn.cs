@@ -4,10 +4,8 @@
 
 namespace SekaiLib.Migrations
 {
-    /// <inheritdoc />
     public partial class EnsureParentCommentIdColumn : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(@"
@@ -37,7 +35,6 @@ namespace SekaiLib.Migrations
             ");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(@"

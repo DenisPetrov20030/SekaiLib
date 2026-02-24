@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../app/store/hooks';
 import { usersApi, messagesApi } from '../../../core/api';
@@ -23,6 +23,7 @@ export const ProfilePage = () => {
   const [convLoading, setConvLoading] = useState(true);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarInputKey, setAvatarInputKey] = useState(0);
+  const [friendsCount, setFriendsCount] = useState(0);
 
   useEffect(() => {
     loadProfile();
@@ -30,6 +31,22 @@ export const ProfilePage = () => {
     loadCustomLists();
     loadConversations();
   }, []);
+
+  useEffect(() => {
+    if (authUser?.id) {
+      loadFriendsCount();
+    }
+  }, [authUser?.id]);
+
+  const loadFriendsCount = async () => {
+    if (!authUser?.id) return;
+    try {
+      const data = await usersApi.getFriendsCount(authUser.id);
+      setFriendsCount(data.count);
+    } catch (error) {
+      console.error('Не вдалося завантажити кількість друзів:', error);
+    }
+  };
 
   const loadProfile = async () => {
     try {
@@ -118,14 +135,11 @@ export const ProfilePage = () => {
     }).format(date).replace(' р.', '');
   };
 
-  // Автор останнього повідомлення у переписці
   const getSenderName = (c: any) => {
     if (authUser?.id && c?.lastMessageSenderId === authUser.id) return authUser.username;
     return c?.otherUsername || 'Невідомо';
   };
 
-  // Аватар автора останнього повідомлення
-  // (unused) getSenderAvatar removed to avoid lint warning
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -194,6 +208,11 @@ export const ProfilePage = () => {
               <p className="text-text-muted text-sm mt-2">
                 На сайті з {getLocalizedRegistrationDate(profile.createdAt)}
               </p>
+              {authUser?.id && (
+                <Link to={ROUTES.USER_FRIENDS.replace(':userId', authUser.id)} className="inline-block mt-2 text-sm text-primary-500 hover:text-primary-400">
+                  Друзі: {friendsCount}
+                </Link>
+              )}
             </div>
           </div>
           <div className="flex gap-3">
@@ -207,7 +226,7 @@ export const ProfilePage = () => {
       {/* Особисті переписки */}
       <div className="mb-12 bg-surface rounded-lg p-6 shadow-sm">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-text-primary">Особисті</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Особисті переписки</h2>
           <Button variant="ghost" onClick={loadConversations}>Оновити</Button>
         </div>
         {(() => {

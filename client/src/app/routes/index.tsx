@@ -9,8 +9,9 @@ import { ReadingListsPage } from '../../features/reading-lists/pages';
 import { UserReadingListsPage } from '../../features/reading-lists/pages/UserReadingListsPage';
 import { UserListPage } from '../../features/userlists/pages/UserListPage';
 import { UserCustomListsPage } from '../../features/userlists/pages/UserCustomListsPage';
-import { ProfilePage, UserProfilePage } from '../../features/profile/pages';
+import { FriendsPage, ProfilePage, UserProfilePage } from '../../features/profile/pages';
 import { ChatPage } from '../../features/messages/pages/ChatPage';
+import { NotificationsPage } from '../../features/notifications';
 import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage } from '../../features/admin';
 import { ROUTES } from '../../core/constants';
 import { HomePage } from '../../features/home/pages/HomePage.tsx';
@@ -39,6 +40,10 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.USER_PROFILE,
         element: <UserProfilePage />,
+      },
+      {
+        path: ROUTES.USER_FRIENDS,
+        element: <FriendsPage />,
       },
       {
         path: '/users/:userId/reading-lists',
@@ -90,6 +95,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.DIRECT_MESSAGE,
             element: <ChatPage />,
+          },
+          {
+            path: ROUTES.NOTIFICATIONS,
+            element: <NotificationsPage />,
           },
         ],
       },

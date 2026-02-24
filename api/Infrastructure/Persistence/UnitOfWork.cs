@@ -23,6 +23,9 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<Conversation>? _conversations;
     private IRepository<ConversationParticipant>? _conversationParticipants;
     private IRepository<Message>? _messages;
+    private IRepository<Friendship>? _friendships;
+    private IRepository<FriendRequest>? _friendRequests;
+    private IRepository<Notification>? _notifications;
     
     public UnitOfWork(
         AppDbContext context,
@@ -63,6 +66,15 @@ public class UnitOfWork : IUnitOfWork
 
     public IRepository<Message> Messages =>
         _messages ??= new Repository<Message>(_context);
+
+    public IRepository<Friendship> Friendships =>
+        _friendships ??= new Repository<Friendship>(_context);
+
+    public IRepository<FriendRequest> FriendRequests =>
+        _friendRequests ??= new Repository<FriendRequest>(_context);
+
+    public IRepository<Notification> Notifications =>
+        _notifications ??= new Repository<Notification>(_context);
 
     public async Task<int> SaveChangesAsync()
     {

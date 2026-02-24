@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAppSelector } from '../../../app/store/hooks';
 import type { Review } from '../../../core/types';
 import { reviewsApi } from '../../../core/api';
@@ -11,6 +12,7 @@ interface ReviewListProps {
 }
 
 export function ReviewList({ titleId, onLoginRequired }: ReviewListProps) {
+  const location = useLocation();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,42 @@ export function ReviewList({ titleId, onLoginRequired }: ReviewListProps) {
     };
     fetchReviews();
   }, [titleId]);
+
+  useEffect(() => {
+    if (loading || reviews.length === 0) return;
+
+    const hash = location.hash;
+    if (hash && hash.startsWith('#comment-')) {
+      const scrollToComment = () => {
+        const element = document.querySelector(hash);
+        if (element) {
+          requestAnimationFrame(() => {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            element.classList.add('ring-2', 'ring-orange-500', 'bg-orange-500/10');
+
+            setTimeout(() => {
+              element.classList.remove('ring-2', 'ring-orange-500', 'bg-orange-500/10');
+            }, 3000);
+          });
+          return true;
+        }
+        return false;
+      };
+
+      let found = false;
+      const timeouts: number[] = [];
+
+      [100, 300, 700, 1500, 3000].forEach((delay) => {
+        const timeoutId = window.setTimeout(() => {
+          if (!found) found = scrollToComment();
+        }, delay);
+        timeouts.push(timeoutId);
+      });
+
+      return () => timeouts.forEach(clearTimeout);
+    }
+  }, [loading, reviews, location.hash]);
 
   const handleCreate = async (content: string, rating: number) => {
     if (!isAuthenticated) {

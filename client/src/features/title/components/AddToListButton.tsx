@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useAppSelector } from '../../../app/store/hooks';
 import { axiosInstance } from '../../../core/api';
 import { ReadingStatus } from '../../../core/types/enums';
@@ -10,7 +10,6 @@ interface AddToListButtonProps {
   alwaysVisible?: boolean;
 }
 
-// Інтерфейс для отримання ваших кастомних списків з БД
 interface CustomList {
   id: string;
   name: string;
@@ -20,7 +19,6 @@ export function AddToListButton({ titleId, onLoginRequired, alwaysVisible = fals
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const [showSelect, setShowSelect] = useState(false);
   
-  // Використовуємо string, бо ID кастомного списку — це GUID (рядок)
   const [status, setStatus] = useState<string>(String(ReadingStatus.Planned));
   const [currentStatus, setCurrentStatus] = useState<string | null>(null);
   
@@ -28,22 +26,18 @@ export function AddToListButton({ titleId, onLoginRequired, alwaysVisible = fals
   const [loading, setLoading] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(false);
 
-  // Функція для завантаження кастомних списків та поточного статусу тайтла
   const loadData = useCallback(async () => {
     if (!isAuthenticated) return;
     
     setCheckingStatus(true);
     try {
-      // 1. Отримуємо кастомні списки користувача (створені вами в профілі)
       const customRes = await axiosInstance.get<CustomList[]>('/UserLists');
       setCustomLists(customRes.data);
 
-      // 2. Перевіряємо, чи доданий цей тайтл кудись
       const statusRes = await axiosInstance.get<{ status: any, userListId: any }>(`/ReadingLists/${titleId}/status`);
       if (statusRes.data) {
           const userListId = statusRes.data.userListId;
           const sysStatus = statusRes.data.status;
-          // Встановлюємо currentStatus тільки якщо реально є запис в БД
           if (userListId) {
             setCurrentStatus(String(userListId));
             setStatus(String(userListId));
@@ -51,7 +45,6 @@ export function AddToListButton({ titleId, onLoginRequired, alwaysVisible = fals
             setCurrentStatus(String(sysStatus));
             setStatus(String(sysStatus));
           } else {
-            // Немає запису — тримаємо null
             setCurrentStatus(null);
           }
       }
@@ -66,18 +59,15 @@ export function AddToListButton({ titleId, onLoginRequired, alwaysVisible = fals
     loadData();
   }, [loadData]);
 
-  // Формуємо загальний список опцій для випадаючого меню
   const allOptions = [
-    // Стандартні системні статуси
     { value: String(ReadingStatus.Reading), label: '📖 Читаю' },
     { value: String(ReadingStatus.Planned), label: '⏳ Заплановано' },
     { value: String(ReadingStatus.Completed), label: '✅ Завершено' },
     { value: String(ReadingStatus.Dropped), label: '❌ Припинено' },
     { value: String(ReadingStatus.Favorite), label: '⭐ Улюблені' },
-    // Ваші персональні списки з бази даних
     ...customLists.map(list => ({
       value: list.id,
-      label: `📁 ${list.name}`
+      label: `📃 ${list.name}`
     }))
   ];
 
@@ -99,12 +89,12 @@ export function AddToListButton({ titleId, onLoginRequired, alwaysVisible = fals
 
     setLoading(true);
     try {
-      const isCustomList = isNaN(Number(status)); // Перевірка: якщо не число, то це GUID списку
+      const isCustomList = isNaN(Number(status)); 
 
 const payload = {
     TitleId: titleId,
     Status: isCustomList ? null : Number(status),
-    UserListId: isCustomList ? status : null // Використовуйте актуальну змінну тут
+    UserListId: isCustomList ? status : null 
 };
 
       if (currentStatus !== null) {

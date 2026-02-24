@@ -1,4 +1,4 @@
-import { ReadingStatus, TitleStatus, UserRole } from './enums';
+﻿import { ReadingStatus, TitleStatus, UserRole } from './enums';
 
 export interface LoginRequest {
   email: string;
@@ -138,7 +138,6 @@ export interface UpdateChapterRequest {
   isPremium: boolean;
 }
 
-// Messaging DTOs
 export interface SendMessageRequest {
   text: string;
 }
@@ -160,4 +159,44 @@ export interface ConversationDto {
   lastMessageSenderId?: string | null;
   lastMessageAt?: string | null;
   unreadCount: number;
+}
+
+export interface FriendDto {
+  id: string;
+  username: string;
+  avatarUrl?: string | null;
+}
+export interface FriendRequestDto {
+  id: string;
+  fromUserId: string;
+  fromUsername: string;
+  fromAvatarUrl?: string | null;
+  toUserId: string;
+  status: 'Pending' | 'Accepted' | 'Rejected';
+  createdAt: string;
+}
+
+export const NotificationType = {
+  NewChapter: 0,
+  CommentReply: 1,
+  DirectMessage: 2,
+  FriendRequest: 3,
+  TitleCompleted: 4,
+} as const;
+
+export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+
+export interface NotificationDto {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  link?: string | null;
+  isRead: boolean;
+  createdAt: string;
+  actorUserId?: string | null;
+  actorUsername?: string | null;
+  actorAvatarUrl?: string | null;
+  titleId?: string | null;
+  titleCoverImageUrl?: string | null;
 }

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using SekaiLib.Application.DTOs.Chapters;
@@ -59,7 +59,6 @@ public class ChaptersController : ControllerBase
         return NoContent();
     }
 
-    // Comments
     [HttpGet("{chapterId}/comments")]
     public async Task<ActionResult<IEnumerable<ChapterCommentResponse>>> GetComments(Guid chapterId)
     {

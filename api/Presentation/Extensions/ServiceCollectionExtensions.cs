@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITitleRatingService, TitleRatingService>();
         services.AddScoped<UserListService>();
         services.AddScoped<IMessagingService, MessagingService>();
+        services.AddScoped<INotificationService, NotificationService>();
 
         return services;
     }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchReadingLists } from '../store';
@@ -31,7 +31,6 @@ export const ReadingListsPage = () => {
     dispatch(fetchReadingLists());
   }, [dispatch]);
 
-  // Показуємо тільки системні записи (без userListId) у вкладках статусів
   const filteredItems = items.filter((item) => item.status === selectedStatus && !item.userListId);
 
   const getCountByStatus = (s: ReadingStatus) => {

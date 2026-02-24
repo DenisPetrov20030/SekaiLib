@@ -1,11 +1,11 @@
-using SekaiLib.Domain.Entities;
+﻿using SekaiLib.Domain.Entities;
 using SekaiLib.Domain.Interfaces;
 using SekaiLib.Application.DTOs.UserLists;
 using SekaiLib.Application.DTOs.ReadingLists;
 
 namespace SekaiLib.Application.Services;
 
-public class UserListService // Додав інтерфейс, якщо він у вас є
+public class UserListService 
 {
     private readonly IUnitOfWork _unitOfWork;
     public UserListService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
@@ -36,10 +36,10 @@ public class UserListService // Додав інтерфейс, якщо він �
             l.Name,
             l.UserId,
             l.Description,
-            l.ReadingListItems.Count(ri => ri.Title != null), // кількість тайтлів
+            l.ReadingListItems.Count(ri => ri.Title != null), 
             l.CreatedAt,
             l.ReadingListItems
-                .Where(ri => ri.Title != null) // Захист від порожніх тайтлів
+                .Where(ri => ri.Title != null) 
                 .Select(ri => new ReadingListTitleDto(
                     ri.Title.Id,
                     ri.Title.Name,
@@ -62,7 +62,6 @@ public class UserListService // Додав інтерфейс, якщо він �
 
     public async Task<UserListDto?> GetUserListByIdAsync(Guid userId, Guid listId)
     {
-        // Використовуємо репозиторний метод, який підвантажує ReadingListItems з Title
         var lists = await _unitOfWork.UserLists.GetUserListsWithTitlesAsync(userId);
         var list = lists.FirstOrDefault(l => l.Id == listId);
         if (list == null) return null;

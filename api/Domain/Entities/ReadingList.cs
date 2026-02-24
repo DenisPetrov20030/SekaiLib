@@ -1,4 +1,4 @@
-using SekaiLib.Domain.Enums;
+﻿using SekaiLib.Domain.Enums;
 
 namespace SekaiLib.Domain.Entities;
 
@@ -7,7 +7,6 @@ public class ReadingList
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
     
-    // Зовнішній ключ для кастомного списку
     public Guid? UserListId { get; set; } 
     public virtual UserList? UserList { get; set; }
     

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usersApi } from '../../../core/api';
+import { useAppSelector } from '../../../app/store/hooks';
 import { TitleCard } from '../../catalog/components/TitleCard';
 import { Pagination } from '../../catalog/components/Pagination';
 import { Button } from '../../../shared/components';
@@ -11,6 +12,7 @@ import type { PagedResponse } from '../../../core/types';
 import type { UserList } from '../../../core/types';
 
 export const UserProfilePage = () => {
+  const { user: authUser } = useAppSelector((state) => state.auth);
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -19,15 +21,21 @@ export const UserProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [lists, setLists] = useState<UserList[]>([]);
   const [listsLoading, setListsLoading] = useState(true);
-  const [listsError, setListsError] = useState<string | null>(null);
+const [listsError, setListsError] = useState<string | null>(null);
+  const [isFriend, setIsFriend] = useState(false);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
+  const [friendActionLoading, setFriendActionLoading] = useState(false);
+  const [friendsCount, setFriendsCount] = useState(0);
 
   useEffect(() => {
     if (userId) {
       loadProfile();
       loadTitles(1);
       loadCustomLists();
+      loadFriendshipStatus();
+      loadPendingRequestStatus();
+      loadFriendsCount();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const loadProfile = async () => {
@@ -54,6 +62,34 @@ export const UserProfilePage = () => {
     }
   };
 
+  const loadFriendshipStatus = async () => {
+    if (!userId || !authUser || authUser.id === userId) {
+      setIsFriend(false);
+      return;
+    }
+
+    try {
+      const status = await usersApi.getFriendshipStatus(userId);
+      setIsFriend(status.isFriend);
+    } catch {
+      setIsFriend(false);
+    }
+  };
+
+  const loadPendingRequestStatus = async () => {
+    if (!userId || !authUser || authUser.id === userId) {
+      setHasPendingRequest(false);
+      return;
+    }
+
+    try {
+      const outgoing = await usersApi.getOutgoingRequests();
+      setHasPendingRequest(outgoing.some((request) => request.toUserId === userId));
+    } catch {
+      setHasPendingRequest(false);
+    }
+  };
+
   const loadTitles = async (pageNum: number) => {
     try {
       setLoading(true);
@@ -66,6 +102,43 @@ export const UserProfilePage = () => {
       setLoading(false);
     }
   };
+
+  const loadFriendsCount = async () => {
+    if (!userId) return;
+    try {
+      const data = await usersApi.getFriendsCount(userId);
+      setFriendsCount(data.count);
+    } catch (error) {
+      console.error('Не вдалося завантажити кількість друзів:', error);
+    }
+  };
+
+  const handleAddFriend = async () => {
+    if (!userId) return;
+
+    if (!authUser) {
+      alert('Увійдіть в акаунт, щоб додавати в друзі.');
+      return;
+    }
+
+    if (authUser.id === userId) {
+      alert('Себе не можна додати в друзі.');
+      return;
+    }
+
+    try {
+      setFriendActionLoading(true);
+      await usersApi.sendFriendRequest(userId);
+      setHasPendingRequest(true);
+      alert('Запит про дружбу відправлено!');
+    } catch (e) {
+      console.error('Send friend request failed:', e);
+      alert('Не вдалося відправити запит. Спробуйте ще раз.');
+    } finally {
+      setFriendActionLoading(false);
+    }
+  };
+
 
   if (!profile) {
     return (
@@ -101,15 +174,25 @@ export const UserProfilePage = () => {
             <p className="text-text-muted text-sm mt-2">
               На сайті з {new Date(profile.createdAt).toLocaleDateString('uk-UA')}
             </p>
+            <Link to={ROUTES.USER_FRIENDS.replace(':userId', userId!)} className="inline-block mt-2 text-sm text-primary-500 hover:text-primary-400">
+              Друзі: {friendsCount}
+            </Link>
           </div>
           </div>
-          <div className="shrink-0">
+          <div className="shrink-0 flex items-center gap-2">
+            <Button variant="primary" onClick={() => navigate(`/messages/to/${userId}`)}>Написати повідомлення</Button>
+            {authUser?.id !== userId && !isFriend && (
+              <Button
+                variant="primary"
+                onClick={handleAddFriend}
+                disabled={friendActionLoading || hasPendingRequest}
+              >
+                {friendActionLoading ? 'Зачекайте...' : hasPendingRequest ? 'Запит надіслано' : 'Додати в друзі'}
+              </Button>
+            )}
             <Link to={`/users/${userId}/reading-lists`}>
               <Button>Перейти до списків</Button>
             </Link>
-            <div className="mt-2">
-              <Button variant="primary" onClick={() => navigate(`/messages/to/${userId}`)}>Написати повідомлення</Button>
-            </div>
           </div>
         </div>
       </div>

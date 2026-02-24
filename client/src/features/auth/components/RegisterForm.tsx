@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+﻿import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { registerSchema } from '../validation';
@@ -20,12 +20,10 @@ export const RegisterForm = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword, ...userData } = data;
       await registerUser(userData);
       navigate(ROUTES.CATALOG);
     } catch {
-      // Error handled in store
     }
   };
 

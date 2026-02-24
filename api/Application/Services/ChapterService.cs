@@ -1,5 +1,6 @@
-using SekaiLib.Application.DTOs.Chapters;
+﻿using SekaiLib.Application.DTOs.Chapters;
 using SekaiLib.Application.DTOs.Titles;
+using SekaiLib.Application.DTOs.Notifications;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Application.Exceptions;
 using SekaiLib.Domain.Interfaces;
@@ -12,10 +13,12 @@ namespace SekaiLib.Application.Services;
 public class ChapterService : IChapterService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationService _notifications;
 
-    public ChapterService(IUnitOfWork unitOfWork)
+    public ChapterService(IUnitOfWork unitOfWork, INotificationService notifications)
     {
         _unitOfWork = unitOfWork;
+        _notifications = notifications;
     }
 
     public async Task<IEnumerable<ChapterDto>> GetChaptersByTitleAsync(Guid titleId)
@@ -105,11 +108,31 @@ public class ChapterService : IChapterService
             Content = PrepareTextForDb(request.Content), 
             IsPremium = request.IsPremium,
             PublishedAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow // Додано поле CreatedAt
+            CreatedAt = DateTime.UtcNow
         };
 
         await _unitOfWork.Chapters.AddAsync(chapter);
         await _unitOfWork.SaveChangesAsync();
+
+        var followerIds = await _unitOfWork.ReadingLists.Query()
+            .Where(rl => rl.TitleId == titleId)
+            .Select(rl => rl.UserId)
+            .Distinct()
+            .ToListAsync();
+
+        foreach (var followerId in followerIds.Where(id => id != userId))
+        {
+            await _notifications.CreateAsync(new CreateNotificationRequest(
+                followerId,
+                NotificationType.NewChapter,
+                "Нова глава",
+                $"{title.Name} — Глава {chapter.Number}",
+                $"/titles/{titleId}/chapters/{chapter.Number}",
+                userId,
+                titleId,
+                chapter.Id
+            ));
+        }
 
         return await BuildChapterContentDto(chapter);
     }
@@ -230,7 +253,6 @@ public class ChapterService : IChapterService
             .Trim();                         
     }
 
-    // Comments
     public async Task<IEnumerable<ChapterCommentResponse>> GetCommentsAsync(Guid chapterId, Guid? currentUserId)
     {
         var chapter = await _unitOfWork.Chapters.GetByIdAsync(chapterId);
@@ -301,6 +323,24 @@ public class ChapterService : IChapterService
 
         await _unitOfWork.Chapters.AddCommentAsync(comment);
         await _unitOfWork.SaveChangesAsync();
+
+        if (comment.ParentCommentId.HasValue)
+        {
+            var parent = await _unitOfWork.Chapters.GetCommentByIdAsync(comment.ParentCommentId.Value);
+            if (parent != null && parent.UserId != userId)
+            {
+                await _notifications.CreateAsync(new CreateNotificationRequest(
+                    parent.UserId,
+                    NotificationType.CommentReply,
+                    "Відповідь на коментар",
+                    $"{user.Username} відповів(ла) на ваш коментар до глави {chapter.Number}",
+                    $"/titles/{chapter.TitleId}/chapters/{chapter.Number}#comment-{comment.Id}",
+                    userId,
+                    chapter.TitleId,
+                    chapter.Id
+                ));
+            }
+        }
 
         return new ChapterCommentResponse(
             comment.Id,

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { RouterProvider } from 'react-router-dom';
 import { store } from './app/store';
@@ -10,7 +10,6 @@ function App() {
     store.dispatch(initializeAuth());
   }, []);
 
-  // Persist last visited route and restore on reload
   useEffect(() => {
     const unsubscribe = router.subscribe((state) => {
       const loc = state.location;

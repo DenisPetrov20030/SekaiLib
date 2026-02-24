@@ -4,13 +4,10 @@
 
 namespace SekaiLib.Migrations
 {
-    /// <inheritdoc />
     public partial class EnsureReviewCommentReactions : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Ensure parent table exists before creating FK from ReviewCommentReactions.
             migrationBuilder.Sql(@"
                 CREATE TABLE IF NOT EXISTS ""ReviewComments"" (
                     ""Id"" uuid NOT NULL,
@@ -72,7 +69,6 @@ namespace SekaiLib.Migrations
                 column: "UserId");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

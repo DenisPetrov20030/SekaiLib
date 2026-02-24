@@ -1,4 +1,4 @@
-using SekaiLib.Domain.Enums;
+﻿using SekaiLib.Domain.Enums;
 
 namespace SekaiLib.Application.DTOs.ReadingLists;
 
@@ -13,18 +13,16 @@ public record ReadingListTitleDto(
 public record ReadingListDto(
     Guid TitleId,
     ReadingListTitleDto Title,
-    ReadingStatus? Status, // Змінено на nullable
-    Guid? UserListId,      // Додано для кастомних списків
+    ReadingStatus? Status, 
+    Guid? UserListId,      
     DateTime AddedAt
 );
 
-// Модель для отримання статусу (використовується в GET .../status)
 public record ReadingStatusResponse(
     ReadingStatus? Status,
     Guid? UserListId
 );
 
-// Модель для запитів на додавання/оновлення (POST/PUT)
 public record UpdateReadingStatusRequest(
     Guid TitleId,
     ReadingStatus? Status,

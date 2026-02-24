@@ -20,5 +20,8 @@ public interface IUnitOfWork
     IRepository<Conversation> Conversations { get; }
     IRepository<ConversationParticipant> ConversationParticipants { get; }
     IRepository<Message> Messages { get; }
+    IRepository<Friendship> Friendships { get; }
+    IRepository<FriendRequest> FriendRequests { get; }
+    IRepository<Notification> Notifications { get; }
     Task<int> SaveChangesAsync();
 }

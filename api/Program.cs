@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SekaiLib.Presentation.Extensions;
 using SekaiLib.Infrastructure.Persistence;
 using Microsoft.Extensions.FileProviders;
@@ -9,7 +9,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    // Map IFormFile to file upload schema to avoid Swagger generation errors
     c.MapType<IFormFile>(() => new Microsoft.OpenApi.Models.OpenApiSchema
     {
         Type = "string",
@@ -17,7 +16,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Real-time messaging
 builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
@@ -44,7 +42,6 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<AppDbContext>();
         var pendingMigrations = context.Database.GetPendingMigrations();
-        // If there are migrations, apply them; otherwise ensure schema is created
         if (pendingMigrations.Any())
         {
             context.Database.Migrate();
@@ -87,7 +84,6 @@ app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 
-// Serve static files (for uploaded avatars, covers, etc.)
 app.UseStaticFiles();
 
 var uploadsRoot = Path.Combine(
@@ -106,7 +102,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// SignalR hubs
 app.MapHub<SekaiLib.Presentation.Hubs.ChatHub>("/hubs/chat");
+app.MapHub<SekaiLib.Presentation.Hubs.NotificationsHub>("/hubs/notifications");
 
 app.Run();

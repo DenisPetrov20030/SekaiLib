@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+﻿import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
@@ -55,7 +55,6 @@ export const LoginModal = ({ isOpen, onClose, onSuccess }: LoginModalProps) => {
       onClose();
       onSuccess?.();
     } catch {
-      // Error handled in store
     }
   };
 

@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SekaiLib.Application.DTOs.ReadingLists;
@@ -26,7 +26,6 @@ public class ReadingListsController : ControllerBase
         return Ok(lists);
     }
 
-    // Публічний перегляд стандартних списків іншого користувача
     [AllowAnonymous]
     [HttpGet("by-user/{userId:guid}")]
     public async Task<ActionResult<IEnumerable<ReadingListDto>>> GetUserListsByUser(Guid userId)
@@ -47,7 +46,6 @@ public class ReadingListsController : ControllerBase
     public async Task<ActionResult> AddToList([FromBody] UpdateReadingStatusRequest request)
     {
     var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-    // Переконайся, що твій сервіс тепер приймає об'єкт request або окремий UserListId
     await _readingListService.AddToListAsync(userId, request); 
     return Ok();
     }

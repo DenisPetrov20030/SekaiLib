@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { axiosInstance } from '../../../core/api';
 import { TitleCard } from '../../catalog/components/TitleCard';
@@ -18,7 +18,6 @@ export const UserListPage = () => {
         setList(res.data);
       } catch (e) {
         try {
-          // Фолбэк: якщо публічний шлях не знайшов, спробуємо авторизований для власника
           const res2 = await axiosInstance.get(`/userlists/${id}`);
           setList(res2.data);
         } catch {
