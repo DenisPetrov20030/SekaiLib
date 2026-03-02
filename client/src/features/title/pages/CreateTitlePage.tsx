@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { titlesApi, genresApi } from '../../../core/api';
 import { Button, Input, Textarea } from '../../../shared/components';
 import { TitleStatus } from '../../../core/types/enums';
+import type { CreateTitleRequest } from '../../../core/types';
 import type { Genre } from '../../../core/api/genres';
 
 export const CreateTitlePage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [genres, setGenres] = useState<Genre[]>([]);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateTitleRequest>({
     name: '',
     author: '',
     description: '',

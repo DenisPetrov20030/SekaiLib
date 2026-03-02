@@ -17,10 +17,10 @@ interface TitleFormData {
 }
 
 const statusOptions = [
-  { value: TitleStatus.Ongoing, label: 'Випускається' },
-  { value: TitleStatus.Completed, label: 'Завершений' },
-  { value: TitleStatus.Hiatus, label: 'Зупинений' },
-  { value: TitleStatus.Cancelled, label: 'Випуск припинено' },
+  { value: String(TitleStatus.Ongoing), label: 'Випускається' },
+  { value: String(TitleStatus.Completed), label: 'Завершений' },
+  { value: String(TitleStatus.Hiatus), label: 'Зупинений' },
+  { value: String(TitleStatus.Cancelled), label: 'Випуск припинено' },
 ];
 
 export function AdminTitleEditPage() {
@@ -147,8 +147,8 @@ export function AdminTitleEditPage() {
 
         <Select
           label="Статус"
-          value={formData.status}
-          onChange={(v) => setFormData({ ...formData, status: v as TitleStatus })}
+          value={String(formData.status)}
+          onChange={(v) => setFormData({ ...formData, status: Number(v) as TitleStatus })}
           options={statusOptions}
         />
 

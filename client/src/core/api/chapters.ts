@@ -3,12 +3,12 @@ import type { ChapterContentDto, CreateChapterRequest, UpdateChapterRequest } fr
 
 export const chaptersApi = {
   create: async (titleId: string, data: CreateChapterRequest): Promise<ChapterContentDto> => {
-    const response = await apiClient.post(`/chapters/title/${titleId}`, data);
+    const response = await apiClient.post<ChapterContentDto>(`/chapters/title/${titleId}`, data);
     return response.data;
   },
 
   update: async (chapterId: string, data: UpdateChapterRequest): Promise<ChapterContentDto> => {
-    const response = await apiClient.put(`/chapters/${chapterId}`, data);
+    const response = await apiClient.put<ChapterContentDto>(`/chapters/${chapterId}`, data);
     return response.data;
   },
 
@@ -17,7 +17,7 @@ export const chaptersApi = {
   },
 
   getById: async (chapterId: string): Promise<ChapterContentDto> => {
-    const response = await apiClient.get(`/chapters/${chapterId}`);
+    const response = await apiClient.get<ChapterContentDto>(`/chapters/${chapterId}`);
     return response.data;
   },
 };

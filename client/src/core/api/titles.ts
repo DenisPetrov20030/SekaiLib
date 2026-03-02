@@ -3,12 +3,12 @@ import type { TitleDetailsDto, CreateTitleRequest, UpdateTitleRequest } from '..
 
 export const titlesApi = {
   create: async (data: CreateTitleRequest): Promise<TitleDetailsDto> => {
-    const response = await apiClient.post('/titles', data);
+    const response = await apiClient.post<TitleDetailsDto>('/titles', data);
     return response.data;
   },
 
   update: async (id: string, data: UpdateTitleRequest): Promise<TitleDetailsDto> => {
-    const response = await apiClient.put(`/titles/${id}`, data);
+    const response = await apiClient.put<TitleDetailsDto>(`/titles/${id}`, data);
     return response.data;
   },
 

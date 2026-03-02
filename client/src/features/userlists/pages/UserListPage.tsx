@@ -1,8 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { axiosInstance } from '../../../core/api';
 import { TitleCard } from '../../catalog/components/TitleCard';
-import { Button } from '../../../shared/components';
 
 export const UserListPage = () => {
   const { id } = useParams<{ id: string }>();

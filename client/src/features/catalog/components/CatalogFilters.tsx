@@ -8,7 +8,7 @@ interface CatalogFiltersProps {
   selectedStatus?: TitleStatus;
   onGenreChange: (genreId: string | undefined) => void;
   onCountryChange: (country: string | undefined) => void;
-  onStatusChange: (status: string | undefined) => void;
+  onStatusChange: (status: TitleStatus | undefined) => void;
   onClear: () => void;
 }
 
@@ -31,7 +31,7 @@ export const CatalogFilters = ({
   };
 
   const handleStatusChange = (value: string) => {
-    onStatusChange(value as TitleStatus || undefined);
+    onStatusChange(value ? (Number(value) as TitleStatus) : undefined);
   };
 
   const handleClear = () => {

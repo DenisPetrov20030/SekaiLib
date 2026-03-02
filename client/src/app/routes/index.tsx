@@ -15,6 +15,7 @@ import { NotificationsPage } from '../../features/notifications';
 import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage } from '../../features/admin';
 import { ROUTES } from '../../core/constants';
 import { HomePage } from '../../features/home/pages/HomePage.tsx';
+import { NotFoundPage } from '../../features/home/pages/NotFoundPage';
 
 export const router = createBrowserRouter([
   {
@@ -56,6 +57,10 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.READER,
         element: <ReaderPage />,
+      },
+      {
+        path: ROUTES.NOT_FOUND,
+        element: <NotFoundPage />,
       },
       {
         element: <ProtectedRoute />,
@@ -126,6 +131,10 @@ export const router = createBrowserRouter([
             element: <AdminTitleEditPage />,
           },
         ],
+      },
+      {
+        path: '*',
+        element: <NotFoundPage />,
       },
     ],
   },

@@ -46,8 +46,8 @@ export const useCatalog = () => {
     dispatch(setCountryFilter(country));
   };
 
-  const handleStatusFilter = (status: string | undefined) => {
-    dispatch(setStatusFilter(status as TitleStatus | undefined));
+  const handleStatusFilter = (status: TitleStatus | undefined) => {
+    dispatch(setStatusFilter(status));
   };
 
   const handleClearFilters = () => {

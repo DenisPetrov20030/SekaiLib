@@ -25,7 +25,7 @@ function App() {
     try {
       const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
       const saved = window.localStorage.getItem('lastRoute');
-      if (saved && saved !== current) {
+      if (window.location.pathname === '/' && saved && saved !== current) {
         router.navigate(saved);
       }
     } catch {}
