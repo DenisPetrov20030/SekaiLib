@@ -29,7 +29,7 @@ public class TitleService : ITitleService
         var catalogFilter = new CatalogFilter
         {
             Search = filter.Search,
-            GenreId = filter.GenreId,
+            GenreIds = filter.GenreIds,
             Country = filter.Country,
             Status = filter.Status
         };

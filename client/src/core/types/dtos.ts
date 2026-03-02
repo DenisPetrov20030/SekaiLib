@@ -25,7 +25,7 @@ export interface AuthResponse {
 
 export interface CatalogFilters {
   search?: string;
-  genreId?: string;
+  genreIds?: string[];
   country?: string;
   status?: TitleStatus;
 }

@@ -31,7 +31,7 @@ export const CatalogPage = () => {
 
       <CatalogFilters
         genres={genres}
-        selectedGenre={filters.genreId}
+        selectedGenres={filters.genreIds || []}
         selectedCountry={filters.country}
         selectedStatus={filters.status}
         onGenreChange={filterByGenre}

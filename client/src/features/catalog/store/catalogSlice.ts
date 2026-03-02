@@ -3,6 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import type { Title, CatalogFilters, Genre, TitleStatus } from '../../../core/types';
 import { catalogApi } from '../api';
 import { PAGINATION } from '../../../core/constants';
+import { login, register, logout } from '../../auth/store/authSlice';
 
 interface CatalogState {
   titles: Title[];
@@ -26,6 +27,12 @@ const initialState: CatalogState = {
   totalPages: 0,
   loading: false,
   error: null,
+};
+
+const resetCatalogViewState = (state: CatalogState) => {
+  state.filters = {};
+  state.page = PAGINATION.DEFAULT_PAGE;
+  state.pageSize = PAGINATION.DEFAULT_PAGE_SIZE;
 };
 
 export const fetchCatalog = createAsyncThunk(
@@ -62,8 +69,8 @@ const catalogSlice = createSlice({
       state.filters.search = action.payload;
       state.page = PAGINATION.DEFAULT_PAGE;
     },
-    setGenreFilter: (state, action: PayloadAction<string | undefined>) => {
-      state.filters.genreId = action.payload;
+    setGenreFilter: (state, action: PayloadAction<string[]>) => {
+      state.filters.genreIds = action.payload.length > 0 ? action.payload : undefined;
       state.page = PAGINATION.DEFAULT_PAGE;
     },
     setCountryFilter: (state, action: PayloadAction<string | undefined>) => {
@@ -106,6 +113,15 @@ const catalogSlice = createSlice({
       })
       .addCase(fetchGenres.fulfilled, (state, action) => {
         state.genres = action.payload;
+      })
+      .addCase(logout, (state) => {
+        resetCatalogViewState(state);
+      })
+      .addCase(login.fulfilled, (state) => {
+        resetCatalogViewState(state);
+      })
+      .addCase(register.fulfilled, (state) => {
+        resetCatalogViewState(state);
       });
   },
 });

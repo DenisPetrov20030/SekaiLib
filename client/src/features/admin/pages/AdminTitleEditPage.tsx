@@ -43,7 +43,7 @@ export function AdminTitleEditPage() {
   useEffect(() => {
     const fetchGenres = async () => {
       try {
-        const response = await axiosInstance.get<Genre[]>('/genres');
+        const response = await axiosInstance.get<Genre[]>('/admin/genres');
         setGenres(response.data);
       } catch {
         setGenres([]);

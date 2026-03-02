@@ -25,13 +25,13 @@ public class TitlesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<PagedResponse<TitleDto>>> GetCatalog(
         [FromQuery] string? search,
-        [FromQuery] Guid? genreId,
+        [FromQuery] List<Guid>? genreIds,
         [FromQuery] string? country,
         [FromQuery] TitleStatus? status,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        var filter = new CatalogFilterDto(search, genreId, country, status);
+        var filter = new CatalogFilterDto(search, genreIds, country, status);
         var result = await _titleService.GetCatalogAsync(filter, page, pageSize);
         return Ok(result);
     }

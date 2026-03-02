@@ -38,8 +38,8 @@ export const useCatalog = () => {
     dispatch(setSearch(query));
   };
 
-  const handleGenreFilter = (genreId: string | undefined) => {
-    dispatch(setGenreFilter(genreId));
+  const handleGenreFilter = (genreIds: string[]) => {
+    dispatch(setGenreFilter(genreIds));
   };
 
   const handleCountryFilter = (country: string | undefined) => {

@@ -24,9 +24,16 @@ public class TitleRepository : Repository<Title>, ITitleRepository
             query = query.Where(t => t.Name.Contains(filter.Search) || t.Author.Contains(filter.Search));
         }
 
-        if (filter.GenreId.HasValue)
+        if (filter.GenreIds is { Count: > 0 })
         {
-            query = query.Where(t => t.TitleGenres.Any(tg => tg.GenreId == filter.GenreId.Value));
+            var selectedGenreIds = filter.GenreIds.Distinct().ToList();
+            query = query.Where(t =>
+                t.TitleGenres
+                    .Where(tg => selectedGenreIds.Contains(tg.GenreId))
+                    .Select(tg => tg.GenreId)
+                    .Distinct()
+                    .Count() == selectedGenreIds.Count
+            );
         }
 
         if (!string.IsNullOrWhiteSpace(filter.Country))
