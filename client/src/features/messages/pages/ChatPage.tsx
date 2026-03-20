@@ -98,10 +98,10 @@ export const ChatPage = () => {
     }, [recipientInfo.id]);
 
     useEffect(() => {
-        if (authUser?.id && (!profileUser || profileUser.id !== authUser.id)) {
+        if (authUser?.id) {
             dispatch(fetchProfile());
         }
-    }, [authUser?.id, profileUser, dispatch]);
+    }, [authUser?.id, dispatch]);
 
     useEffect(() => {
         const apiBase = API_BASE_URL.replace(/\/api$/, '');

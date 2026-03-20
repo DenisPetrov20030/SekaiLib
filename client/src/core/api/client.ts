@@ -8,11 +8,15 @@ class ApiClient {
   private client: AxiosInstance;
   private accessToken: string | null = null;
   private isRefreshing = false;
-  private refreshSubscribers: ((token: string) => void)[] = [];
+  private refreshSubscribers: Array<{
+    resolve: (token: string) => void;
+    reject: (error: ApiError) => void;
+  }> = [];
 
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
+      timeout: 15000,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -36,15 +40,25 @@ class ApiClient {
       (response) => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+        const requestUrl = originalRequest?.url ?? '';
+        const isRefreshRequest = requestUrl.includes('/auth/refresh');
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && !originalRequest?._retry && !isRefreshRequest) {
+          const sessionExpiredError: ApiError = {
+            message: 'Session expired. Please sign in again.',
+            statusCode: 401,
+          };
+
           if (this.isRefreshing) {
-            return new Promise((resolve) => {
-              this.refreshSubscribers.push((token: string) => {
+            return new Promise((resolve, reject) => {
+              this.refreshSubscribers.push({
+                resolve: (token: string) => {
                 if (originalRequest.headers) {
                   originalRequest.headers.Authorization = `Bearer ${token}`;
                 }
                 resolve(this.client(originalRequest));
+                },
+                reject,
               });
             });
           }
@@ -59,8 +73,7 @@ class ApiClient {
               const { accessToken } = response.data;
 
               this.setAccessToken(accessToken);
-              this.refreshSubscribers.forEach((callback) => callback(accessToken));
-              this.refreshSubscribers = [];
+              this.resolveRefreshSubscribers(accessToken);
 
               if (originalRequest.headers) {
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
@@ -68,9 +81,13 @@ class ApiClient {
 
               return this.client(originalRequest);
             }
+            this.clearTokens();
+            this.rejectRefreshSubscribers(sessionExpiredError);
+            return Promise.reject(sessionExpiredError);
           } catch {
             this.clearTokens();
-            window.location.href = '/login';
+            this.rejectRefreshSubscribers(sessionExpiredError);
+            return Promise.reject(sessionExpiredError);
           } finally {
             this.isRefreshing = false;
           }
@@ -81,6 +98,16 @@ class ApiClient {
     );
   }
 
+  private resolveRefreshSubscribers(token: string): void {
+    this.refreshSubscribers.forEach((subscriber) => subscriber.resolve(token));
+    this.refreshSubscribers = [];
+  }
+
+  private rejectRefreshSubscribers(error: ApiError): void {
+    this.refreshSubscribers.forEach((subscriber) => subscriber.reject(error));
+    this.refreshSubscribers = [];
+  }
+
   private normalizeError(error: AxiosError): ApiError {
     const apiError: ApiError = {
       message: 'An unexpected error occurred',
@@ -88,10 +115,15 @@ class ApiClient {
     };
 
     if (error.response) {
-      const data = error.response.data as { message?: string; errors?: Record<string, string[]> };
+      const data = error.response.data as {
+        message?: string;
+        Message?: string;
+        errors?: Record<string, string[]>;
+        Errors?: Record<string, string[]>;
+      };
       apiError.statusCode = error.response.status;
-      apiError.message = data.message || error.message;
-      apiError.errors = data.errors;
+      apiError.message = data.message || data.Message || error.message;
+      apiError.errors = data.errors || data.Errors;
     } else if (error.request) {
       apiError.message = 'Network error. Please check your connection.';
     }
@@ -146,3 +178,4 @@ class ApiClient {
 
 export const apiClient = new ApiClient();
 export const axiosInstance = apiClient.getClient();
+

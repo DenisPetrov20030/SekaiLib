@@ -693,7 +693,6 @@ namespace SekaiLib.Migrations
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Role")
@@ -718,6 +717,48 @@ namespace SekaiLib.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("SekaiLib.Domain.Entities.UserExternalLogin", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ProviderUserId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Provider", "ProviderUserId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Provider")
+                        .IsUnique();
+
+                    b.ToTable("UserExternalLogins");
+                });
+            modelBuilder.Entity("SekaiLib.Domain.Entities.UserExternalLogin", b =>
+                {
+                    b.HasOne("SekaiLib.Domain.Entities.User", "User")
+                        .WithMany("ExternalLogins")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
             modelBuilder.Entity("SekaiLib.Domain.Entities.UserList", b =>
                 {
                     b.Property<Guid>("Id")
@@ -917,7 +958,7 @@ namespace SekaiLib.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("SekaiLib.Domain.Entities.Title", "Title")
-                        .WithMany()
+                        .WithMany("ReadingListEntries")
                         .HasForeignKey("TitleId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -1222,6 +1263,8 @@ namespace SekaiLib.Migrations
                 {
                     b.Navigation("CustomLists");
 
+                    b.Navigation("ExternalLogins");
+
                     b.Navigation("PublishedTitles");
 
                     b.Navigation("ReadingLists");
@@ -1245,3 +1288,5 @@ namespace SekaiLib.Migrations
         }
     }
 }
+
+

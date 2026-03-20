@@ -65,10 +65,10 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientUsername, rec
   }, [isOpen, recipientId]);
 
   useEffect(() => {
-    if (isOpen && !profileUser?.avatarUrl) {
+    if (isOpen && authUser?.id) {
       dispatch(fetchProfile());
     }
-  }, [isOpen, profileUser?.avatarUrl, dispatch]);
+  }, [isOpen, authUser?.id, dispatch]);
 
   useEffect(() => {
     if (!isOpen) return;

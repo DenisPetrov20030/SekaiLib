@@ -1,6 +1,6 @@
-import { createBrowserRouter } from 'react-router-dom';
+﻿import { createBrowserRouter } from 'react-router-dom';
 import { MainLayout, ProtectedRoute } from '../../shared/components';
-import { RegisterPage } from '../../features/auth/pages';
+import { OAuthCallbackPage, LegacyAuthRedirectPage } from '../../features/auth/pages';
 import { CatalogPage } from '../../features/catalog/pages';
 import { TitleDetailsPage, CreateTitlePage } from '../../features/title/pages';
 import { ChapterEditorPage } from '../../features/chapter';
@@ -27,8 +27,16 @@ export const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
+        path: ROUTES.LOGIN,
+        element: <LegacyAuthRedirectPage />,
+      },
+      {
         path: ROUTES.REGISTER,
-        element: <RegisterPage />,
+        element: <LegacyAuthRedirectPage />,
+      },
+      {
+        path: ROUTES.AUTH_CALLBACK,
+        element: <OAuthCallbackPage />,
       },
       {
         path: ROUTES.CATALOG,

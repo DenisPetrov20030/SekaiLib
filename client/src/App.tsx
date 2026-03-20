@@ -10,27 +10,6 @@ function App() {
     store.dispatch(initializeAuth());
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = router.subscribe((state) => {
-      const loc = state.location;
-      try {
-        const href = `${loc.pathname}${loc.search}${loc.hash ?? ''}`;
-        window.localStorage.setItem('lastRoute', href);
-      } catch {}
-    });
-    return unsubscribe;
-  }, []);
-
-  useEffect(() => {
-    try {
-      const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-      const saved = window.localStorage.getItem('lastRoute');
-      if (window.location.pathname === '/' && saved && saved !== current) {
-        router.navigate(saved);
-      }
-    } catch {}
-  }, []);
-
   return (
     <Provider store={store}>
       <RouterProvider router={router} />

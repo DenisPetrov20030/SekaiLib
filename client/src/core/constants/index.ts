@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7054/api';
+﻿export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7054/api';
 
 export const TOKEN_STORAGE_KEY = 'refreshToken';
 export const ACCESS_TOKEN_STORAGE_KEY = 'accessToken';
@@ -7,6 +7,7 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   REGISTER: '/register',
+  AUTH_CALLBACK: '/auth/callback',
   CATALOG: '/catalog',
   TITLE_DETAILS: '/titles/:id',
   TITLE_CREATE: '/titles/create',
@@ -39,3 +40,4 @@ export const PAGINATION = {
 export const DEBOUNCE_DELAY = 500;
 
 export const READER_SETTINGS_STORAGE_KEY = 'readerSettings';
+

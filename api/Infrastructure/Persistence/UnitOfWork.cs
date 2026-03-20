@@ -1,4 +1,4 @@
-using SekaiLib.Domain.Entities;
+﻿using SekaiLib.Domain.Entities;
 using SekaiLib.Domain.Interfaces;
 using SekaiLib.Domain.Interfaces.Repositories;
 using SekaiLib.Infrastructure.Persistence.Repositories;
@@ -19,14 +19,15 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<TitleGenre> TitleGenres { get; }
     public IRepository<TranslationTeam> TranslationTeams { get; }
     public IRepository<RefreshToken> RefreshTokens { get; }
-    public IUserListRepository UserLists { get; } 
+    public IRepository<UserExternalLogin> UserExternalLogins { get; }
+    public IUserListRepository UserLists { get; }
     private IRepository<Conversation>? _conversations;
     private IRepository<ConversationParticipant>? _conversationParticipants;
     private IRepository<Message>? _messages;
     private IRepository<Friendship>? _friendships;
     private IRepository<FriendRequest>? _friendRequests;
     private IRepository<Notification>? _notifications;
-    
+
     public UnitOfWork(
         AppDbContext context,
         IUserRepository users,
@@ -39,7 +40,7 @@ public class UnitOfWork : IUnitOfWork
         IRepository<TitleGenre> titleGenres,
         IRepository<TranslationTeam> translationTeams,
         IRepository<RefreshToken> refreshTokens,
-        IUserListRepository userLists) 
+        IUserListRepository userLists)
     {
         _context = context;
         Users = users;
@@ -52,7 +53,8 @@ public class UnitOfWork : IUnitOfWork
         TitleGenres = titleGenres;
         TranslationTeams = translationTeams;
         RefreshTokens = refreshTokens;
-        UserLists = userLists; 
+        UserExternalLogins = new Repository<UserExternalLogin>(_context);
+        UserLists = userLists;
     }
     private IRepository<UserReadingProgress>? _userReadingProgresses;
     public IRepository<UserReadingProgress> UserReadingProgresses =>

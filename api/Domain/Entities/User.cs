@@ -1,4 +1,4 @@
-using SekaiLib.Domain.Enums;
+﻿using SekaiLib.Domain.Enums;
 
 namespace SekaiLib.Domain.Entities;
 
@@ -7,11 +7,12 @@ public class User
     public Guid Id { get; set; }
     public string Email { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
-    public string PasswordHash { get; set; } = string.Empty;
+    public string? PasswordHash { get; set; }
     public string? AvatarUrl { get; set; }
     public UserRole Role { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public ICollection<UserExternalLogin> ExternalLogins { get; set; } = new List<UserExternalLogin>();
     public ICollection<UserList> CustomLists { get; set; } = new List<UserList>();
     public ICollection<ReadingList> ReadingLists { get; set; } = new List<ReadingList>();
     public ICollection<ReadingProgress> ReadingProgresses { get; set; } = new List<ReadingProgress>();

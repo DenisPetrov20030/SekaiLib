@@ -1,6 +1,7 @@
-import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
-import { login, register, logout } from '../store/authSlice';
-import type { LoginRequest, RegisterRequest } from '../../../core/types';
+﻿import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
+import { login, register, logout, completeOAuth } from '../store/authSlice';
+import { authApi } from '../api';
+import type { LoginRequest, RegisterRequest, AuthProvider } from '../../../core/types';
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
@@ -14,6 +15,14 @@ export const useAuth = () => {
     return dispatch(register(userData)).unwrap();
   };
 
+  const handleCompleteOAuth = async (ticket: string) => {
+    return dispatch(completeOAuth(ticket)).unwrap();
+  };
+
+  const handleStartOAuth = (provider: AuthProvider, returnUrl?: string) => {
+    authApi.startOAuth(provider, returnUrl);
+  };
+
   const handleLogout = () => {
     dispatch(logout());
   };
@@ -25,6 +34,8 @@ export const useAuth = () => {
     error,
     login: handleLogin,
     register: handleRegister,
+    completeOAuth: handleCompleteOAuth,
+    startOAuth: handleStartOAuth,
     logout: handleLogout,
   };
 };

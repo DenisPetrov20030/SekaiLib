@@ -1,12 +1,15 @@
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SekaiLib.Application.Interfaces;
+using SekaiLib.Application.Options;
 using SekaiLib.Application.Services;
 using SekaiLib.Domain.Entities;
 using SekaiLib.Domain.Interfaces;
 using SekaiLib.Domain.Interfaces.Repositories;
+using SekaiLib.Infrastructure.Auth;
+using SekaiLib.Infrastructure.Auth.Providers;
 using SekaiLib.Infrastructure.Persistence;
 using SekaiLib.Infrastructure.Persistence.Repositories;
 
@@ -17,6 +20,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IExternalAuthService, ExternalAuthService>();
         services.AddScoped<ITitleService, TitleService>();
         services.AddScoped<IChapterService, ChapterService>();
         services.AddScoped<IReadingListService, ReadingListService>();
@@ -26,6 +30,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<UserListService>();
         services.AddScoped<IMessagingService, MessagingService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IOAuthFlowService, OAuthFlowService>();
+        services.AddScoped<IOAuthStateStore, OAuthStateStore>();
+        services.AddScoped<IExternalAuthTicketStore, ExternalAuthTicketStore>();
 
         return services;
     }
@@ -34,6 +41,11 @@ public static class ServiceCollectionExtensions
     {
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+
+        services.Configure<OAuthOptions>(configuration.GetSection("OAuth"));
+        services.AddMemoryCache();
+        services.AddHttpClient<GoogleExternalAuthProvider>();
+        services.AddScoped<IExternalAuthProvider>(sp => sp.GetRequiredService<GoogleExternalAuthProvider>());
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ITitleRepository, TitleRepository>();

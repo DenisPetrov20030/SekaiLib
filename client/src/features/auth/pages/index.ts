@@ -1,2 +1,2 @@
-export * from './LoginPage';
-export * from './RegisterPage';
+﻿export * from './OAuthCallbackPage';
+export * from './LegacyAuthRedirectPage';

@@ -1,4 +1,5 @@
-﻿import { ReadingStatus, TitleStatus, UserRole } from './enums';
+﻿export type AuthProvider = 'google';
+import { ReadingStatus, TitleStatus, UserRole } from './enums';
 
 export interface LoginRequest {
   email: string;
@@ -200,3 +201,4 @@ export interface NotificationDto {
   titleId?: string | null;
   titleCoverImageUrl?: string | null;
 }
+

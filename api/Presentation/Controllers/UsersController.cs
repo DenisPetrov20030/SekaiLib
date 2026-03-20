@@ -523,3 +523,4 @@ public async Task<IActionResult> RejectFriendRequest(Guid requestId)
         return Ok(new { avatarUrl = user.AvatarUrl });
     }
 }
+

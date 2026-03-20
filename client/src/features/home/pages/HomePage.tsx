@@ -4,7 +4,6 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import axios from 'axios';
 import { apiClient } from '../../../core/api';
 import { ROUTES } from '../../../core/constants';
 
@@ -33,8 +32,8 @@ export const HomePage = () => {
             try {
                 setLoading(true);
                 const [chaptersRes, titlesRes, progressRes] = await Promise.all([
-                    axios.get('https://localhost:7054/api/titles/latest-chapters'),
-                    axios.get('https://localhost:7054/api/titles/latest'),
+                    apiClient.get<any[]>('/titles/latest-chapters'),
+                    apiClient.get<any[]>('/titles/latest'),
                     apiClient.get('/users/reading-progress').catch(() => ({ data: [] as any[] }))
                 ]);
 

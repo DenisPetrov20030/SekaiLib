@@ -9,6 +9,7 @@ public class AppDbContext : DbContext
     {
     }
     public DbSet<User> Users { get; set; }
+    public DbSet<UserExternalLogin> UserExternalLogins { get; set; }
     public DbSet<UserList> UserLists { get; set; }
     public DbSet<Title> Titles { get; set; }
     public DbSet<Chapter> Chapters { get; set; }
@@ -39,6 +40,25 @@ public class AppDbContext : DbContext
     base.OnModelCreating(modelBuilder);
 
     modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+    modelBuilder.Entity<UserExternalLogin>(entity =>
+    {
+        entity.HasKey(x => x.Id);
+
+        entity.Property(x => x.Provider)
+            .HasMaxLength(50)
+            .IsRequired();
+
+        entity.Property(x => x.ProviderUserId)
+            .HasMaxLength(200)
+            .IsRequired();
+
+        entity.HasIndex(x => new { x.Provider, x.ProviderUserId })
+            .IsUnique();
+
+        entity.HasIndex(x => new { x.UserId, x.Provider })
+            .IsUnique();
+    });
 
     modelBuilder.Entity<UserList>(entity =>
     {

@@ -1,12 +1,9 @@
-import { useState } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+﻿import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../features/auth/hooks';
 import { ROUTES } from '../../core/constants';
-import { LoginModal } from './LoginModal';
 
 export const ProtectedRoute = () => {
   const { isAuthenticated, loading } = useAuth();
-  const [showLoginModal, setShowLoginModal] = useState(!isAuthenticated);
 
   if (loading) {
     return (
@@ -20,13 +17,5 @@ export const ProtectedRoute = () => {
     return <Outlet />;
   }
 
-  return (
-    <>
-      <Navigate to={ROUTES.CATALOG} replace />
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-      />
-    </>
-  );
+  return <Navigate to={`${ROUTES.CATALOG}?auth=login`} replace />;
 };

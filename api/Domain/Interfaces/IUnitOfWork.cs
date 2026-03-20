@@ -1,4 +1,4 @@
-using SekaiLib.Domain.Entities;
+﻿using SekaiLib.Domain.Entities;
 using SekaiLib.Domain.Interfaces.Repositories;
 
 namespace SekaiLib.Domain.Interfaces;
@@ -15,6 +15,7 @@ public interface IUnitOfWork
     IRepository<TitleGenre> TitleGenres { get; }
     IRepository<TranslationTeam> TranslationTeams { get; }
     IRepository<RefreshToken> RefreshTokens { get; }
+    IRepository<UserExternalLogin> UserExternalLogins { get; }
     IUserListRepository UserLists { get; }
     IRepository<UserReadingProgress> UserReadingProgresses { get; }
     IRepository<Conversation> Conversations { get; }

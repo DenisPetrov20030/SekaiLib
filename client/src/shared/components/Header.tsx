@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import * as signalR from '@microsoft/signalr';
 import { useAuth } from '../../features/auth/hooks';
 import { messagesApi, notificationsApi } from '../../core/api';
@@ -8,11 +8,14 @@ import { UserRole } from '../../core/types/enums';
 import { NotificationType } from '../../core/types/dtos';
 import type { NotificationDto } from '../../core/types/dtos';
 import { storage } from '../../core/utils';
-import { LoginModal } from './LoginModal';
+import { AuthDialog } from './AuthDialog';
 
 export const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -55,6 +58,33 @@ export const Header = () => {
 
   const isAdmin = user?.role === UserRole.Administrator || user?.role === UserRole.Moderator;
 
+  useEffect(() => {
+    const auth = new URLSearchParams(location.search).get('auth');
+    if (!isAuthenticated && (auth === 'login' || auth === 'register')) {
+      setAuthMode(auth);
+      setIsLoginModalOpen(true);
+    }
+  }, [isAuthenticated, location.search]);
+
+  const closeAuthDialog = () => {
+    setIsLoginModalOpen(false);
+    const params = new URLSearchParams(location.search);
+    if (!params.has('auth')) {
+      return;
+    }
+
+    params.delete('auth');
+    const search = params.toString();
+    navigate(
+      {
+        pathname: location.pathname,
+        search: search ? `?${search}` : '',
+        hash: location.hash,
+      },
+      { replace: true }
+    );
+  };
+
   const filteredNotifications = useMemo(() => {
     switch (activeTab) {
       case 'chapters':
@@ -76,7 +106,7 @@ export const Header = () => {
     if (!isAuthenticated) {
       setNotifications([]);
       setUnreadCount(0);
-      connectionRef.current?.stop().catch(() => {});
+      connectionRef.current?.stop()?.catch(() => {});
       connectionRef.current = null;
       return;
     }
@@ -176,7 +206,7 @@ export const Header = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
               
-              <Link to="/" className="text-2xl font-bold text-primary-500">
+              <Link to={ROUTES.HOME} className="text-2xl font-bold text-primary-500">
                 SekaiLib
               </Link>
               
@@ -348,17 +378,17 @@ export const Header = () => {
               ) : (
                 <>
                   <button
-                    onClick={() => setIsLoginModalOpen(true)}
+                    onClick={() => { setAuthMode('login'); setIsLoginModalOpen(true); }}
                     className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
                   >
                     Вхід
                   </button>
-                  <Link
-                    to={ROUTES.REGISTER}
+                  <button
+                    onClick={() => { setAuthMode('register'); setIsLoginModalOpen(true); }}
                     className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700"
                   >
                     Реєстрація
-                  </Link>
+                  </button>
                 </>
               )}
             </div>
@@ -366,10 +396,12 @@ export const Header = () => {
         </div>
       </header>
 
-      <LoginModal
+      <AuthDialog
         isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
+        initialMode={authMode}
+        onClose={closeAuthDialog}
       />
     </>
   );
 };
+

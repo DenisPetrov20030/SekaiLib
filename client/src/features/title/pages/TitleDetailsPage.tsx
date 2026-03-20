@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchTitleDetails } from '../store';
 import { RatingButtons, ReviewList, AddToListButton } from '../components';
-import { LoginModal, Button } from '../../../shared/components';
+import { AuthDialog, Button } from '../../../shared/components';
 import { ratingsApi } from '../../../core/api';
 import { UserRole } from '../../../core/types/enums';
 import type { TitleRating } from '../../../core/types';
 
 const translateCountry = (country: string): string => {
   const translations: { [key: string]: string } = {
-    Japan: 'Японія',
-    China: 'Китай',
-    Korea: 'Південна Корея',
-    Other: 'Інше',
+    Japan: 'Ð¯Ð¿Ð¾Ð½Ñ–Ñ',
+    China: 'ÐšÐ¸Ñ‚Ð°Ð¹',
+    Korea: 'ÐŸÑ–Ð²Ð´ÐµÐ½Ð½Ð° ÐšÐ¾Ñ€ÐµÑ',
+    Other: 'Ð†Ð½ÑˆÐµ',
   };
   return translations[country] || country;
 };
@@ -51,7 +51,7 @@ export const TitleDetailsPage = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center text-red-600">
-          {error || 'Твір не знайдено'}
+          {error || 'Ð¢Ð²Ñ–Ñ€ Ð½Ðµ Ð·Ð½Ð°Ð¹Ð´ÐµÐ½Ð¾'}
         </div>
       </div>
     );
@@ -59,7 +59,7 @@ export const TitleDetailsPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
+      <AuthDialog isOpen={showLogin} onClose={() => setShowLogin(false)} initialMode="login" />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1">
@@ -76,7 +76,7 @@ export const TitleDetailsPage = () => {
 
         <div className="md:col-span-2">
           <h1 className="text-3xl font-bold text-text-primary">{currentTitle.name}</h1>
-          <p className="mt-2 text-lg text-text-muted">автор: {currentTitle.author}</p>
+          <p className="mt-2 text-lg text-text-muted">Ð°Ð²Ñ‚Ð¾Ñ€: {currentTitle.author}</p>
           
           {currentTitle.publisher && (
             <Link
@@ -90,7 +90,7 @@ export const TitleDetailsPage = () => {
                   className="w-6 h-6 rounded-full"
                 />
               )}
-              <span>Опубліковано: {currentTitle.publisher.username}</span>
+              <span>ÐžÐ¿ÑƒÐ±Ð»Ñ–ÐºÐ¾Ð²Ð°Ð½Ð¾: {currentTitle.publisher.username}</span>
             </Link>
           )}
 
@@ -116,12 +116,12 @@ export const TitleDetailsPage = () => {
           </div>
 
           <div className="mt-6">
-            <h2 className="text-xl font-semibold text-text-primary">Опис</h2>
+            <h2 className="text-xl font-semibold text-text-primary">ÐžÐ¿Ð¸Ñ</h2>
             <p className="mt-2 text-text-secondary whitespace-pre-line">{currentTitle.description}</p>
           </div>
 
           <div className="mt-6">
-            <h2 className="text-xl font-semibold text-text-primary">Жанри</h2>
+            <h2 className="text-xl font-semibold text-text-primary">Ð–Ð°Ð½Ñ€Ð¸</h2>
             <div className="mt-2 flex flex-wrap gap-2">
               {currentTitle.genres.map((genre) => (
                 <span
@@ -136,13 +136,13 @@ export const TitleDetailsPage = () => {
 
           <div className="mt-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-text-primary">Розділи</h2>
+              <h2 className="text-xl font-semibold text-text-primary">Ð Ð¾Ð·Ð´Ñ–Ð»Ð¸</h2>
               {canManageChapters && (
                 <Button
                   onClick={() => navigate(`/titles/${id}/chapters/create`)}
                   size="sm"
                 >
-                  Додати розділ
+                  Ð”Ð¾Ð´Ð°Ñ‚Ð¸ Ñ€Ð¾Ð·Ð´Ñ–Ð»
                 </Button>
               )}
             </div>
@@ -159,7 +159,7 @@ export const TitleDetailsPage = () => {
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="font-medium text-text-primary">Глава {chapter.chapterNumber}</span>
+                          <span className="font-medium text-text-primary">Ð“Ð»Ð°Ð²Ð° {chapter.chapterNumber}</span>
                           {chapter.name && (
                             <span className="ml-2 text-text-muted">- {chapter.name}</span>
                           )}
@@ -174,21 +174,21 @@ export const TitleDetailsPage = () => {
                         onClick={() => navigate(`/titles/${id}/chapters/${chapter.id}/edit`)}
                         className="ml-4 px-3 py-1 text-sm text-primary-400 hover:text-primary-300 transition-colors"
                       >
-                        Редагувати
+                        Ð ÐµÐ´Ð°Ð³ÑƒÐ²Ð°Ñ‚Ð¸
                       </button>
                     )}
                   </div>
                 ))
               ) : (
                 <p className="text-text-muted text-center py-8">
-                  Розділи ще не додані
+                  Ð Ð¾Ð·Ð´Ñ–Ð»Ð¸ Ñ‰Ðµ Ð½Ðµ Ð´Ð¾Ð´Ð°Ð½Ñ–
                 </p>
               )}
             </div>
           </div>
 
           <div className="mt-8">
-            <h2 className="text-xl font-semibold text-text-primary mb-4">Рецензії</h2>
+            <h2 className="text-xl font-semibold text-text-primary mb-4">Ð ÐµÑ†ÐµÐ½Ð·Ñ–Ñ—</h2>
             <ReviewList
               titleId={currentTitle.id}
               onLoginRequired={() => setShowLogin(true)}
@@ -199,3 +199,4 @@ export const TitleDetailsPage = () => {
     </div>
   );
 };
+

@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+﻿import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { User } from '../../../core/types';
 import { authApi } from '../api';
@@ -47,6 +47,18 @@ export const register = createAsyncThunk(
   }
 );
 
+export const completeOAuth = createAsyncThunk(
+  'auth/completeOAuth',
+  async (ticket: string, { rejectWithValue }) => {
+    try {
+      const response = await authApi.completeOAuth(ticket);
+      return response;
+    } catch (error) {
+      return rejectWithValue((error as { message: string }).message);
+    }
+  }
+);
+
 export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
   async (_, { rejectWithValue }) => {
@@ -65,7 +77,7 @@ export const initializeAuth = createAsyncThunk(
     try {
       const accessToken = storage.get<string>(ACCESS_TOKEN_STORAGE_KEY);
       const refreshToken = storage.get<string>(TOKEN_STORAGE_KEY);
-      
+
       if (!accessToken || !refreshToken) {
         return null;
       }
@@ -81,6 +93,15 @@ export const initializeAuth = createAsyncThunk(
     }
   }
 );
+
+const applyAuthResponse = (state: AuthState, payload: AuthResponse) => {
+  state.user = payload.user;
+  state.accessToken = payload.accessToken;
+  state.isAuthenticated = true;
+  storage.set(ACCESS_TOKEN_STORAGE_KEY, payload.accessToken);
+  storage.set(TOKEN_STORAGE_KEY, payload.refreshToken);
+  apiClient.setAccessToken(payload.accessToken);
+};
 
 const authSlice = createSlice({
   name: 'auth',
@@ -111,12 +132,7 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
         state.loading = false;
-        state.user = action.payload.user;
-        state.accessToken = action.payload.accessToken;
-        state.isAuthenticated = true;
-        storage.set(ACCESS_TOKEN_STORAGE_KEY, action.payload.accessToken);
-        storage.set(TOKEN_STORAGE_KEY, action.payload.refreshToken);
-        apiClient.setAccessToken(action.payload.accessToken);
+        applyAuthResponse(state, action.payload);
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -128,14 +144,21 @@ const authSlice = createSlice({
       })
       .addCase(register.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
         state.loading = false;
-        state.user = action.payload.user;
-        state.accessToken = action.payload.accessToken;
-        state.isAuthenticated = true;
-        storage.set(ACCESS_TOKEN_STORAGE_KEY, action.payload.accessToken);
-        storage.set(TOKEN_STORAGE_KEY, action.payload.refreshToken);
-        apiClient.setAccessToken(action.payload.accessToken);
+        applyAuthResponse(state, action.payload);
       })
       .addCase(register.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(completeOAuth.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(completeOAuth.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
+        state.loading = false;
+        applyAuthResponse(state, action.payload);
+      })
+      .addCase(completeOAuth.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
