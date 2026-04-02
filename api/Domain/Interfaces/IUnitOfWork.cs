@@ -14,6 +14,8 @@ public interface IUnitOfWork
     IRepository<Genre> Genres { get; }
     IRepository<TitleGenre> TitleGenres { get; }
     IRepository<TranslationTeam> TranslationTeams { get; }
+    IRepository<TranslationTeamMember> TranslationTeamMembers { get; }
+    IRepository<TranslationTeamSubscription> TranslationTeamSubscriptions { get; }
     IRepository<RefreshToken> RefreshTokens { get; }
     IRepository<UserExternalLogin> UserExternalLogins { get; }
     IUserListRepository UserLists { get; }

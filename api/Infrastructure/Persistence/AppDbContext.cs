@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<Chapter> Chapters { get; set; }
     public DbSet<Genre> Genres { get; set; }
     public DbSet<TranslationTeam> TranslationTeams { get; set; }
+    public DbSet<TranslationTeamMember> TranslationTeamMembers { get; set; }
+    public DbSet<TranslationTeamSubscription> TranslationTeamSubscriptions { get; set; }
     public DbSet<ReadingList> ReadingLists { get; set; }
     public DbSet<ReadingProgress> ReadingProgresses { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
@@ -159,6 +161,52 @@ public class AppDbContext : DbContext
             .HasForeignKey(m => m.SenderId)
             .OnDelete(DeleteBehavior.Cascade);
     });
+
+    modelBuilder.Entity<TranslationTeam>(entity =>
+    {
+        entity.HasOne(t => t.Owner)
+            .WithMany()
+            .HasForeignKey(t => t.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
+    });
+
+    modelBuilder.Entity<TranslationTeamMember>(entity =>
+    {
+        entity.HasKey(m => new { m.TeamId, m.UserId });
+
+        entity.HasOne(m => m.Team)
+            .WithMany(t => t.Members)
+            .HasForeignKey(m => m.TeamId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(m => m.User)
+            .WithMany()
+            .HasForeignKey(m => m.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<TranslationTeamSubscription>(entity =>
+    {
+        entity.HasKey(s => new { s.TeamId, s.UserId });
+
+        entity.HasOne(s => s.Team)
+            .WithMany(t => t.Subscriptions)
+            .HasForeignKey(s => s.TeamId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(s => s.User)
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<Chapter>(entity =>
+    {
+        entity.HasOne(c => c.TranslationTeam)
+            .WithMany(t => t.Chapters)
+            .HasForeignKey(c => c.TranslationTeamId)
+            .OnDelete(DeleteBehavior.SetNull);
+    });
 }
-    
+
 }

@@ -20,7 +20,8 @@ public class ChapterRepository : Repository<Chapter>, IChapterRepository
     public async Task<IEnumerable<Chapter>> GetByTitleIdAsync(Guid titleId)
     {
         return await _dbSet
-            .Include(c => c.Title) 
+            .Include(c => c.Title)
+            .Include(c => c.TranslationTeam)
             .Where(c => c.TitleId == titleId)
             .OrderBy(c => c.Number)
             .ToListAsync();

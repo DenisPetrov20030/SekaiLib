@@ -68,6 +68,7 @@ public class TitleRepository : Repository<Title>, ITitleRepository
         return await _dbSet
             .Include(t => t.Publisher)
             .Include(t => t.Chapters)
+                .ThenInclude(c => c.TranslationTeam)
             .Include(t => t.TitleGenres)
                 .ThenInclude(tg => tg.Genre)
             .Include(t => t.TitleTranslators)

@@ -30,6 +30,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<UserListService>();
         services.AddScoped<IMessagingService, MessagingService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<ITranslationTeamService, TranslationTeamService>();
         services.AddScoped<IOAuthFlowService, OAuthFlowService>();
         services.AddScoped<IOAuthStateStore, OAuthStateStore>();
         services.AddScoped<IExternalAuthTicketStore, ExternalAuthTicketStore>();

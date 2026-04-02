@@ -18,6 +18,8 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Genre> Genres { get; }
     public IRepository<TitleGenre> TitleGenres { get; }
     public IRepository<TranslationTeam> TranslationTeams { get; }
+    public IRepository<TranslationTeamMember> TranslationTeamMembers { get; }
+    public IRepository<TranslationTeamSubscription> TranslationTeamSubscriptions { get; }
     public IRepository<RefreshToken> RefreshTokens { get; }
     public IRepository<UserExternalLogin> UserExternalLogins { get; }
     public IUserListRepository UserLists { get; }
@@ -52,6 +54,8 @@ public class UnitOfWork : IUnitOfWork
         Genres = genres;
         TitleGenres = titleGenres;
         TranslationTeams = translationTeams;
+        TranslationTeamMembers = new Repository<TranslationTeamMember>(_context);
+        TranslationTeamSubscriptions = new Repository<TranslationTeamSubscription>(_context);
         RefreshTokens = refreshTokens;
         UserExternalLogins = new Repository<UserExternalLogin>(_context);
         UserLists = userLists;
