@@ -1,4 +1,4 @@
-﻿export type AuthProvider = 'google';
+﻿export type AuthProvider = 'google' | 'facebook';
 import { ReadingStatus, TitleStatus, UserRole } from './enums';
 
 export interface LoginRequest {

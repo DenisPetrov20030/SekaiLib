@@ -2,5 +2,6 @@
 
 public enum ExternalAuthProvider
 {
-    Google = 0
+    Google = 0,
+    Facebook = 1
 }

@@ -45,7 +45,9 @@ public static class ServiceCollectionExtensions
         services.Configure<OAuthOptions>(configuration.GetSection("OAuth"));
         services.AddMemoryCache();
         services.AddHttpClient<GoogleExternalAuthProvider>();
+        services.AddHttpClient<FacebookExternalAuthProvider>();
         services.AddScoped<IExternalAuthProvider>(sp => sp.GetRequiredService<GoogleExternalAuthProvider>());
+        services.AddScoped<IExternalAuthProvider>(sp => sp.GetRequiredService<FacebookExternalAuthProvider>());
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ITitleRepository, TitleRepository>();

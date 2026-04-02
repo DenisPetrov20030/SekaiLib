@@ -111,8 +111,7 @@ public class AuthController : ControllerBase
 
     private string BuildCallbackUrl(string provider)
     {
-       
-        return $"{Request.Scheme}://{Request.Host}/api/auth/oauth/{provider.ToLowerInvariant()}/callback";
+        return Url.ActionLink(nameof(OAuthCallback), values: new { provider })!;
     }
 
     private string BuildFrontendCallbackUrl(string? ticket = null, string? returnUrl = null, string? errorMessage = null)
@@ -154,6 +153,11 @@ public class AuthController : ControllerBase
             return true;
         }
 
+        if (provider.Equals("facebook", StringComparison.OrdinalIgnoreCase))
+        {
+            parsedProvider = ExternalAuthProvider.Facebook;
+            return true;
+        }
         parsedProvider = default;
         return false;
     }

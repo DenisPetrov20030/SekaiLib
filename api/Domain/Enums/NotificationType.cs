@@ -6,5 +6,6 @@ public enum NotificationType
     CommentReply = 1,
     DirectMessage = 2,
     FriendRequest = 3,
-    TitleCompleted = 4
+    TitleCompleted = 4,
+    NewTeamChapter = 5
 }

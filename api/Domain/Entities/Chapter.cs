@@ -10,6 +10,8 @@ public class Chapter
     public DateTime PublishedAt { get; set; }
     public bool IsPremium { get; set; }
     public DateTime? EarlyAccessUntil { get; set; }
+    public Guid? TranslationTeamId { get; set; }
     public Title Title { get; set; } = null!;
+    public TranslationTeam? TranslationTeam { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
