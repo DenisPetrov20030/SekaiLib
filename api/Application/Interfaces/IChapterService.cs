@@ -5,7 +5,7 @@ namespace SekaiLib.Application.Interfaces;
 
 public interface IChapterService
 {
-    Task<IEnumerable<ChapterDto>> GetChaptersByTitleAsync(Guid titleId);
+    Task<IEnumerable<ChapterDto>> GetChaptersByTitleAsync(Guid titleId, Guid? teamId = null);
     Task<ChapterContentDto> GetChapterContentAsync(Guid chapterId);
     Task<ChapterContentDto> GetChapterContentByNumberAsync(Guid titleId, int chapterNumber);
     Task<ChapterContentDto> CreateAsync(Guid userId, Guid titleId, CreateChapterRequest request);

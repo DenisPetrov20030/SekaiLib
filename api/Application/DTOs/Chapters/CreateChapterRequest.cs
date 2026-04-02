@@ -4,5 +4,6 @@ public record CreateChapterRequest(
     int ChapterNumber,
     string Name,
     string Content,
-    bool IsPremium
+    bool IsPremium,
+    Guid? TranslationTeamId = null
 );

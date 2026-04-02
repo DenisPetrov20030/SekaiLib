@@ -19,9 +19,9 @@ public class ChaptersController : ControllerBase
     }
 
     [HttpGet("title/{titleId}")]
-    public async Task<ActionResult<IEnumerable<ChapterDto>>> GetChaptersByTitle(Guid titleId)
+    public async Task<ActionResult<IEnumerable<ChapterDto>>> GetChaptersByTitle(Guid titleId, [FromQuery] Guid? teamId = null)
     {
-        var chapters = await _chapterService.GetChaptersByTitleAsync(titleId);
+        var chapters = await _chapterService.GetChaptersByTitleAsync(titleId, teamId);
         return Ok(chapters);
     }
 

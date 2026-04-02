@@ -21,7 +21,7 @@ public class ChapterService : IChapterService
         _notifications = notifications;
     }
 
-    public async Task<IEnumerable<ChapterDto>> GetChaptersByTitleAsync(Guid titleId)
+    public async Task<IEnumerable<ChapterDto>> GetChaptersByTitleAsync(Guid titleId, Guid? teamId = null)
     {
         var titleExists = await _unitOfWork.Titles.ExistsAsync(titleId);
         if (!titleExists)
@@ -29,9 +29,13 @@ public class ChapterService : IChapterService
 
         var chapters = await _unitOfWork.Chapters.GetByTitleIdAsync(titleId);
 
-        return chapters
+        var query = chapters.AsEnumerable();
+        if (teamId.HasValue)
+            query = query.Where(c => c.TranslationTeamId == teamId.Value);
+
+        return query
             .OrderBy(c => c.Number)
-            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium));
+            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.TranslationTeamId, c.TranslationTeam?.Name));
     }
 
     public async Task<ChapterContentDto> GetChapterContentAsync(Guid chapterId)
@@ -89,7 +93,19 @@ public class ChapterService : IChapterService
         if (user == null)
             throw new UnauthorizedException();
 
-        if (title.PublisherId != userId && user.Role != UserRole.Administrator)
+        // Check permission: publisher, admin, or team member (not team admin)
+        var canCreate = title.PublisherId == userId || user.Role == UserRole.Administrator;
+
+        if (!canCreate && request.TranslationTeamId.HasValue)
+        {
+            var teamMember = await _unitOfWork.TranslationTeamMembers.Query()
+                .FirstOrDefaultAsync(m => m.TeamId == request.TranslationTeamId.Value && m.UserId == userId);
+
+            if (teamMember != null && teamMember.Role != Domain.Enums.TeamMemberRole.Admin)
+                canCreate = true;
+        }
+
+        if (!canCreate)
             throw new ForbiddenException();
 
         var existingChapter = await _unitOfWork.Chapters.GetByTitleAndNumberAsync(titleId, request.ChapterNumber);
@@ -105,8 +121,9 @@ public class ChapterService : IChapterService
             TitleId = titleId,
             Number = request.ChapterNumber,
             Name = request.Name,
-            Content = PrepareTextForDb(request.Content), 
+            Content = PrepareTextForDb(request.Content),
             IsPremium = request.IsPremium,
+            TranslationTeamId = request.TranslationTeamId,
             PublishedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
         };
@@ -114,6 +131,7 @@ public class ChapterService : IChapterService
         await _unitOfWork.Chapters.AddAsync(chapter);
         await _unitOfWork.SaveChangesAsync();
 
+        // Notify reading list followers (title subscribers)
         var followerIds = await _unitOfWork.ReadingLists.Query()
             .Where(rl => rl.TitleId == titleId)
             .Select(rl => rl.UserId)
@@ -132,6 +150,35 @@ public class ChapterService : IChapterService
                 titleId,
                 chapter.Id
             ));
+        }
+
+        // Notify team subscribers if chapter is from a team
+        if (request.TranslationTeamId.HasValue)
+        {
+            var teamSubscriberIds = await _unitOfWork.TranslationTeamSubscriptions.Query()
+                .Where(s => s.TeamId == request.TranslationTeamId.Value)
+                .Select(s => s.UserId)
+                .Distinct()
+                .ToListAsync();
+
+            var alreadyNotified = new HashSet<Guid>(followerIds);
+            alreadyNotified.Add(userId);
+
+            var team = await _unitOfWork.TranslationTeams.GetByIdAsync(request.TranslationTeamId.Value);
+
+            foreach (var subscriberId in teamSubscriberIds.Where(id => !alreadyNotified.Contains(id)))
+            {
+                await _notifications.CreateAsync(new CreateNotificationRequest(
+                    subscriberId,
+                    NotificationType.NewTeamChapter,
+                    "Нова глава від команди",
+                    $"{team?.Name ?? "Команда"}: {title.Name} — Глава {chapter.Number}",
+                    $"/titles/{titleId}/chapters/{chapter.Number}",
+                    userId,
+                    titleId,
+                    chapter.Id
+                ));
+            }
         }
 
         return await BuildChapterContentDto(chapter);
