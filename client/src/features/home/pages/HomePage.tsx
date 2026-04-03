@@ -5,13 +5,18 @@ import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { apiClient } from '../../../core/api';
+import { teamsApi } from '../../../core/api/teams';
 import { ROUTES } from '../../../core/constants';
+import { useAppSelector } from '../../../app/store/hooks';
+import type { SubscribedTeamChapterDto } from '../../../core/types/dtos';
 
 export const HomePage = () => {
     const navigate = useNavigate();
+    const { user } = useAppSelector((state) => state.auth);
     const [latestChapters, setLatestChapters] = useState<any[]>([]);
     const [latestTitles, setLatestTitles] = useState<any[]>([]);
     const [readingProgress, setReadingProgress] = useState<any[]>([]);
+    const [subscribedChapters, setSubscribedChapters] = useState<SubscribedTeamChapterDto[]>([]);
     const [loading, setLoading] = useState(true);
 
     const handleChapterClick = (titleId: string, chapterNumber: number) => {
@@ -40,6 +45,12 @@ export const HomePage = () => {
                 setLatestChapters(chaptersRes.data);
                 setLatestTitles(titlesRes.data);
                 setReadingProgress(Array.isArray(progressRes.data) ? progressRes.data : []);
+
+                if (user) {
+                    teamsApi.getSubscribedChapters(20)
+                        .then(setSubscribedChapters)
+                        .catch(() => {});
+                }
             } catch (err) {
                 console.error("Помилка завантаження даних", err);
             } finally {
@@ -151,6 +162,76 @@ export const HomePage = () => {
                     ))}
                 </Swiper>
             </section>
+
+            {subscribedChapters.length > 0 && (
+                <section>
+                    <div className="flex items-center gap-3 mb-6">
+                        <span className="w-1 h-8 bg-purple-500 rounded-full"></span>
+                        <h2 className="text-2xl font-bold text-white">Оновлення від команд</h2>
+                        <Link
+                            to={ROUTES.TEAMS}
+                            className="ml-auto text-xs text-gray-400 hover:text-purple-400 uppercase tracking-wider transition"
+                        >
+                            всі команди →
+                        </Link>
+                    </div>
+                    <Swiper
+                        modules={[Navigation]}
+                        navigation
+                        spaceBetween={15}
+                        slidesPerView={2.2}
+                        breakpoints={{
+                            640: { slidesPerView: 3.5 },
+                            1024: { slidesPerView: 5.5 },
+                        }}
+                    >
+                        {subscribedChapters.map((ch) => (
+                            <SwiperSlide key={ch.chapterId}>
+                                <div
+                                    onClick={() =>
+                                        navigate(
+                                            ROUTES.READER
+                                                .replace(':titleId', ch.titleId)
+                                                .replace(':chapterNumber', ch.chapterNumber.toString())
+                                        )
+                                    }
+                                    className="relative group overflow-hidden rounded-xl bg-gray-900 aspect-[2/3] block cursor-pointer"
+                                >
+                                    {ch.titleCoverImageUrl ? (
+                                        <img
+                                            src={ch.titleCoverImageUrl}
+                                            alt={ch.titleName}
+                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 opacity-80"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                                            <span className="text-4xl font-bold text-gray-600">
+                                                {ch.titleName.charAt(0)}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black via-black/70 to-transparent text-left">
+                                        <span className="inline-block bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded mb-1">
+                                            Глава {ch.chapterNumber}
+                                        </span>
+                                        <p className="text-white text-sm font-semibold truncate">
+                                            {ch.titleName}
+                                        </p>
+                                        <p className="text-gray-400 text-[10px] truncate">
+                                            {ch.teamName}
+                                        </p>
+                                    </div>
+                                    {ch.isPremium && (
+                                        <div className="absolute top-2 right-2 bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                            Premium
+                                        </div>
+                                    )}
+                                </div>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
+                </section>
+            )}
 
             {readingProgress?.length > 0 && (
                 <section className="bg-gray-900/50 rounded-2xl p-6 border border-gray-800">
