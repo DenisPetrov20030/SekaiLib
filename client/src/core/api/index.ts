@@ -6,3 +6,4 @@ export { messagesApi } from './messages';
 export * from './genres';
 export * from './chapters';
 export { notificationsApi } from './notifications';
+export { teamsApi } from './teams';

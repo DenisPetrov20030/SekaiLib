@@ -28,6 +28,9 @@ export const ROUTES = {
   ADMIN_TITLE_EDIT: '/admin/titles/:id',
   ADMIN_TITLE_CREATE: '/admin/titles/create',
   ADMIN_GENRES: '/admin/genres',
+  TEAMS: '/teams',
+  TEAM_DETAILS: '/teams/:teamId',
+  TEAM_CREATE: '/teams/create',
   NOT_FOUND: '/404',
 } as const;
 

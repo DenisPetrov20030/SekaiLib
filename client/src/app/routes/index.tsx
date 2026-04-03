@@ -13,6 +13,7 @@ import { FriendsPage, ProfilePage, UserProfilePage } from '../../features/profil
 import { ChatPage } from '../../features/messages/pages/ChatPage';
 import { NotificationsPage } from '../../features/notifications';
 import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage } from '../../features/admin';
+import { TeamsPage, TeamDetailsPage, CreateTeamPage } from '../../features/teams';
 import { ROUTES } from '../../core/constants';
 import { HomePage } from '../../features/home/pages/HomePage.tsx';
 import { NotFoundPage } from '../../features/home/pages/NotFoundPage';
@@ -47,6 +48,14 @@ export const router = createBrowserRouter([
         element: <TitleDetailsPage />,
       },
       {
+        path: ROUTES.TEAMS,
+        element: <TeamsPage />,
+      },
+      {
+        path: ROUTES.TEAM_DETAILS,
+        element: <TeamDetailsPage />,
+      },
+      {
         path: ROUTES.USER_PROFILE,
         element: <UserProfilePage />,
       },
@@ -76,6 +85,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.TITLE_CREATE,
             element: <CreateTitlePage />,
+          },
+          {
+            path: ROUTES.TEAM_CREATE,
+            element: <CreateTeamPage />,
           },
           {
             path: ROUTES.CHAPTER_CREATE,

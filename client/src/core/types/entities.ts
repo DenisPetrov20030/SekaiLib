@@ -37,6 +37,8 @@ export interface Chapter {
   name: string;
   isPremium: boolean;
   publishedAt: string;
+  translationTeamId?: string | null;
+  translationTeamName?: string | null;
 }
 
 export interface ChapterContent {

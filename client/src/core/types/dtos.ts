@@ -130,6 +130,7 @@ export interface CreateChapterRequest {
   name: string;
   content: string;
   isPremium: boolean;
+  translationTeamId?: string | null;
 }
 
 export interface UpdateChapterRequest {
@@ -177,12 +178,90 @@ export interface FriendRequestDto {
   createdAt: string;
 }
 
+export const TeamMemberRole = {
+  Owner: 0,
+  Admin: 1,
+  Member: 2,
+} as const;
+
+export type TeamMemberRole = typeof TeamMemberRole[keyof typeof TeamMemberRole];
+
+export interface TranslationTeamDto {
+  id: string;
+  name: string;
+  description: string;
+  avatarUrl?: string | null;
+  ownerId: string;
+  ownerUsername: string;
+  memberCount: number;
+  chapterCount: number;
+  subscriberCount: number;
+  createdAt: string;
+}
+
+export interface TeamMemberDto {
+  userId: string;
+  username: string;
+  avatarUrl?: string | null;
+  role: TeamMemberRole;
+  joinedAt: string;
+}
+
+export interface CreateTeamRequest {
+  name: string;
+  description: string;
+  avatarUrl?: string | null;
+}
+
+export interface UpdateTeamRequest {
+  name: string;
+  description: string;
+  avatarUrl?: string | null;
+}
+
+export interface AddMemberRequest {
+  userId: string;
+  role: TeamMemberRole;
+}
+
+export interface TeamChapterDto {
+  id: string;
+  chapterNumber: number;
+  name: string;
+  publishedAt: string;
+  isPremium: boolean;
+  translationTeamId?: string | null;
+  translationTeamName?: string | null;
+}
+
+export interface SubscribedTeamChapterDto {
+  chapterId: string;
+  chapterNumber: number;
+  chapterName: string;
+  publishedAt: string;
+  isPremium: boolean;
+  titleId: string;
+  titleName: string;
+  titleCoverImageUrl?: string | null;
+  teamId: string;
+  teamName: string;
+}
+
+export interface TeamChaptersResponse {
+  data: TeamChapterDto[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 export const NotificationType = {
   NewChapter: 0,
   CommentReply: 1,
   DirectMessage: 2,
   FriendRequest: 3,
   TitleCompleted: 4,
+  NewTeamChapter: 5,
 } as const;
 
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
