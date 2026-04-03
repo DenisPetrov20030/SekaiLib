@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchTitleDetails } from '../store';
@@ -10,10 +10,10 @@ import type { TitleRating } from '../../../core/types';
 
 const translateCountry = (country: string): string => {
   const translations: { [key: string]: string } = {
-    Japan: 'Ð¯Ð¿Ð¾Ð½Ñ–Ñ',
-    China: 'ÐšÐ¸Ñ‚Ð°Ð¹',
-    Korea: 'ÐŸÑ–Ð²Ð´ÐµÐ½Ð½Ð° ÐšÐ¾Ñ€ÐµÑ',
-    Other: 'Ð†Ð½ÑˆÐµ',
+    Japan: 'Японія',
+    China: 'Китай',
+    Korea: 'Південна Корея',
+    Other: 'Інше',
   };
   return translations[country] || country;
 };
@@ -26,9 +26,10 @@ export const TitleDetailsPage = () => {
   const { user } = useAppSelector((state) => state.auth);
   const [showLogin, setShowLogin] = useState(false);
   const [rating, setRating] = useState<TitleRating | undefined>();
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
   const canManageChapters = user && currentTitle && (
-    user.id === currentTitle.publisher?.id || 
+    user.id === currentTitle.publisher?.id ||
     user.role === UserRole.Administrator
   );
 
@@ -38,6 +39,11 @@ export const TitleDetailsPage = () => {
       ratingsApi.get(id).then(setRating).catch(() => {});
     }
   }, [dispatch, id]);
+
+  // Reset team filter when title changes
+  useEffect(() => {
+    setSelectedTeamId(null);
+  }, [id]);
 
   if (loading) {
     return (
@@ -51,16 +57,20 @@ export const TitleDetailsPage = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center text-red-600">
-          {error || 'Ð¢Ð²Ñ–Ñ€ Ð½Ðµ Ð·Ð½Ð°Ð¹Ð´ÐµÐ½Ð¾'}
+          {error || 'Твір не знайдено'}
         </div>
       </div>
     );
   }
 
+  const filteredChapters = selectedTeamId
+    ? currentTitle.chapters.filter((c) => c.translationTeamId === selectedTeamId)
+    : currentTitle.chapters;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <AuthDialog isOpen={showLogin} onClose={() => setShowLogin(false)} initialMode="login" />
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1">
           {currentTitle.coverImageUrl ? (
@@ -76,8 +86,8 @@ export const TitleDetailsPage = () => {
 
         <div className="md:col-span-2">
           <h1 className="text-3xl font-bold text-text-primary">{currentTitle.name}</h1>
-          <p className="mt-2 text-lg text-text-muted">Ð°Ð²Ñ‚Ð¾Ñ€: {currentTitle.author}</p>
-          
+          <p className="mt-2 text-lg text-text-muted">автор: {currentTitle.author}</p>
+
           {currentTitle.publisher && (
             <Link
               to={`/users/${currentTitle.publisher.id}`}
@@ -90,7 +100,7 @@ export const TitleDetailsPage = () => {
                   className="w-6 h-6 rounded-full"
                 />
               )}
-              <span>ÐžÐ¿ÑƒÐ±Ð»Ñ–ÐºÐ¾Ð²Ð°Ð½Ð¾: {currentTitle.publisher.username}</span>
+              <span>Опубліковано: {currentTitle.publisher.username}</span>
             </Link>
           )}
 
@@ -116,12 +126,12 @@ export const TitleDetailsPage = () => {
           </div>
 
           <div className="mt-6">
-            <h2 className="text-xl font-semibold text-text-primary">ÐžÐ¿Ð¸Ñ</h2>
+            <h2 className="text-xl font-semibold text-text-primary">Опис</h2>
             <p className="mt-2 text-text-secondary whitespace-pre-line">{currentTitle.description}</p>
           </div>
 
           <div className="mt-6">
-            <h2 className="text-xl font-semibold text-text-primary">Ð–Ð°Ð½Ñ€Ð¸</h2>
+            <h2 className="text-xl font-semibold text-text-primary">Жанри</h2>
             <div className="mt-2 flex flex-wrap gap-2">
               {currentTitle.genres.map((genre) => (
                 <span
@@ -134,21 +144,69 @@ export const TitleDetailsPage = () => {
             </div>
           </div>
 
+          {/* Translation teams */}
+          {currentTitle.translationTeams && currentTitle.translationTeams.length > 0 && (
+            <div className="mt-6">
+              <h2 className="text-xl font-semibold text-text-primary mb-2">Команди перекладачів</h2>
+              <div className="flex flex-wrap gap-2">
+                {currentTitle.translationTeams.map((team) => (
+                  <Link
+                    key={team.id}
+                    to={`/teams/${team.id}`}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-surface-hover text-primary-400 hover:text-primary-300 transition-colors"
+                  >
+                    {team.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mt-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-text-primary">Ð Ð¾Ð·Ð´Ñ–Ð»Ð¸</h2>
+              <h2 className="text-xl font-semibold text-text-primary">Розділи</h2>
               {canManageChapters && (
                 <Button
                   onClick={() => navigate(`/titles/${id}/chapters/create`)}
                   size="sm"
                 >
-                  Ð”Ð¾Ð´Ð°Ñ‚Ð¸ Ñ€Ð¾Ð·Ð´Ñ–Ð»
+                  Додати розділ
                 </Button>
               )}
             </div>
+
+            {/* Team filter */}
+            {currentTitle.translationTeams && currentTitle.translationTeams.length > 1 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                <button
+                  onClick={() => setSelectedTeamId(null)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                    selectedTeamId === null
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-surface-hover text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  Всі переклади
+                </button>
+                {currentTitle.translationTeams.map((team) => (
+                  <button
+                    key={team.id}
+                    onClick={() => setSelectedTeamId(team.id)}
+                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                      selectedTeamId === team.id
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-surface-hover text-text-secondary hover:text-text-primary'
+                    }`}
+                  >
+                    {team.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="mt-4 space-y-2">
-              {currentTitle.chapters.length > 0 ? (
-                currentTitle.chapters.map((chapter) => (
+              {filteredChapters.length > 0 ? (
+                filteredChapters.map((chapter) => (
                   <div
                     key={chapter.id}
                     className="flex items-center justify-between p-4 bg-surface rounded-lg shadow hover:bg-surface-hover transition-colors"
@@ -159,9 +217,12 @@ export const TitleDetailsPage = () => {
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="font-medium text-text-primary">Ð“Ð»Ð°Ð²Ð° {chapter.chapterNumber}</span>
+                          <span className="font-medium text-text-primary">Глава {chapter.chapterNumber}</span>
                           {chapter.name && (
                             <span className="ml-2 text-text-muted">- {chapter.name}</span>
+                          )}
+                          {chapter.translationTeamName && !selectedTeamId && (
+                            <span className="ml-2 text-xs text-primary-400">[{chapter.translationTeamName}]</span>
                           )}
                         </div>
                         {chapter.isPremium && (
@@ -174,21 +235,21 @@ export const TitleDetailsPage = () => {
                         onClick={() => navigate(`/titles/${id}/chapters/${chapter.id}/edit`)}
                         className="ml-4 px-3 py-1 text-sm text-primary-400 hover:text-primary-300 transition-colors"
                       >
-                        Ð ÐµÐ´Ð°Ð³ÑƒÐ²Ð°Ñ‚Ð¸
+                        Редагувати
                       </button>
                     )}
                   </div>
                 ))
               ) : (
                 <p className="text-text-muted text-center py-8">
-                  Ð Ð¾Ð·Ð´Ñ–Ð»Ð¸ Ñ‰Ðµ Ð½Ðµ Ð´Ð¾Ð´Ð°Ð½Ñ–
+                  {selectedTeamId ? 'Ця команда ще не додала розділів' : 'Розділи ще не додані'}
                 </p>
               )}
             </div>
           </div>
 
           <div className="mt-8">
-            <h2 className="text-xl font-semibold text-text-primary mb-4">Ð ÐµÑ†ÐµÐ½Ð·Ñ–Ñ—</h2>
+            <h2 className="text-xl font-semibold text-text-primary mb-4">Рецензії</h2>
             <ReviewList
               titleId={currentTitle.id}
               onLoginRequired={() => setShowLogin(true)}
@@ -199,4 +260,3 @@ export const TitleDetailsPage = () => {
     </div>
   );
 };
-
