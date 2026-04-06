@@ -5,7 +5,6 @@ public class OAuthOptions
     public string FrontendCallbackBaseUrl { get; set; } = string.Empty;
     public int TicketTtlMinutes { get; set; } = 5;
     public OAuthProviderOptions Google { get; set; } = new();
-    public OAuthProviderOptions Facebook { get; set; } = new();
 }
 
 public class OAuthProviderOptions

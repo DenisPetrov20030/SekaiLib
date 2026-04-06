@@ -76,7 +76,7 @@ export const AuthDialog = ({ isOpen, initialMode = 'login', onClose, onSuccess }
     }
   };
 
-  const handleOAuth = (provider: 'google' | 'facebook') => {
+  const handleOAuth = (provider: 'google') => {
     const returnUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     startOAuth(provider, returnUrl);
   };
@@ -125,20 +125,13 @@ export const AuthDialog = ({ isOpen, initialMode = 'login', onClose, onSuccess }
             </button>
           </div>
 
-          <div className="mb-5 grid grid-cols-1 gap-3">
+          <div className="mb-5">
             <button
               type="button"
               onClick={() => handleOAuth('google')}
               className="w-full rounded-lg border border-surface-hover bg-background px-4 py-2.5 text-sm font-medium text-text-primary hover:border-primary-500"
             >
               Continue with Google
-            </button>
-            <button
-              type="button"
-              onClick={() => handleOAuth('facebook')}
-              className="w-full rounded-lg border border-surface-hover bg-background px-4 py-2.5 text-sm font-medium text-text-primary hover:border-primary-500"
-            >
-              Continue with Facebook
             </button>
           </div>
 

@@ -153,11 +153,6 @@ public class AuthController : ControllerBase
             return true;
         }
 
-        if (provider.Equals("facebook", StringComparison.OrdinalIgnoreCase))
-        {
-            parsedProvider = ExternalAuthProvider.Facebook;
-            return true;
-        }
         parsedProvider = default;
         return false;
     }
