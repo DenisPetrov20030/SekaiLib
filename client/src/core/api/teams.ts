@@ -11,6 +11,13 @@ import type {
 import { TeamMemberRole } from '../types/dtos';
 
 export const teamsApi = {
+  getMyTeams: async (canAddChapters = false): Promise<TranslationTeamDto[]> => {
+    const response = await apiClient.get<TranslationTeamDto[]>('/teams/my', {
+      params: canAddChapters ? { canAddChapters: true } : undefined,
+    });
+    return response.data;
+  },
+
   getAll: async (): Promise<TranslationTeamDto[]> => {
     const response = await apiClient.get<TranslationTeamDto[]>('/teams');
     return response.data;

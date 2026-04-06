@@ -24,6 +24,15 @@ public class TranslationTeamsController : ControllerBase
         return Ok(teams);
     }
 
+    [HttpGet("my")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<TranslationTeamDto>>> GetMyTeams([FromQuery] bool canAddChapters = false)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var teams = await _teamService.GetUserTeamsAsync(userId, canAddChapters);
+        return Ok(teams);
+    }
+
     [HttpGet("{teamId:guid}")]
     public async Task<ActionResult<TranslationTeamDto>> GetById(Guid teamId)
     {

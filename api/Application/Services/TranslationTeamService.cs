@@ -274,6 +274,26 @@ public class TranslationTeamService : ITranslationTeamService
         return (dtos, totalCount);
     }
 
+    public async Task<IEnumerable<TranslationTeamDto>> GetUserTeamsAsync(Guid userId, bool canAddChaptersOnly = false)
+    {
+        var query = _unitOfWork.TranslationTeamMembers.Query()
+            .Include(m => m.Team)
+                .ThenInclude(t => t.Owner)
+            .Include(m => m.Team)
+                .ThenInclude(t => t.Members)
+            .Include(m => m.Team)
+                .ThenInclude(t => t.Subscriptions)
+            .Include(m => m.Team)
+                .ThenInclude(t => t.Chapters)
+            .Where(m => m.UserId == userId);
+
+        if (canAddChaptersOnly)
+            query = query.Where(m => m.Role != TeamMemberRole.Admin);
+
+        var memberships = await query.ToListAsync();
+        return memberships.Select(m => MapToDto(m.Team));
+    }
+
     public async Task<IEnumerable<SubscribedTeamChapterDto>> GetRecentChaptersFromSubscribedTeamsAsync(Guid userId, int count)
     {
         var subscribedTeamIds = await _unitOfWork.TranslationTeamSubscriptions.Query()

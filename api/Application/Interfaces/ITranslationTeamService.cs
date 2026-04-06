@@ -22,4 +22,5 @@ public interface ITranslationTeamService
 
     Task<(IEnumerable<ChapterDto> Items, int TotalCount)> GetTeamChaptersAsync(Guid teamId, int page, int pageSize);
     Task<IEnumerable<SubscribedTeamChapterDto>> GetRecentChaptersFromSubscribedTeamsAsync(Guid userId, int count);
+    Task<IEnumerable<TranslationTeamDto>> GetUserTeamsAsync(Guid userId, bool canAddChaptersOnly = false);
 }
