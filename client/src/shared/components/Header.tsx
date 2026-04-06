@@ -217,6 +217,12 @@ export const Header = () => {
                 >
                   Каталог
                 </Link>
+                <Link
+                  to={ROUTES.TEAMS}
+                  className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Команди
+                </Link>
                 {isAuthenticated && (
                   <>
                     <Link

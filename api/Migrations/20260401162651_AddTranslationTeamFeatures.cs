@@ -110,6 +110,14 @@ namespace SekaiLib.Migrations
                 onDelete: ReferentialAction.SetNull);
 
             migrationBuilder.AddForeignKey(
+                name: "FK_Notifications_Titles_TitleId",
+                table: "Notifications",
+                column: "TitleId",
+                principalTable: "Titles",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
                 name: "FK_TranslationTeams_Users_OwnerId",
                 table: "TranslationTeams",
                 column: "OwnerId",
@@ -124,6 +132,10 @@ namespace SekaiLib.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_Chapters_TranslationTeams_TranslationTeamId",
                 table: "Chapters");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Notifications_Titles_TitleId",
+                table: "Notifications");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_TranslationTeams_Users_OwnerId",

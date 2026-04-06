@@ -1,28 +1,40 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { chaptersApi } from '../../../core/api';
+import { teamsApi } from '../../../core/api/teams';
 import { Button, Input, Textarea } from '../../../shared/components';
-import type { CreateChapterRequest, UpdateChapterRequest } from '../../../core/types/dtos';
+import { useAppSelector } from '../../../app/store/hooks';
+import type { CreateChapterRequest, UpdateChapterRequest, TranslationTeamDto } from '../../../core/types/dtos';
 
 interface ChapterFormData {
   chapterNumber: number;
   name: string;
   content: string;
   isPremium: boolean;
+  translationTeamId: string;
 }
 
 export const ChapterEditorPage = () => {
   const { titleId, chapterId } = useParams<{ titleId: string; chapterId?: string }>();
   const navigate = useNavigate();
+  const { user } = useAppSelector((state) => state.auth);
   const [loading, setLoading] = useState(false);
+  const [myTeams, setMyTeams] = useState<TranslationTeamDto[]>([]);
   const [formData, setFormData] = useState<ChapterFormData>({
     chapterNumber: 1,
     name: '',
     content: '',
     isPremium: false,
+    translationTeamId: '',
   });
 
   const isEditMode = !!chapterId;
+
+  useEffect(() => {
+    if (!isEditMode && user) {
+      teamsApi.getMyTeams(true).then(setMyTeams).catch(() => {});
+    }
+  }, [isEditMode, user]);
 
   useEffect(() => {
     if (isEditMode && chapterId) {
@@ -39,6 +51,7 @@ export const ChapterEditorPage = () => {
         name: chapter.name,
         content: chapter.content,
         isPremium: false,
+        translationTeamId: '',
       });
     } catch (error) {
       console.error('Failed to load chapter:', error);
@@ -67,6 +80,7 @@ export const ChapterEditorPage = () => {
           name: formData.name,
           content: formData.content,
           isPremium: formData.isPremium,
+          translationTeamId: formData.translationTeamId || null,
         };
         await chaptersApi.create(titleId, request);
       }
@@ -127,6 +141,26 @@ export const ChapterEditorPage = () => {
             placeholder="Глава 1: Початок"
           />
         </div>
+
+        {!isEditMode && myTeams.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">
+              Команда перекладу
+            </label>
+            <select
+              value={formData.translationTeamId}
+              onChange={(e) => setFormData({ ...formData, translationTeamId: e.target.value })}
+              className="w-full px-3 py-2 bg-surface border border-border rounded-md text-text-primary focus:outline-none focus:ring-1 focus:ring-primary-500"
+            >
+              <option value="">— без команди —</option>
+              {myTeams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <Textarea
           label="Контент"

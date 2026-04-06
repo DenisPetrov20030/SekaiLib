@@ -5,6 +5,7 @@ import { fetchTitleDetails } from '../store';
 import { RatingButtons, ReviewList, AddToListButton } from '../components';
 import { AuthDialog, Button } from '../../../shared/components';
 import { ratingsApi } from '../../../core/api';
+import { teamsApi } from '../../../core/api/teams';
 import { UserRole } from '../../../core/types/enums';
 import type { TitleRating } from '../../../core/types';
 
@@ -27,11 +28,13 @@ export const TitleDetailsPage = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [rating, setRating] = useState<TitleRating | undefined>();
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [hasTeamMembership, setHasTeamMembership] = useState(false);
 
-  const canManageChapters = user && currentTitle && (
+  const isPublisherOrAdmin = user && currentTitle && (
     user.id === currentTitle.publisher?.id ||
     user.role === UserRole.Administrator
   );
+  const canManageChapters = isPublisherOrAdmin || hasTeamMembership;
 
   useEffect(() => {
     if (id) {
@@ -39,6 +42,16 @@ export const TitleDetailsPage = () => {
       ratingsApi.get(id).then(setRating).catch(() => {});
     }
   }, [dispatch, id]);
+
+  useEffect(() => {
+    if (user) {
+      teamsApi.getMyTeams(true)
+        .then((teams) => setHasTeamMembership(teams.length > 0))
+        .catch(() => {});
+    } else {
+      setHasTeamMembership(false);
+    }
+  }, [user]);
 
   // Reset team filter when title changes
   useEffect(() => {
