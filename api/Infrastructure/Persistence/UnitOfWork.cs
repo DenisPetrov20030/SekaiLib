@@ -82,6 +82,10 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Notification> Notifications =>
         _notifications ??= new Repository<Notification>(_context);
 
+    private IRepository<ChapterView>? _chapterViews;
+    public IRepository<ChapterView> ChapterViews =>
+        _chapterViews ??= new Repository<ChapterView>(_context);
+
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync();

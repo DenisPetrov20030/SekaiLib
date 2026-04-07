@@ -268,7 +268,8 @@ public class TranslationTeamService : ITranslationTeamService
             c.PublishedAt,
             c.IsPremium,
             c.TranslationTeamId,
-            c.TranslationTeam?.Name
+            c.TranslationTeam?.Name,
+            c.ViewCount
         ));
 
         return (dtos, totalCount);

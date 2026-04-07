@@ -9,5 +9,6 @@ public record ChapterContentDto(
     Guid TitleId,
     string TitleName,
     int? PreviousChapterNumber,
-    int? NextChapterNumber
+    int? NextChapterNumber,
+    int ViewCount = 0
 );

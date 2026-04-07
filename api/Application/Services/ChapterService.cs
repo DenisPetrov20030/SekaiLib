@@ -7,6 +7,8 @@ using SekaiLib.Domain.Interfaces;
 using SekaiLib.Domain.Entities;
 using SekaiLib.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace SekaiLib.Application.Services;
 
@@ -35,7 +37,7 @@ public class ChapterService : IChapterService
 
         return query
             .OrderBy(c => c.Number)
-            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.TranslationTeamId, c.TranslationTeam?.Name));
+            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.TranslationTeamId, c.TranslationTeam?.Name, c.ViewCount));
     }
 
     public async Task<ChapterContentDto> GetChapterContentAsync(Guid chapterId)
@@ -79,7 +81,8 @@ public class ChapterService : IChapterService
             title.Id,
             title.Name,
             previousChapterNumber,
-            nextChapterNumber
+            nextChapterNumber,
+            chapter.ViewCount
         );
     }
 
@@ -509,6 +512,57 @@ public class ChapterService : IChapterService
             throw new NotFoundException("ChapterComment", commentId);
 
         return Map(target);
+    }
+
+    public async Task<int> RecordViewAsync(Guid chapterId, Guid? userId, string ipAddress)
+    {
+        var chapter = await _unitOfWork.Chapters.GetByIdAsync(chapterId);
+        if (chapter == null)
+            throw new NotFoundException("Chapter", chapterId);
+
+        var ipHash = HashIp(ipAddress);
+        var cooldown = DateTime.UtcNow.AddHours(-24);
+
+        bool alreadyViewed;
+        if (userId.HasValue)
+        {
+            alreadyViewed = await _unitOfWork.ChapterViews.Query()
+                .AnyAsync(v => v.ChapterId == chapterId
+                            && v.UserId == userId.Value
+                            && v.ViewedAt > cooldown);
+        }
+        else
+        {
+            alreadyViewed = await _unitOfWork.ChapterViews.Query()
+                .AnyAsync(v => v.ChapterId == chapterId
+                            && v.UserId == null
+                            && v.IpHash == ipHash
+                            && v.ViewedAt > cooldown);
+        }
+
+        if (alreadyViewed)
+            return chapter.ViewCount;
+
+        await _unitOfWork.ChapterViews.AddAsync(new ChapterView
+        {
+            Id = Guid.NewGuid(),
+            ChapterId = chapterId,
+            UserId = userId,
+            IpHash = ipHash,
+            ViewedAt = DateTime.UtcNow
+        });
+
+        chapter.ViewCount++;
+        await _unitOfWork.Chapters.UpdateAsync(chapter);
+        await _unitOfWork.SaveChangesAsync();
+
+        return chapter.ViewCount;
+    }
+
+    private static string HashIp(string ip)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(ip));
+        return Convert.ToHexString(bytes)[..16]; // first 8 bytes enough for dedup
     }
 
     private async Task<Guid> GetChapterIdByCommentId(Guid commentId)

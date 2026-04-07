@@ -19,4 +19,5 @@ public interface IChapterService
     Task<ChapterCommentResponse> SetCommentReactionAsync(Guid userId, Guid commentId, ReactionType type);
     Task RemoveCommentReactionAsync(Guid userId, Guid commentId);
     Task DeleteCommentAsync(Guid userId, Guid commentId);
+    Task<int> RecordViewAsync(Guid chapterId, Guid? userId, string ipAddress);
 }

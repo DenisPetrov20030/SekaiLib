@@ -13,5 +13,6 @@ public class Chapter
     public Guid? TranslationTeamId { get; set; }
     public Title Title { get; set; } = null!;
     public TranslationTeam? TranslationTeam { get; set; }
+    public int ViewCount { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

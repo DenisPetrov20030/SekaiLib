@@ -7,5 +7,6 @@ public record ChapterDto(
     DateTime PublishedAt,
     bool IsPremium,
     Guid? TranslationTeamId = null,
-    string? TranslationTeamName = null
+    string? TranslationTeamName = null,
+    int ViewCount = 0
 );

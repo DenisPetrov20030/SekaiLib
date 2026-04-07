@@ -26,5 +26,6 @@ public interface IUnitOfWork
     IRepository<Friendship> Friendships { get; }
     IRepository<FriendRequest> FriendRequests { get; }
     IRepository<Notification> Notifications { get; }
+    IRepository<ChapterView> ChapterViews { get; }
     Task<int> SaveChangesAsync();
 }

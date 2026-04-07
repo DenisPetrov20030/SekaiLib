@@ -59,6 +59,19 @@ public class ChaptersController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{chapterId}/view")]
+    public async Task<ActionResult<int>> RecordView(Guid chapterId)
+    {
+        Guid? userId = null;
+        var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(idClaim))
+            userId = Guid.Parse(idClaim);
+
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var viewCount = await _chapterService.RecordViewAsync(chapterId, userId, ip);
+        return Ok(new { viewCount });
+    }
+
     [HttpGet("{chapterId}/comments")]
     public async Task<ActionResult<IEnumerable<ChapterCommentResponse>>> GetComments(Guid chapterId)
     {

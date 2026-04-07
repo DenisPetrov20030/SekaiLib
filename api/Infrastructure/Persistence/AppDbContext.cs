@@ -36,6 +36,7 @@ public class AppDbContext : DbContext
     public DbSet<Friendship> Friendships { get; set; }
     public DbSet<FriendRequest> FriendRequests { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<ChapterView> ChapterViews { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
@@ -207,6 +208,20 @@ public class AppDbContext : DbContext
             .HasForeignKey(c => c.TranslationTeamId)
             .OnDelete(DeleteBehavior.SetNull);
     });
+
+    modelBuilder.Entity<ChapterView>(entity =>
+    {
+        entity.HasOne(v => v.Chapter)
+            .WithMany()
+            .HasForeignKey(v => v.ChapterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Fast lookup: did this user already view this chapter?
+        entity.HasIndex(v => new { v.ChapterId, v.UserId });
+        // Fast lookup for anonymous (by IP hash)
+        entity.HasIndex(v => new { v.ChapterId, v.IpHash });
+    });
 }
+
 
 }
