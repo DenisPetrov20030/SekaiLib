@@ -123,6 +123,7 @@ export interface ChapterContentDto {
   titleName: string;
   previousChapterNumber?: number;
   nextChapterNumber?: number;
+  viewCount: number;
 }
 
 export interface CreateChapterRequest {
