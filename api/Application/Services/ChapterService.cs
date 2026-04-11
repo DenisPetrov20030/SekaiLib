@@ -35,9 +35,13 @@ public class ChapterService : IChapterService
         if (teamId.HasValue)
             query = query.Where(c => c.TranslationTeamId == teamId.Value);
 
+        var title = await _unitOfWork.Titles.GetByIdAsync(titleId);
+        if (title == null)
+            throw new NotFoundException("Title", titleId);
+
         return query
             .OrderBy(c => c.Number)
-            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.TranslationTeamId, c.TranslationTeam?.Name, c.ViewCount));
+            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.TranslationTeamId, c.TranslationTeam?.Name, c.TitleId, title.Name, title.CoverImageUrl, c.ViewCount));
     }
 
     public async Task<ChapterContentDto> GetChapterContentAsync(Guid chapterId)
@@ -96,7 +100,7 @@ public class ChapterService : IChapterService
         if (user == null)
             throw new UnauthorizedException();
 
-        // Check permission: publisher, admin, or team member (not team admin)
+        // Check permission: publisher, admin, or any member of the selected team.
         var canCreate = title.PublisherId == userId || user.Role == UserRole.Administrator;
 
         if (!canCreate && request.TranslationTeamId.HasValue)
@@ -104,7 +108,7 @@ public class ChapterService : IChapterService
             var teamMember = await _unitOfWork.TranslationTeamMembers.Query()
                 .FirstOrDefaultAsync(m => m.TeamId == request.TranslationTeamId.Value && m.UserId == userId);
 
-            if (teamMember != null && teamMember.Role != Domain.Enums.TeamMemberRole.Admin)
+            if (teamMember != null)
                 canCreate = true;
         }
 
@@ -201,7 +205,15 @@ public class ChapterService : IChapterService
         if (user == null)
             throw new UnauthorizedException();
 
-        if (title.PublisherId != userId && user.Role != UserRole.Administrator)
+        var canManage = title.PublisherId == userId || user.Role == UserRole.Administrator;
+
+        if (!canManage && chapter.TranslationTeamId.HasValue)
+        {
+            canManage = await _unitOfWork.TranslationTeamMembers.Query()
+                .AnyAsync(m => m.TeamId == chapter.TranslationTeamId.Value && m.UserId == userId);
+        }
+
+        if (!canManage)
             throw new ForbiddenException();
 
         if (chapter.Number != request.ChapterNumber)
@@ -236,7 +248,15 @@ public class ChapterService : IChapterService
         if (user == null)
             throw new UnauthorizedException();
 
-        if (title.PublisherId != userId && user.Role != UserRole.Administrator)
+        var canManage = title.PublisherId == userId || user.Role == UserRole.Administrator;
+
+        if (!canManage && chapter.TranslationTeamId.HasValue)
+        {
+            canManage = await _unitOfWork.TranslationTeamMembers.Query()
+                .AnyAsync(m => m.TeamId == chapter.TranslationTeamId.Value && m.UserId == userId);
+        }
+
+        if (!canManage)
             throw new ForbiddenException();
 
         await _unitOfWork.Chapters.DeleteAsync(chapter);

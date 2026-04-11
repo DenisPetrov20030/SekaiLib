@@ -47,7 +47,6 @@ public static class ServiceCollectionExtensions
         services.AddMemoryCache();
         services.AddHttpClient<GoogleExternalAuthProvider>();
         services.AddScoped<IExternalAuthProvider>(sp => sp.GetRequiredService<GoogleExternalAuthProvider>());
-        // Facebook OAuth removed
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ITitleRepository, TitleRepository>();

@@ -10,6 +10,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
+    c.CustomSchemaIds(type => type.FullName?.Replace('+', '.') ?? type.Name);
     c.MapType<IFormFile>(() => new Microsoft.OpenApi.Models.OpenApiSchema
     {
         Type = "string",

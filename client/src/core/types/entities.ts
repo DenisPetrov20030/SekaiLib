@@ -50,6 +50,7 @@ export interface ChapterContent {
   titleName: string;
   previousChapterNumber?: number;
   nextChapterNumber?: number;
+  viewCount?: number;
 }
 
 export interface Genre {

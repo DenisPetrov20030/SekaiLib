@@ -48,7 +48,8 @@ public class TranslationTeamService : ITranslationTeamService
             Id = Guid.NewGuid(),
             Name = request.Name,
             Description = request.Description,
-            AvatarUrl = request.AvatarUrl,
+            AvatarUrl = NormalizeAvatarUrl(request.AvatarUrl),
+            CoverImageUrl = NormalizeCoverImageUrl(request.CoverImageUrl),
             OwnerId = userId,
             CreatedAt = DateTime.UtcNow
         };
@@ -79,7 +80,8 @@ public class TranslationTeamService : ITranslationTeamService
 
         team.Name = request.Name;
         team.Description = request.Description;
-        team.AvatarUrl = request.AvatarUrl;
+        team.AvatarUrl = NormalizeAvatarUrl(request.AvatarUrl);
+        team.CoverImageUrl = NormalizeCoverImageUrl(request.CoverImageUrl);
 
         await _unitOfWork.TranslationTeams.UpdateAsync(team);
         await _unitOfWork.SaveChangesAsync();
@@ -251,6 +253,7 @@ public class TranslationTeamService : ITranslationTeamService
             throw new NotFoundException("TranslationTeam", teamId);
 
         var query = _unitOfWork.Chapters.Query()
+            .Include(c => c.Title)
             .Include(c => c.TranslationTeam)
             .Where(c => c.TranslationTeamId == teamId)
             .OrderByDescending(c => c.PublishedAt);
@@ -269,6 +272,9 @@ public class TranslationTeamService : ITranslationTeamService
             c.IsPremium,
             c.TranslationTeamId,
             c.TranslationTeam?.Name,
+            c.TitleId,
+            c.Title?.Name,
+            c.Title?.CoverImageUrl,
             c.ViewCount
         ));
 
@@ -349,11 +355,40 @@ public class TranslationTeamService : ITranslationTeamService
             team.Name,
             team.Description,
             team.AvatarUrl,
+            team.CoverImageUrl,
             team.OwnerId,
             team.Owner?.Username ?? string.Empty,
             team.Members.Count,
             team.Chapters.Count,
+            team.Chapters.Select(c => c.TitleId).Distinct().Count(),
             team.Subscriptions.Count,
             team.CreatedAt
         );
+
+    private static string? NormalizeAvatarUrl(string? avatarUrl)
+    {
+        if (string.IsNullOrWhiteSpace(avatarUrl))
+            return null;
+
+        var trimmed = avatarUrl.Trim();
+
+        // Browser-local blob URLs are temporary and should never be persisted.
+        if (trimmed.StartsWith("blob:", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        return trimmed;
+    }
+
+    private static string? NormalizeCoverImageUrl(string? coverImageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(coverImageUrl))
+            return null;
+
+        var trimmed = coverImageUrl.Trim();
+
+        if (trimmed.StartsWith("blob:", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        return trimmed;
+    }
 }

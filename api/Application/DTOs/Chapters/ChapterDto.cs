@@ -8,5 +8,8 @@ public record ChapterDto(
     bool IsPremium,
     Guid? TranslationTeamId = null,
     string? TranslationTeamName = null,
+    Guid? TitleId = null,
+    string? TitleName = null,
+    string? TitleCoverImageUrl = null,
     int ViewCount = 0
 );

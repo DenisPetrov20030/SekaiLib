@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using SekaiLib.Application.DTOs.Teams;
 using SekaiLib.Application.Interfaces;
+using SekaiLib.Domain.Enums;
+using SekaiLib.Domain.Interfaces;
 
 namespace SekaiLib.Presentation.Controllers;
 
@@ -11,10 +14,12 @@ namespace SekaiLib.Presentation.Controllers;
 public class TranslationTeamsController : ControllerBase
 {
     private readonly ITranslationTeamService _teamService;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public TranslationTeamsController(ITranslationTeamService teamService)
+    public TranslationTeamsController(ITranslationTeamService teamService, IUnitOfWork unitOfWork)
     {
         _teamService = teamService;
+        _unitOfWork = unitOfWork;
     }
 
     [HttpGet]
@@ -56,6 +61,100 @@ public class TranslationTeamsController : ControllerBase
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var team = await _teamService.UpdateAsync(userId, teamId, request);
         return Ok(team);
+    }
+
+    [HttpPost("{teamId:guid}/avatar")]
+    [Authorize]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadAvatar(Guid teamId, IFormFile avatar)
+    {
+        if (avatar == null || avatar.Length == 0)
+            return BadRequest("Файл аватару відсутній або порожній.");
+
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var membership = await _unitOfWork.TranslationTeamMembers.Query()
+            .FirstOrDefaultAsync(m => m.TeamId == teamId && m.UserId == userId);
+
+        if (membership == null || (membership.Role != TeamMemberRole.Owner && membership.Role != TeamMemberRole.Admin))
+            return Forbid();
+
+        var team = await _unitOfWork.TranslationTeams.GetByIdAsync(teamId);
+        if (team == null)
+            return NotFound();
+
+        var ext = Path.GetExtension(avatar.FileName).ToLowerInvariant();
+        var allowed = new[] { ".png", ".jpg", ".jpeg", ".webp" };
+        if (!allowed.Contains(ext))
+            return BadRequest("Підтримуються лише PNG/JPG/JPEG/WEBP.");
+
+        var uploadsRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "SekaiLib",
+            "uploads",
+            "team-avatars");
+        Directory.CreateDirectory(uploadsRoot);
+
+        var fileName = $"{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(uploadsRoot, fileName);
+
+        using (var stream = System.IO.File.Create(filePath))
+        {
+            await avatar.CopyToAsync(stream);
+        }
+
+        var request = HttpContext.Request;
+        var baseUrl = $"{request.Scheme}://{request.Host}";
+        team.AvatarUrl = $"{baseUrl}/uploads/team-avatars/{fileName}";
+
+        await _unitOfWork.SaveChangesAsync();
+        return Ok(new { avatarUrl = team.AvatarUrl });
+    }
+
+    [HttpPost("{teamId:guid}/cover")]
+    [Authorize]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadCover(Guid teamId, IFormFile cover)
+    {
+        if (cover == null || cover.Length == 0)
+            return BadRequest("Файл обкладинки відсутній або порожній.");
+
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var membership = await _unitOfWork.TranslationTeamMembers.Query()
+            .FirstOrDefaultAsync(m => m.TeamId == teamId && m.UserId == userId);
+
+        if (membership == null || (membership.Role != TeamMemberRole.Owner && membership.Role != TeamMemberRole.Admin))
+            return Forbid();
+
+        var team = await _unitOfWork.TranslationTeams.GetByIdAsync(teamId);
+        if (team == null)
+            return NotFound();
+
+        var ext = Path.GetExtension(cover.FileName).ToLowerInvariant();
+        var allowed = new[] { ".png", ".jpg", ".jpeg", ".webp" };
+        if (!allowed.Contains(ext))
+            return BadRequest("Підтримуються лише PNG/JPG/JPEG/WEBP.");
+
+        var uploadsRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "SekaiLib",
+            "uploads",
+            "team-covers");
+        Directory.CreateDirectory(uploadsRoot);
+
+        var fileName = $"{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(uploadsRoot, fileName);
+
+        using (var stream = System.IO.File.Create(filePath))
+        {
+            await cover.CopyToAsync(stream);
+        }
+
+        var request = HttpContext.Request;
+        var baseUrl = $"{request.Scheme}://{request.Host}";
+        team.CoverImageUrl = $"{baseUrl}/uploads/team-covers/{fileName}";
+
+        await _unitOfWork.SaveChangesAsync();
+        return Ok(new { coverImageUrl = team.CoverImageUrl });
     }
 
     [HttpDelete("{teamId:guid}")]

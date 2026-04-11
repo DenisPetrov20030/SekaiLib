@@ -38,6 +38,32 @@ export const teamsApi = {
     return response.data;
   },
 
+  uploadAvatar: async (teamId: string, file: File): Promise<{ avatarUrl: string }> => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const response = await apiClient.post<{ avatarUrl: string }>(`/teams/${teamId}/avatar`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data;
+  },
+
+  uploadCover: async (teamId: string, file: File): Promise<{ coverImageUrl: string }> => {
+    const formData = new FormData();
+    formData.append('cover', file);
+
+    const response = await apiClient.post<{ coverImageUrl: string }>(`/teams/${teamId}/cover`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data;
+  },
+
   delete: async (teamId: string): Promise<void> => {
     await apiClient.delete(`/teams/${teamId}`);
   },

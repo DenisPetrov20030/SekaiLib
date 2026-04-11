@@ -5,10 +5,12 @@ public record TranslationTeamDto(
     string Name,
     string Description,
     string? AvatarUrl,
+    string? CoverImageUrl,
     Guid OwnerId,
     string OwnerUsername,
     int MemberCount,
     int ChapterCount,
+    int TitleCount,
     int SubscriberCount,
     DateTime CreatedAt
 );

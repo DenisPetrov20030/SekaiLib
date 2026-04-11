@@ -24,4 +24,13 @@
     <Watch Remove="wwwroot\avatars\**\*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="obj_ci\**\*.cs" />
+    <Compile Remove="bin_ci\**\*.cs" />
+    <None Remove="obj_ci\**\*" />
+    <None Remove="bin_ci\**\*" />
+    <Content Remove="obj_ci\**\*" />
+    <Content Remove="bin_ci\**\*" />
+  </ItemGroup>
+
 </Project>

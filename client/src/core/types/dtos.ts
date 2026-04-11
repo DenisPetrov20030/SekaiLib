@@ -192,10 +192,12 @@ export interface TranslationTeamDto {
   name: string;
   description: string;
   avatarUrl?: string | null;
+  coverImageUrl?: string | null;
   ownerId: string;
   ownerUsername: string;
   memberCount: number;
   chapterCount: number;
+  titleCount: number;
   subscriberCount: number;
   createdAt: string;
 }
@@ -212,12 +214,14 @@ export interface CreateTeamRequest {
   name: string;
   description: string;
   avatarUrl?: string | null;
+  coverImageUrl?: string | null;
 }
 
 export interface UpdateTeamRequest {
   name: string;
   description: string;
   avatarUrl?: string | null;
+  coverImageUrl?: string | null;
 }
 
 export interface AddMemberRequest {
@@ -233,6 +237,9 @@ export interface TeamChapterDto {
   isPremium: boolean;
   translationTeamId?: string | null;
   translationTeamName?: string | null;
+  titleId?: string | null;
+  titleName?: string | null;
+  titleCoverImageUrl?: string | null;
 }
 
 export interface SubscribedTeamChapterDto {

@@ -7,6 +7,9 @@ import { useAppSelector } from '../../../app/store/hooks';
 import { Button } from '../../../shared/components';
 
 type Tab = 'updates' | 'members';
+const DEFAULT_TEAM_COVER = '/team-default-cover.svg';
+const DEFAULT_TEAM_AVATAR = '/team-default-avatar.svg';
+const DEFAULT_TITLE_COVER = '/title-default-cover.svg';
 
 const ROLE_LABELS: Record<number, string> = {
   [TeamMemberRole.Owner]: 'Власник',
@@ -33,10 +36,20 @@ export const TeamDetailsPage = () => {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [avatarInputMode, setAvatarInputMode] = useState<'url' | 'file'>('url');
   const [editAvatarUrl, setEditAvatarUrl] = useState('');
+  const [isAvatarUrlEdited, setIsAvatarUrlEdited] = useState(false);
+  const [editAvatarFile, setEditAvatarFile] = useState<File | null>(null);
+  const [coverInputMode, setCoverInputMode] = useState<'url' | 'file' | 'default'>('url');
+  const [editCoverImageUrl, setEditCoverImageUrl] = useState('');
+  const [isCoverImageUrlEdited, setIsCoverImageUrlEdited] = useState(false);
+  const [editCoverImageFile, setEditCoverImageFile] = useState<File | null>(null);
+  const [coverImageSrc, setCoverImageSrc] = useState(DEFAULT_TEAM_COVER);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Add member state
-  const [addUsername, setAddUsername] = useState('');
   const [addUserId, setAddUserId] = useState('');
   const [addRole, setAddRole] = useState<TeamMemberRole>(TeamMemberRole.Member);
 
@@ -66,6 +79,7 @@ export const TeamDetailsPage = () => {
       user ? teamsApi.isSubscribed(teamId) : Promise.resolve(false),
     ]).then(([teamData, membersData, chaptersData, isSubbed]) => {
       setTeam(teamData);
+      setCoverImageSrc(teamData.coverImageUrl || DEFAULT_TEAM_COVER);
       setMembers(membersData);
       setChapters(chaptersData.data);
       setTotalPages(chaptersData.totalPages);
@@ -87,21 +101,77 @@ export const TeamDetailsPage = () => {
   };
 
   const handleEditSave = async () => {
-    if (!teamId) return;
-    const updated = await teamsApi.update(teamId, {
-      name: editName,
-      description: editDescription,
-      avatarUrl: editAvatarUrl || null,
-    });
-    setTeam(updated);
-    setEditing(false);
+    if (!teamId || saveLoading) return;
+
+    if (avatarInputMode === 'url' && editAvatarUrl.trim().toLowerCase().startsWith('blob:')) {
+      setSaveError('Посилання виду blob: тимчасове і не зберігається. Оберіть файл з ПК або вставте прямий https:// URL.');
+      return;
+    }
+
+    if (coverInputMode === 'url' && editCoverImageUrl.trim().toLowerCase().startsWith('blob:')) {
+      setSaveError('Посилання виду blob: для фону тимчасове і не зберігається. Оберіть файл з ПК або вставте прямий https:// URL.');
+      return;
+    }
+
+    if (avatarInputMode === 'file' && !editAvatarFile) {
+      setSaveError('Оберіть файл перед збереженням.');
+      return;
+    }
+
+    setSaveLoading(true);
+    setSaveError(null);
+
+    try {
+      const updated = await teamsApi.update(teamId, {
+        name: editName,
+        description: editDescription,
+        avatarUrl: avatarInputMode === 'url'
+          ? (isAvatarUrlEdited ? (editAvatarUrl.trim() || null) : (team?.avatarUrl ?? null))
+          : (team?.avatarUrl ?? null),
+        coverImageUrl: coverInputMode === 'default'
+          ? null
+          : coverInputMode === 'url'
+            ? (isCoverImageUrlEdited ? (editCoverImageUrl.trim() || null) : (team?.coverImageUrl ?? null))
+            : (team?.coverImageUrl ?? null),
+      });
+
+      if (avatarInputMode === 'file' && editAvatarFile) {
+        const uploadResult = await teamsApi.uploadAvatar(teamId, editAvatarFile);
+        updated.avatarUrl = uploadResult.avatarUrl;
+      }
+
+      if (coverInputMode === 'file' && editCoverImageFile) {
+        const uploadResult = await teamsApi.uploadCover(teamId, editCoverImageFile);
+        updated.coverImageUrl = uploadResult.coverImageUrl;
+      }
+
+      setTeam(updated);
+      setCoverImageSrc(updated.coverImageUrl || DEFAULT_TEAM_COVER);
+
+      setEditAvatarFile(null);
+      setEditCoverImageFile(null);
+      setEditing(false);
+    } catch (error) {
+      const message = (error as { message?: string })?.message;
+      setSaveError(message || 'Не вдалося зберегти зміни.');
+    } finally {
+      setSaveLoading(false);
+    }
   };
 
   const startEdit = () => {
     if (!team) return;
     setEditName(team.name);
     setEditDescription(team.description);
-    setEditAvatarUrl(team.avatarUrl ?? '');
+    setEditAvatarUrl('');
+    setIsAvatarUrlEdited(false);
+    setEditAvatarFile(null);
+    setAvatarInputMode('url');
+    setEditCoverImageUrl('');
+    setIsCoverImageUrlEdited(false);
+    setEditCoverImageFile(null);
+    setCoverInputMode('url');
+    setSaveError(null);
     setEditing(true);
   };
 
@@ -120,7 +190,6 @@ export const TeamDetailsPage = () => {
       setMembers((prev) => [...prev, newMember]);
       setTeam((t) => t ? { ...t, memberCount: t.memberCount + 1 } : t);
       setAddUserId('');
-      setAddUsername('');
     } catch {
       alert('Не вдалося додати учасника');
     }
@@ -129,6 +198,23 @@ export const TeamDetailsPage = () => {
   const handleChangePage = (p: number) => {
     setPage(p);
     loadChapters(p);
+  };
+
+  const handleDeleteTeam = async () => {
+    if (!teamId || deleteLoading) return;
+
+    const confirmed = window.confirm('Ви впевнені, що хочете видалити команду? Цю дію неможливо скасувати.');
+    if (!confirmed) return;
+
+    try {
+      setDeleteLoading(true);
+      await teamsApi.delete(teamId);
+      navigate('/teams');
+    } catch {
+      setSaveError('Не вдалося видалити команду. Спробуйте ще раз.');
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   if (loading) {
@@ -169,73 +255,213 @@ export const TeamDetailsPage = () => {
           </div>
           <div>
             <label className="block text-sm text-text-secondary mb-1">URL аватара</label>
-            <input
-              type="url"
-              value={editAvatarUrl}
-              onChange={(e) => setEditAvatarUrl(e.target.value)}
-              className="w-full px-3 py-2 bg-background border border-border rounded-md text-text-primary focus:outline-none focus:ring-1 focus:ring-primary-500"
-            />
+            <div className="mb-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setAvatarInputMode('url')}
+                className={`px-3 py-1.5 text-sm rounded-md border ${avatarInputMode === 'url' ? 'border-primary-500 text-primary-400' : 'border-border text-text-secondary'}`}
+              >
+                URL
+              </button>
+              <button
+                type="button"
+                onClick={() => setAvatarInputMode('file')}
+                className={`px-3 py-1.5 text-sm rounded-md border ${avatarInputMode === 'file' ? 'border-primary-500 text-primary-400' : 'border-border text-text-secondary'}`}
+              >
+                Файл з ПК
+              </button>
+            </div>
+
+            {avatarInputMode === 'url' ? (
+              <input
+                type="url"
+                value={editAvatarUrl}
+                onChange={(e) => {
+                  setEditAvatarUrl(e.target.value);
+                  setIsAvatarUrlEdited(true);
+                }}
+                placeholder="https://..."
+                className="w-full px-3 py-2 bg-background border border-border rounded-md text-text-primary focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+            ) : (
+              <div className="space-y-2">
+                <input
+                  id="team-avatar-file-edit"
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={(e) => setEditAvatarFile(e.target.files?.[0] ?? null)}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="team-avatar-file-edit"
+                  className="inline-flex cursor-pointer items-center rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary hover:border-primary-500"
+                >
+                  Оберіть файл
+                </label>
+                <p className="text-sm text-text-secondary">
+                  {editAvatarFile ? editAvatarFile.name : 'Файл не вибрано'}
+                </p>
+              </div>
+            )}
           </div>
-          <div className="flex gap-2">
-            <Button onClick={handleEditSave}>Зберегти</Button>
-            <Button variant="secondary" onClick={() => setEditing(false)}>Скасувати</Button>
+
+          <div>
+            <label className="block text-sm text-text-secondary mb-1">Фонове зображення зверху</label>
+            <div className="mb-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setCoverInputMode('default')}
+                className={`px-3 py-1.5 text-sm rounded-md border ${coverInputMode === 'default' ? 'border-primary-500 text-primary-400' : 'border-border text-text-secondary'}`}
+              >
+                Звичайне
+              </button>
+              <button
+                type="button"
+                onClick={() => setCoverInputMode('url')}
+                className={`px-3 py-1.5 text-sm rounded-md border ${coverInputMode === 'url' ? 'border-primary-500 text-primary-400' : 'border-border text-text-secondary'}`}
+              >
+                URL
+              </button>
+              <button
+                type="button"
+                onClick={() => setCoverInputMode('file')}
+                className={`px-3 py-1.5 text-sm rounded-md border ${coverInputMode === 'file' ? 'border-primary-500 text-primary-400' : 'border-border text-text-secondary'}`}
+              >
+                Файл з ПК
+              </button>
+            </div>
+
+            {coverInputMode === 'default' && (
+              <p className="text-sm text-text-secondary">Буде використано стандартний фон команди.</p>
+            )}
+
+            {coverInputMode === 'url' && (
+              <input
+                type="url"
+                value={editCoverImageUrl}
+                onChange={(e) => {
+                  setEditCoverImageUrl(e.target.value);
+                  setIsCoverImageUrlEdited(true);
+                }}
+                placeholder="https://..."
+                className="w-full px-3 py-2 bg-background border border-border rounded-md text-text-primary focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+            )}
+
+            {coverInputMode === 'file' && (
+              <div className="space-y-2">
+                <input
+                  id="team-cover-file-edit"
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={(e) => setEditCoverImageFile(e.target.files?.[0] ?? null)}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="team-cover-file-edit"
+                  className="inline-flex cursor-pointer items-center rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary hover:border-primary-500"
+                >
+                  Оберіть файл
+                </label>
+                <p className="text-sm text-text-secondary">
+                  {editCoverImageFile ? editCoverImageFile.name : 'Файл не вибрано'}
+                </p>
+              </div>
+            )}
+          </div>
+          {saveError && (
+            <p className="text-sm text-red-500">{saveError}</p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleEditSave} loading={saveLoading} disabled={saveLoading}>Зберегти</Button>
+            <Button variant="secondary" onClick={() => setEditing(false)} disabled={saveLoading}>Скасувати</Button>
+            {isOwner && (
+              <Button
+                variant="danger"
+                onClick={handleDeleteTeam}
+                loading={deleteLoading}
+                disabled={saveLoading || deleteLoading}
+              >
+                Видалити команду
+              </Button>
+            )}
           </div>
         </div>
       ) : (
-        <div className="flex items-start gap-6 mb-6">
-          {team.avatarUrl ? (
+        <div className="mb-6">
+          <div className="relative mb-4 h-36 md:h-44 w-full overflow-hidden rounded-xl border border-border shadow-sm">
             <img
-              src={team.avatarUrl}
-              alt={team.name}
-              className="w-20 h-20 rounded-full object-cover flex-shrink-0"
+              src={coverImageSrc}
+              alt={`${team.name} cover`}
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                if (e.currentTarget.src.endsWith(DEFAULT_TEAM_COVER)) return;
+                e.currentTarget.src = DEFAULT_TEAM_COVER;
+              }}
             />
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-primary-900 flex items-center justify-center flex-shrink-0">
-              <span className="text-primary-300 text-3xl font-bold">
-                {team.name.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl font-bold text-text-primary">{team.name}</h1>
-              {canManage && (
-                <Button size="sm" variant="secondary" onClick={startEdit}>
-                  Редагувати
-                </Button>
-              )}
-              {user && !isOwner && (
-                <Button
-                  size="sm"
-                  variant={subscribed ? 'secondary' : 'primary'}
-                  onClick={handleSubscribe}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
+          </div>
+
+          <div className="flex items-start gap-6">
+            <img
+              src={team.avatarUrl || DEFAULT_TEAM_AVATAR}
+              alt={team.name}
+              className="w-28 h-40 md:w-32 md:h-44 rounded-xl object-cover flex-shrink-0 border border-border shadow-sm"
+              onError={(e) => {
+                if (e.currentTarget.src.endsWith(DEFAULT_TEAM_AVATAR)) return;
+                e.currentTarget.src = DEFAULT_TEAM_AVATAR;
+              }}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl font-bold text-text-primary">{team.name}</h1>
+                {canManage && (
+                  <Button size="sm" variant="secondary" onClick={startEdit}>
+                    Редагувати
+                  </Button>
+                )}
+                {user && !isOwner && (
+                  <Button
+                    size="sm"
+                    variant={subscribed ? 'secondary' : 'primary'}
+                    onClick={handleSubscribe}
+                  >
+                    {subscribed ? 'Відписатись' : 'Підписатись'}
+                  </Button>
+                )}
+              </div>
+              <p className="mt-1 text-text-secondary text-sm">
+                Власник:{' '}
+                <Link
+                  to={`/users/${team.ownerId}`}
+                  className="text-primary-400 hover:text-primary-300"
                 >
-                  {subscribed ? 'Відписатись' : 'Підписатись'}
-                </Button>
+                  {team.ownerUsername}
+                </Link>
+              </p>
+              {team.description && (
+                <p className="mt-2 text-text-muted text-sm whitespace-pre-line">{team.description}</p>
               )}
-            </div>
-            <p className="mt-1 text-text-secondary text-sm">
-              Власник:{' '}
-              <Link
-                to={`/users/${team.ownerId}`}
-                className="text-primary-400 hover:text-primary-300"
-              >
-                {team.ownerUsername}
-              </Link>
-            </p>
-            {team.description && (
-              <p className="mt-2 text-text-muted text-sm whitespace-pre-line">{team.description}</p>
-            )}
-            <div className="mt-3 flex gap-5 text-sm text-text-muted">
-              <span title={`Глави: ${team.chapterCount}`} className="cursor-default">
-                📖 <span className="text-text-secondary font-medium">{team.chapterCount}</span>
-              </span>
-              <span title={`Учасники: ${team.memberCount}`} className="cursor-default">
-                👥 <span className="text-text-secondary font-medium">{team.memberCount}</span>
-              </span>
-              <span title={`Підписники: ${team.subscriberCount}`} className="cursor-default">
-                🔔 <span className="text-text-secondary font-medium">{team.subscriberCount}</span>
-              </span>
+              <div className="mt-3 flex gap-5 text-sm text-text-muted">
+                <span
+                  title="Глави"
+                  aria-label="Глави"
+                >
+                  📖 <span className="text-text-secondary font-medium">{team.chapterCount}</span>
+                </span>
+                <span
+                  title="Твори"
+                  aria-label="Твори"
+                >
+                  📚 <span className="text-text-secondary font-medium">{team.titleCount ?? 0}</span>
+                </span>
+                <span
+                  title="Підписники"
+                  aria-label="Підписники"
+                >
+                  🔔 <span className="text-text-secondary font-medium">{team.subscriberCount}</span>
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -272,21 +498,38 @@ export const TeamDetailsPage = () => {
               {chapters.map((ch) => (
                 <Link
                   key={ch.id}
-                  to={`/titles/${ch.translationTeamId ? '' : ''}${ch.id}`}
+                  to={ch.titleId ? `/titles/${ch.titleId}/chapters/${ch.chapterNumber}` : `/chapters/${ch.id}`}
                   className="block p-4 bg-surface rounded-lg hover:bg-surface-hover transition-colors"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-medium text-text-primary">Глава {ch.chapterNumber}</span>
-                      {ch.name && (
-                        <span className="ml-2 text-text-muted text-sm">— {ch.name}</span>
-                      )}
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 flex-shrink-0 overflow-hidden rounded-lg border border-border bg-background">
+                      <img
+                        src={ch.titleCoverImageUrl || DEFAULT_TITLE_COVER}
+                        alt={ch.titleName || 'Обкладинка твору'}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          if (e.currentTarget.src.endsWith(DEFAULT_TITLE_COVER)) return;
+                          e.currentTarget.src = DEFAULT_TITLE_COVER;
+                        }}
+                      />
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-text-muted">
-                      {ch.isPremium && (
-                        <span className="text-yellow-500 font-medium">Premium</span>
-                      )}
-                      <span>{new Date(ch.publishedAt).toLocaleDateString('uk-UA')}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {ch.titleName && (
+                          <span className="text-sm font-semibold text-text-primary truncate">{ch.titleName}</span>
+                        )}
+                        <span className="text-sm text-text-muted">•</span>
+                        <span className="font-medium text-text-primary">Глава {ch.chapterNumber}</span>
+                        {ch.name && (
+                          <span className="text-text-muted text-sm">— {ch.name}</span>
+                        )}
+                      </div>
+                      <div className="mt-1 flex items-center gap-3 text-xs text-text-muted">
+                        {ch.isPremium && (
+                          <span className="text-yellow-500 font-medium">Premium</span>
+                        )}
+                        <span>{new Date(ch.publishedAt).toLocaleDateString('uk-UA')}</span>
+                      </div>
                     </div>
                   </div>
                 </Link>

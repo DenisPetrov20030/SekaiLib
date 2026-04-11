@@ -72,7 +72,7 @@ public class TitleService : ITitleService
         var translationTeams = title.TitleTranslators.Select(tt => new TranslationTeamDto(tt.TranslationTeam.Id, tt.TranslationTeam.Name));
         var chapters = title.Chapters
             .OrderBy(c => c.Number)
-            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.TranslationTeamId, c.TranslationTeam?.Name, c.ViewCount));
+            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.TranslationTeamId, c.TranslationTeam?.Name, c.TitleId, title.Name, title.CoverImageUrl, c.ViewCount));
 
         return new TitleDetailsDto(
             title.Id,

@@ -47,9 +47,9 @@ export const ChapterEditorPage = () => {
       setLoading(true);
       const chapter = await chaptersApi.getById(id);
       setFormData({
-        chapterNumber: chapter.number,
-        name: chapter.name,
-        content: chapter.content,
+        chapterNumber: chapter.number ?? 1,
+        name: chapter.name ?? '',
+        content: chapter.content ?? '',
         isPremium: false,
         translationTeamId: '',
       });
