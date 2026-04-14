@@ -42,3 +42,6 @@ bin/
 obj/
 .env.*
 api/wwwroot/avatars/
+
+backup.sql
+
