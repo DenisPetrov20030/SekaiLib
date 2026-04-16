@@ -20,16 +20,19 @@ public class UsersController : ControllerBase
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITitleService _titleService;
     private readonly INotificationService _notifications;
-    public UsersController(IUnitOfWork unitOfWork, ITitleService titleService, INotificationService notifications)
-    {
-        _unitOfWork = unitOfWork;
-        _titleService = titleService;
-        _notifications = notifications;
-    }
+    private readonly ILogger<UsersController> _logger;
+    public UsersController(IUnitOfWork unitOfWork, ITitleService titleService, INotificationService notifications, ILogger<UsersController> logger)
+{
+    _unitOfWork = unitOfWork;
+    _titleService = titleService;
+    _notifications = notifications;
+    _logger = logger; 
+}
 
     [HttpGet("{id}")]
     public async Task<ActionResult<UserProfileDto>> GetProfile(Guid id)
     {
+        _logger.LogInformation("Отримано запит профілю для ID: {UserId}", id);
         var user = await _unitOfWork.Users.GetByIdAsync(id);
         if (user == null)
             return NotFound();
@@ -258,12 +261,19 @@ public async Task<IActionResult> GetFriendshipStatus(Guid id)
 public async Task<IActionResult> AddFriend(Guid id)
 {
     var me = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-    if (me == id)
+
+    if (me == id) 
+    {
+        _logger.LogWarning("Користувач {UserId} намагався додати самого себе в друзі", me);
         return BadRequest("Не можна додати себе в друзі.");
+    }
 
     var otherUserExists = await _unitOfWork.Users.ExistsAsync(id);
     if (!otherUserExists)
+    {
+        _logger.LogWarning("Користувач {Me} намагався додати неіснуючого юзера {TargetId}", me, id);
         return NotFound("Користувача не знайдено.");
+    }
 
     var userA = me.CompareTo(id) < 0 ? me : id;
     var userB = me.CompareTo(id) < 0 ? id : me;
@@ -272,7 +282,9 @@ public async Task<IActionResult> AddFriend(Guid id)
         .AnyAsync(f => f.UserAId == userA && f.UserBId == userB);
 
     if (exists)
+    {
         return Ok(new { added = false, message = "Ви вже у друзях." });
+    }
 
     await _unitOfWork.Friendships.AddAsync(new Friendship
     {
@@ -283,6 +295,8 @@ public async Task<IActionResult> AddFriend(Guid id)
     });
 
     await _unitOfWork.SaveChangesAsync();
+    
+    _logger.LogInformation("Користувачі {UserA} та {UserB} тепер друзі", userA, userB);
     return Ok(new { added = true });
 }
 
@@ -485,30 +499,48 @@ public async Task<IActionResult> RejectFriendRequest(Guid requestId)
     public record UpdateProgressRequest(Guid TitleId, int ChapterNumber, int Page);
 
     [Authorize]
-    [HttpPost("me/avatar")]
-    [Consumes("multipart/form-data")]
-    public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+[HttpPost("me/avatar")]
+[Consumes("multipart/form-data")]
+public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+{
+    var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+    var userId = Guid.Parse(userIdClaim);
+
+    try 
     {
         if (avatar == null || avatar.Length == 0)
+        {
+            _logger.LogWarning("Користувач {UserId} намагався завантажити порожній файл аватара", userId);
             return BadRequest("Файл аватару відсутній або порожній.");
+        }
 
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var user = await _unitOfWork.Users.GetByIdAsync(userId);
-        if (user == null) return NotFound();
+        if (user == null) 
+        {
+            _logger.LogWarning("Користувача {UserId} не знайдено для оновлення аватара", userId);
+            return NotFound();
+        }
 
         var uploadsRoot = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "SekaiLib",
             "uploads",
             "avatars");
+
         if (!Directory.Exists(uploadsRoot)) Directory.CreateDirectory(uploadsRoot);
 
         var ext = Path.GetExtension(avatar.FileName).ToLowerInvariant();
         var allowed = new[] { ".png", ".jpg", ".jpeg", ".webp" };
-        if (!allowed.Contains(ext)) return BadRequest("Підтримуються лише PNG/JPG/JPEG/WEBP.");
+        if (!allowed.Contains(ext)) 
+        {
+            _logger.LogInformation("Відхилено завантаження файлу з непідтримуваним розширенням {Ext} від {UserId}", ext, userId);
+            return BadRequest("Підтримуються лише PNG/JPG/JPEG/WEBP.");
+        }
 
         var fileName = $"{Guid.NewGuid()}{ext}";
         var filePath = Path.Combine(uploadsRoot, fileName);
+        
         using (var stream = System.IO.File.Create(filePath))
         {
             await avatar.CopyToAsync(stream);
@@ -520,7 +552,14 @@ public async Task<IActionResult> RejectFriendRequest(Guid requestId)
         user.AvatarUrl = baseUrl + relativePath;
 
         await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation("Користувач {UserId} успішно оновив аватар: {Url}", userId, user.AvatarUrl);
         return Ok(new { avatarUrl = user.AvatarUrl });
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Критична помилка при завантаженні аватара користувачем {UserId}", userId);
+        return StatusCode(500, "Помилка сервера при обробці зображення");
     }
 }
 
