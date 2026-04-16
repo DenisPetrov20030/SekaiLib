@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>71cd8dad-2bae-4525-8459-c3d667343e20</UserSecretsId>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,10 +29,14 @@
   <ItemGroup>
     <Compile Remove="obj_ci\**\*.cs" />
     <Compile Remove="bin_ci\**\*.cs" />
+    <Compile Remove="SekaiLib.Tests\**" />
+    <EmbeddedResource Remove="SekaiLib.Tests\**" />
     <None Remove="obj_ci\**\*" />
     <None Remove="bin_ci\**\*" />
+    <None Remove="SekaiLib.Tests\**" />
     <Content Remove="obj_ci\**\*" />
     <Content Remove="bin_ci\**\*" />
+    <Content Remove="SekaiLib.Tests\**" />
   </ItemGroup>
 
 </Project>
