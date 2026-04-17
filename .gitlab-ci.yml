@@ -53,15 +53,11 @@ frontend_build:
 docker_build:
   stage: docker
   image: docker:latest
-  services:
-    - name: docker:dind
-      alias: docker
   tags: [student]
   variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: unix:///var/run/docker.sock
   script:
-    - until docker info; do echo "Waiting for docker..."; sleep 2; done
+    - docker info
     - docker build -t sekailib-api:latest ./api
     - docker build -t sekailib-client:latest ./client
   only:
