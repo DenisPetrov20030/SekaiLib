@@ -58,9 +58,10 @@ docker_build:
       alias: docker
   tags: [student]
   variables:
-    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
   script:
+    - until docker info; do echo "Waiting for docker..."; sleep 2; done
     - docker build -t sekailib-api:latest ./api
     - docker build -t sekailib-client:latest ./client
   only:
