@@ -1,1 +1,66 @@
-stages: []
+# ── .gitlab-ci.yml для SekaiLib (.NET 8 + React) ───────────────────
+stages:
+  - build
+  - test
+  - docker
+
+# Кешування пакетів, щоб пайплайни працювали швидше
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .nuget/packages/
+    - client/node_modules/
+
+# ── Backend: .NET 8 API ───────────────────────────────────────────
+backend_build:
+  stage: build
+  image: mcr.microsoft.com/dotnet/sdk:8.0
+  tags: [student]
+  script:
+    - cd api
+    - dotnet restore SekaiLib.sln
+    - dotnet build SekaiLib.sln --configuration Release --no-restore
+  artifacts:
+    paths:
+      - api/**/bin/
+      - api/**/obj/
+    expire_in: 1 hour
+
+backend_test:
+  stage: test
+  image: mcr.microsoft.com/dotnet/sdk:8.0
+  tags: [student]
+  dependencies: [backend_build]
+  script:
+    - cd api
+    - dotnet test SekaiLib.sln --configuration Release --no-build
+
+# ── Frontend: React ──────────────────────────────────────────────
+frontend_build:
+  stage: build
+  image: node:20
+  tags: [student]
+  script:
+    - cd client
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - client/dist/
+    expire_in: 1 hour
+
+# ── Docker: Збірка образів ───────────────────────────────────────
+docker_build:
+  stage: docker
+  image: docker:latest
+  services:
+    - docker:dind
+  tags: [student]
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - docker build -t sekailib-api:latest ./api
+    - docker build -t sekailib-client:latest ./client
+  only:
+    - main
+    - docker
