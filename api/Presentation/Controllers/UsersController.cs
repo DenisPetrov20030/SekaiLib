@@ -563,3 +563,4 @@ public async Task<IActionResult> UploadAvatar(IFormFile avatar)
     }
 }
 
+}
