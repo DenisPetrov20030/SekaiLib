@@ -55,10 +55,10 @@ docker_build:
   image: docker:latest
   services:
     - name: docker:dind
-      alias: docker        
+      alias: docker
   tags: [student]
   variables:
-    DOCKER_HOST: tcp://docker:2375   
+    DOCKER_HOST: tcp://localhost:2375
     DOCKER_TLS_CERTDIR: ""
   script:
     - docker build -t sekailib-api:latest ./api
