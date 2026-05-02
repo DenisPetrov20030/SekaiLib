@@ -25,6 +25,38 @@ public class ReviewRepository : Repository<Review>, IReviewRepository
             .ToListAsync();
     }
 
+    public async Task<Dictionary<Guid, int>> GetReviewerScoresAsync(IEnumerable<Guid> userIds)
+    {
+        var ids = userIds.ToList();
+        var rows = await _context.Reviews
+            .Where(r => ids.Contains(r.UserId))
+            .Select(r => new
+            {
+                r.UserId,
+                Likes = r.Reactions.Count(rx => rx.Type == ReactionType.Like),
+                Dislikes = r.Reactions.Count(rx => rx.Type == ReactionType.Dislike)
+            })
+            .ToListAsync();
+
+        return rows
+            .GroupBy(x => x.UserId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Likes) - g.Sum(x => x.Dislikes));
+    }
+
+    public async Task<int> GetReviewerScoreAsync(Guid userId)
+    {
+        var rows = await _context.Reviews
+            .Where(r => r.UserId == userId)
+            .Select(r => new
+            {
+                Likes = r.Reactions.Count(rx => rx.Type == ReactionType.Like),
+                Dislikes = r.Reactions.Count(rx => rx.Type == ReactionType.Dislike)
+            })
+            .ToListAsync();
+
+        return rows.Sum(x => x.Likes) - rows.Sum(x => x.Dislikes);
+    }
+
     public async Task<Review?> GetByUserAndTitleAsync(Guid userId, Guid titleId)
     {
         return await _context.Reviews

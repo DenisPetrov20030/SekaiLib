@@ -23,7 +23,14 @@ public class ReviewService : IReviewService
     public async Task<IEnumerable<ReviewResponse>> GetByTitleAsync(Guid titleId, Guid? currentUserId)
     {
         var reviews = await _unitOfWork.Reviews.GetByTitleIdAsync(titleId);
-        return reviews.Select(r => MapToResponse(r, currentUserId));
+        var reviewsList = reviews.ToList();
+        var userIds = reviewsList.Select(r => r.UserId).Distinct();
+        var scores = await _unitOfWork.Reviews.GetReviewerScoresAsync(userIds);
+        return reviewsList.Select(r =>
+        {
+            scores.TryGetValue(r.UserId, out var score);
+            return MapToResponse(r, currentUserId, score);
+        });
     }
 
     public async Task<ReviewResponse> CreateAsync(Guid userId, Guid titleId, CreateReviewRequest request)
@@ -63,7 +70,8 @@ public class ReviewService : IReviewService
             }
         }
 
-        return MapToResponse(createdReview, userId);
+        var reviewerScore = await _unitOfWork.Reviews.GetReviewerScoreAsync(userId);
+        return MapToResponse(createdReview, userId, reviewerScore);
     }
 
     public async Task<ReviewResponse> UpdateAsync(Guid userId, Guid reviewId, UpdateReviewRequest request)
@@ -83,7 +91,8 @@ public class ReviewService : IReviewService
         await _unitOfWork.SaveChangesAsync();
 
         var updatedReview = await _unitOfWork.Reviews.GetByUserAndTitleAsync(userId, review.TitleId);
-        return MapToResponse(updatedReview!, userId);
+        var reviewerScore = await _unitOfWork.Reviews.GetReviewerScoreAsync(userId);
+        return MapToResponse(updatedReview!, userId, reviewerScore);
     }
 
     public async Task DeleteAsync(Guid userId, Guid reviewId, bool isAdmin)
@@ -134,7 +143,8 @@ public class ReviewService : IReviewService
         await _unitOfWork.SaveChangesAsync();
 
         var updatedReview = await _unitOfWork.Reviews.GetByUserAndTitleAsync(review.UserId, review.TitleId);
-        return MapToResponse(updatedReview!, userId);
+        var reviewerScore = await _unitOfWork.Reviews.GetReviewerScoreAsync(review.UserId);
+        return MapToResponse(updatedReview!, userId, reviewerScore);
     }
 
     public async Task RemoveReactionAsync(Guid userId, Guid reviewId)
@@ -147,7 +157,7 @@ public class ReviewService : IReviewService
         }
     }
 
-    private static ReviewResponse MapToResponse(Review review, Guid? currentUserId)
+    private static ReviewResponse MapToResponse(Review review, Guid? currentUserId, int reviewerScore = 0)
     {
         var likesCount = review.Reactions?.Count(r => r.Type == ReactionType.Like) ?? 0;
         var dislikesCount = review.Reactions?.Count(r => r.Type == ReactionType.Dislike) ?? 0;
@@ -206,7 +216,8 @@ public class ReviewService : IReviewService
             userReaction,
             review.CreatedAt,
             review.UpdatedAt,
-            comments
+            comments,
+            reviewerScore
         );
     }
 

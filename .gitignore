@@ -43,5 +43,6 @@ obj/
 .env.*
 api/wwwroot/avatars/
 
-backup.sql
+backups/
+!backups/.gitkeep
 

@@ -16,6 +16,8 @@ export const UserProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [titles, setTitles] = useState<PagedResponse<TitleDto> | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -40,10 +42,16 @@ const [listsError, setListsError] = useState<string | null>(null);
 
   const loadProfile = async () => {
     try {
+      setProfileLoading(true);
+      setProfileError(null);
       const data = await usersApi.getProfile(userId!);
       setProfile(data);
     } catch (error) {
+      setProfile(null);
+      setProfileError('Не вдалося завантажити профіль користувача.');
       console.error('Failed to load profile:', error);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -139,12 +147,30 @@ const [listsError, setListsError] = useState<string | null>(null);
     }
   };
 
-
-  if (!profile) {
+  if (profileLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center">
           <p className="text-text-muted">Завантаження...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16">
+        <div className="bg-surface rounded-lg p-6 border border-divider">
+          <h1 className="text-2xl font-bold text-text-primary mb-3">Профіль недоступний</h1>
+          <p className="text-text-secondary mb-6">
+            {profileError ?? 'Не вдалося завантажити дані користувача.'}
+          </p>
+          <div className="flex gap-3">
+            <Button onClick={loadProfile}>Спробувати ще раз</Button>
+            <Link to={ROUTES.CATALOG}>
+              <Button variant="secondary">До каталогу</Button>
+            </Link>
+          </div>
         </div>
       </div>
     );

@@ -7,7 +7,7 @@ export const NotFoundPage = () => {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      // Обчислюємо зміщення відносно центру екрана
+
       const x = (e.clientX - window.innerWidth / 2) / 25;
       const y = (e.clientY - window.innerHeight / 2) / 25;
       setMousePos({ x, y });
@@ -18,7 +18,7 @@ export const NotFoundPage = () => {
 
   return (
     <section className="min-h-[calc(100vh-4rem)] w-full flex items-center justify-center bg-black overflow-hidden relative">
-      {/* Декоративні частинки на фоні */}
+      {}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
         {[...Array(15)].map((_, i) => (
           <div 
@@ -36,7 +36,7 @@ export const NotFoundPage = () => {
 
       <div className="text-center z-10">
         <div className="relative inline-block">
-          {/* Головні цифри з паралакс-ефектом */}
+          {}
           <h1 
             className="text-[150px] md:text-[250px] font-black leading-none tracking-tighter text-white select-none transition-transform duration-75 ease-out"
             style={{ 
@@ -47,7 +47,7 @@ export const NotFoundPage = () => {
             404
           </h1>
           
-          {/* Тінь, що рухається в протилежний бік */}
+          {}
           <div 
             className="absolute inset-0 flex items-center justify-center -z-10 opacity-30 blur-xl text-red-600 text-[150px] md:text-[250px] font-black"
             style={{ transform: `translate(${-mousePos.x * 1.5}px, ${-mousePos.y * 1.5}px)` }}

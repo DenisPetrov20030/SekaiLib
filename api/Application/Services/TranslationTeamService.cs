@@ -372,7 +372,6 @@ public class TranslationTeamService : ITranslationTeamService
 
         var trimmed = avatarUrl.Trim();
 
-        // Browser-local blob URLs are temporary and should never be persisted.
         if (trimmed.StartsWith("blob:", StringComparison.OrdinalIgnoreCase))
             return null;
 

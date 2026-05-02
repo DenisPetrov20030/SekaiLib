@@ -15,11 +15,13 @@ public class TranslationTeamsController : ControllerBase
 {
     private readonly ITranslationTeamService _teamService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IWebHostEnvironment _environment;
 
-    public TranslationTeamsController(ITranslationTeamService teamService, IUnitOfWork unitOfWork)
+    public TranslationTeamsController(ITranslationTeamService teamService, IUnitOfWork unitOfWork, IWebHostEnvironment environment)
     {
         _teamService = teamService;
         _unitOfWork = unitOfWork;
+        _environment = environment;
     }
 
     [HttpGet]
@@ -87,11 +89,7 @@ public class TranslationTeamsController : ControllerBase
         if (!allowed.Contains(ext))
             return BadRequest("Підтримуються лише PNG/JPG/JPEG/WEBP.");
 
-        var uploadsRoot = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "SekaiLib",
-            "uploads",
-            "team-avatars");
+        var uploadsRoot = Path.Combine(_environment.ContentRootPath, "uploads", "team-avatars");
         Directory.CreateDirectory(uploadsRoot);
 
         var fileName = $"{Guid.NewGuid()}{ext}";
@@ -102,9 +100,7 @@ public class TranslationTeamsController : ControllerBase
             await avatar.CopyToAsync(stream);
         }
 
-        var request = HttpContext.Request;
-        var baseUrl = $"{request.Scheme}://{request.Host}";
-        team.AvatarUrl = $"{baseUrl}/uploads/team-avatars/{fileName}";
+        team.AvatarUrl = $"/uploads/team-avatars/{fileName}";
 
         await _unitOfWork.SaveChangesAsync();
         return Ok(new { avatarUrl = team.AvatarUrl });
@@ -134,11 +130,7 @@ public class TranslationTeamsController : ControllerBase
         if (!allowed.Contains(ext))
             return BadRequest("Підтримуються лише PNG/JPG/JPEG/WEBP.");
 
-        var uploadsRoot = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "SekaiLib",
-            "uploads",
-            "team-covers");
+        var uploadsRoot = Path.Combine(_environment.ContentRootPath, "uploads", "team-covers");
         Directory.CreateDirectory(uploadsRoot);
 
         var fileName = $"{Guid.NewGuid()}{ext}";
@@ -149,9 +141,7 @@ public class TranslationTeamsController : ControllerBase
             await cover.CopyToAsync(stream);
         }
 
-        var request = HttpContext.Request;
-        var baseUrl = $"{request.Scheme}://{request.Host}";
-        team.CoverImageUrl = $"{baseUrl}/uploads/team-covers/{fileName}";
+        team.CoverImageUrl = $"/uploads/team-covers/{fileName}";
 
         await _unitOfWork.SaveChangesAsync();
         return Ok(new { coverImageUrl = team.CoverImageUrl });

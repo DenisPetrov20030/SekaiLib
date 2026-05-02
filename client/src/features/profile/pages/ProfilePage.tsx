@@ -15,10 +15,12 @@ export const ProfilePage = () => {
   const { user: authUser } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [titles, setTitles] = useState<PagedResponse<TitleDto> | null>(null);
   const [customLists, setCustomLists] = useState<UserList[]>([]); 
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [conversations, setConversations] = useState<Array<any>>([]);
   const [convLoading, setConvLoading] = useState(true);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -27,10 +29,17 @@ export const ProfilePage = () => {
 
   useEffect(() => {
     loadProfile();
-    loadTitles(1);
     loadCustomLists();
     loadConversations();
   }, []);
+
+  useEffect(() => {
+    if (authUser?.id) {
+      loadTitles(1);
+    } else {
+      setLoading(false);
+    }
+  }, [authUser?.id]);
 
   useEffect(() => {
     if (authUser?.id) {
@@ -50,10 +59,16 @@ export const ProfilePage = () => {
 
   const loadProfile = async () => {
     try {
+      setProfileLoading(true);
+      setProfileError(null);
       const data = await usersApi.getCurrentProfile();
       setProfile(data);
     } catch (error) {
+      setProfile(null);
+      setProfileError('Не вдалося завантажити профіль. Спробуйте ще раз.');
       console.error('Не вдалося завантажити профіль:', error);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -118,10 +133,29 @@ export const ProfilePage = () => {
     }
   };
 
-  if (!profile) {
+  if (profileLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="bg-surface rounded-lg p-6 shadow-sm border border-divider">
+          <h1 className="text-2xl font-bold text-text-primary mb-3">Профіль недоступний</h1>
+          <p className="text-text-secondary mb-6">
+            {profileError ?? 'Не вдалося завантажити дані профілю.'}
+          </p>
+          <div className="flex gap-3">
+            <Button onClick={loadProfile}>Спробувати ще раз</Button>
+            <Link to={`${ROUTES.CATALOG}?auth=login`}>
+              <Button variant="secondary">Увійти знову</Button>
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -160,7 +194,7 @@ export const ProfilePage = () => {
                   </span>
                 </div>
               )}
-              {/* Plus button to upload avatar (only for own profile) */}
+              {}
               {authUser?.id === profile.id && (
                 <>
                   <button
@@ -272,7 +306,7 @@ export const ProfilePage = () => {
                       {c.lastMessageText || 'Немає повідомлень'}
                     </div>
                   </div>
-                  {/* Removed extra unread badge; count shown at right */}
+                  {}
                 </div>
               </Link>
             ))}
@@ -314,7 +348,7 @@ export const ProfilePage = () => {
         )}
       </div>
 
-      {/* Create List Modal */}
+      {}
       <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} title="Створити новий список">
         <div>
           <input

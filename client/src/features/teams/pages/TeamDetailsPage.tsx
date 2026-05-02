@@ -32,7 +32,6 @@ export const TeamDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [chaptersLoading, setChaptersLoading] = useState(false);
 
-  // Edit state
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -49,7 +48,6 @@ export const TeamDetailsPage = () => {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Add member state
   const [addUserId, setAddUserId] = useState('');
   const [addRole, setAddRole] = useState<TeamMemberRole>(TeamMemberRole.Member);
 
@@ -231,7 +229,7 @@ export const TeamDetailsPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Header */}
+      {}
       {editing ? (
         <div className="bg-surface rounded-lg p-6 mb-6 space-y-4">
           <h2 className="text-lg font-semibold text-text-primary">Редагування команди</h2>
@@ -467,7 +465,7 @@ export const TeamDetailsPage = () => {
         </div>
       )}
 
-      {/* Tabs */}
+      {}
       <div className="flex border-b border-border mb-6">
         {(['updates', 'members'] as Tab[]).map((t) => (
           <button
@@ -484,7 +482,7 @@ export const TeamDetailsPage = () => {
         ))}
       </div>
 
-      {/* Updates tab */}
+      {}
       {tab === 'updates' && (
         <div>
           {chaptersLoading ? (
@@ -537,7 +535,7 @@ export const TeamDetailsPage = () => {
             </div>
           )}
 
-          {/* Pagination */}
+          {}
           {totalPages > 1 && (
             <div className="flex justify-center gap-2 mt-6">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
@@ -558,7 +556,7 @@ export const TeamDetailsPage = () => {
         </div>
       )}
 
-      {/* Members tab */}
+      {}
       {tab === 'members' && (
         <div>
           <div className="space-y-2 mb-6">
@@ -607,7 +605,7 @@ export const TeamDetailsPage = () => {
             ))}
           </div>
 
-          {/* Add member (owner/admin only) */}
+          {}
           {canManage && (
             <form onSubmit={handleAddMember} className="bg-surface rounded-lg p-4">
               <h3 className="text-sm font-semibold text-text-secondary mb-3">Додати учасника</h3>

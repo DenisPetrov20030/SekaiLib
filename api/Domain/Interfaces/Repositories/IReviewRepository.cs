@@ -7,6 +7,8 @@ public interface IReviewRepository : IRepository<Review>
 {
     Task<IEnumerable<Review>> GetByTitleIdAsync(Guid titleId);
     Task<Review?> GetByUserAndTitleAsync(Guid userId, Guid titleId);
+    Task<Dictionary<Guid, int>> GetReviewerScoresAsync(IEnumerable<Guid> userIds);
+    Task<int> GetReviewerScoreAsync(Guid userId);
     Task<ReviewReaction?> GetReactionAsync(Guid userId, Guid reviewId);
     Task AddReactionAsync(ReviewReaction reaction);
     Task RemoveReactionAsync(ReviewReaction reaction);

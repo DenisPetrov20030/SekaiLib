@@ -1,4 +1,14 @@
 {
+  "scripts": {
+    "migrate": "cd api && dotnet ef migrations add",
+    "db:update": "cd api && dotnet ef database update --project SekaiLib.csproj",
+    "db:reset": "cd api && dotnet ef database drop --force --project SekaiLib.csproj && dotnet ef database update --project SekaiLib.csproj",
+    "db:backup": "node scripts/db-backup.js",
+    "db:restore": "node scripts/db-restore.js",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:reset": "docker compose down -v && docker compose up -d --build"
+  },
   "dependencies": {
     "swiper": "^12.1.0"
   }

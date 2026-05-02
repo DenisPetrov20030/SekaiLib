@@ -83,7 +83,6 @@ export const ReaderPage = () => {
     loadComments();
   }, [currentChapter?.id]);
 
-  // Record view after 15s of actual reading (anti-abuse)
   useEffect(() => {
     if (!currentChapter) return;
 
@@ -98,7 +97,7 @@ export const ReaderPage = () => {
         );
         setViewCount(res.data.viewCount);
       } catch {
-        // silently ignore — not critical
+
       }
     }, 15_000);
 
@@ -292,7 +291,7 @@ export const ReaderPage = () => {
           </button>
         )}
         
-        {/* Панель керування та вибору тем */}
+        {}
         <div className="mb-8 flex items-center justify-between border-b pb-4 border-gray-700/20">
           <button
             onClick={() => navigate(`/titles/${titleId}`)}
@@ -328,7 +327,7 @@ export const ReaderPage = () => {
           </div>
         </div>
 
-        {/* Шапка глави */}
+        {}
         <header className="mb-12 text-center">
           <h1 className="text-4xl font-bold mb-4">{currentChapter.titleName}</h1>
           <div className="h-1 w-20 bg-orange-600 mx-auto mb-4"></div>
@@ -349,7 +348,7 @@ export const ReaderPage = () => {
           )}
         </header>
 
-        {/* Основний текст твору */}
+        {}
         <article 
             className={`chapter-content-area selection:bg-orange-200 selection:text-orange-900 leading-relaxed ${getFontSizeClass()}`}
             style={{ color: 'inherit' }} 
@@ -357,7 +356,7 @@ export const ReaderPage = () => {
           {renderChapterContent(currentChapter.content)}
         </article>
 
-        {/* Коментарі до глави */}
+        {}
         <section className="mt-16 border-t border-gray-700/20 pt-10">
           <h3 className="text-2xl font-semibold mb-6">Коментарі</h3>
 
@@ -403,7 +402,7 @@ export const ReaderPage = () => {
           </div>
         </section>
 
-        {/* Кнопки переходу між главами */}
+        {}
         <nav className="mt-16 flex items-center justify-between border-t border-gray-700/20 pt-10">
           {currentChapter.previousChapterNumber ? (
             <button

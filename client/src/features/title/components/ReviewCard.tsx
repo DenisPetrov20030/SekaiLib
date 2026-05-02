@@ -7,6 +7,34 @@ import { reviewsApi } from '../../../core/api';
 import { IconButton, Button } from '../../../shared/components';
 import { ReviewForm } from './ReviewForm';
 
+function ReviewerScoreBadge({ score }: { score: number }) {
+  const { pill, dot, label } =
+    score >= 100
+      ? { pill: 'bg-amber-400/10 border-amber-400/20 text-amber-300', dot: 'bg-amber-400', label: 'Легенда' }
+      : score >= 50
+      ? { pill: 'bg-emerald-400/10 border-emerald-400/20 text-emerald-400', dot: 'bg-emerald-400', label: 'Топ ревьюер' }
+      : score >= 10
+      ? { pill: 'bg-sky-400/10 border-sky-400/20 text-sky-400', dot: 'bg-sky-400', label: 'Корисний' }
+      : { pill: 'bg-surface-600/60 border-surface-500/30 text-text-muted', dot: 'bg-surface-500', label: 'Ревьюер' };
+
+  return (
+    <div className="group relative inline-flex">
+      <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border cursor-help select-none ${pill}`}>
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
+        <span>{label}</span>
+        <span className="opacity-60">·</span>
+        <span>{score > 0 ? `+${score}` : score}</span>
+      </div>
+      <div className="pointer-events-none absolute bottom-full left-0 mb-2 z-50 w-56 rounded-lg bg-surface-900 border border-surface-700 shadow-xl p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+        <p className="text-xs font-semibold text-text-primary mb-1">Репутація ревьюера</p>
+        <p className="text-xs text-text-muted leading-relaxed">
+          Сума лайків − дизлайків по всіх рецензіях цього користувача. Показує, наскільки читачі вважають його думку корисною.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function formatRelativeTime(input: string | Date): string {
   const now = Date.now();
   const t = typeof input === 'string' ? new Date(input).getTime() : input.getTime();
@@ -408,7 +436,10 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
             )}
           </div>
           <div>
-            <Link to={`/users/${currentReview.userId}`} className="font-medium text-text-primary hover:underline">{currentReview.username}</Link>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link to={`/users/${currentReview.userId}`} className="font-medium text-text-primary hover:underline">{currentReview.username}</Link>
+              <ReviewerScoreBadge score={currentReview.reviewerScore} />
+            </div>
             <p className="text-sm text-text-muted">
               {new Date(currentReview.createdAt).toLocaleDateString()}
             </p>
@@ -432,7 +463,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
       </div>
       <p className="mt-4 text-text-secondary whitespace-pre-line">{currentReview.content}</p>
 
-      {/* Лайки/дизлайки головної рецензії — під текстом і над кнопками */}
+      {}
       <div className="mt-3 flex items-center gap-2">
         <IconButton
           variant="like"
@@ -458,7 +489,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
         />
       </div>
 
-      {/* Кнопки під коментарем: Відповісти та Скарга (неробоча) */}
+      {}
       <div className="mt-3 flex items-center gap-3">
         <Button size="sm" variant="primary" className="rounded-full" onClick={toggleReply}>
           Відповісти

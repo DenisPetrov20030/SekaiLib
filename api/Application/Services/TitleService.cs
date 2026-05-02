@@ -44,8 +44,7 @@ public class TitleService : ITitleService
             t.Description ?? "",
             t.CountryOfOrigin ?? string.Empty,
             t.Status,
-            0 // TitlesCount
-        ));
+            0         ));
 
         return new PagedResponse<TitleDto>(
             titleDtos,

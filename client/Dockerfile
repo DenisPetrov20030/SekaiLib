@@ -1,27 +1,14 @@
-# Етап збірки (Build Stage)
 FROM node:20-alpine AS build
 WORKDIR /app
-
-# Копіюємо файли залежностей
 COPY package*.json ./
-
-# Встановлюємо залежності
 RUN npm install
-
-# Копіюємо всі файли проекту (включаючи src, public, vite.config.ts)
 COPY . .
-
-# Збираємо проект (Vite згенерує папку dist)
+ARG VITE_API_BASE_URL=/api
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN npm run build
 
-# Етап запуску (Production Stage)
-# Використовуємо легкий Nginx для роздачі статичних файлів
 FROM nginx:stable-alpine
-
-# Копіюємо зібрані файли з попереднього етапу в папку Nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
-
-# Відкриваємо 80 порт
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]

@@ -20,6 +20,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Налаштування порту (за замовчуванням для .NET 8 це 8080, але ми можемо лишити 80)
-EXPOSE 80
+# Налаштування порту 
+EXPOSE 8080
 ENTRYPOINT ["dotnet", "SekaiLib.dll"]

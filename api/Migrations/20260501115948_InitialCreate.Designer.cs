@@ -12,8 +12,8 @@ using SekaiLib.Infrastructure.Persistence;
 namespace SekaiLib.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260411150457_AddTeamCoverImage")]
-    partial class AddTeamCoverImage
+    [Migration("20260501115948_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

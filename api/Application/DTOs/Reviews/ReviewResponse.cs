@@ -15,5 +15,6 @@ public record ReviewResponse(
     ReactionType? UserReaction,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    IEnumerable<ReviewCommentResponse> Comments
+    IEnumerable<ReviewCommentResponse> Comments,
+    int ReviewerScore
 );

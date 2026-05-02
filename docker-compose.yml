@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:17
+    container_name: sekailib-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: sekailib_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d sekailib_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build: ./api
+    container_name: sekailib-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=sekailib_db;Username=user;Password=password"
+    volumes:
+      - uploads_data:/app/uploads
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_API_BASE_URL: /api
+    container_name: sekailib-client
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+  playwright-tests:
+    build: ./api/SekaiLib.Tests
+    container_name: sekailib-tests
+    profiles:
+      - test
+    depends_on:
+      - client
+      - api
+    environment:
+      BASE_URL: http://client
+
+volumes:
+  postgres_data:
+  uploads_data:

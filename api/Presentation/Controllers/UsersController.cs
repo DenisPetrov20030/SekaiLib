@@ -21,13 +21,16 @@ public class UsersController : ControllerBase
     private readonly ITitleService _titleService;
     private readonly INotificationService _notifications;
     private readonly ILogger<UsersController> _logger;
-    public UsersController(IUnitOfWork unitOfWork, ITitleService titleService, INotificationService notifications, ILogger<UsersController> logger)
-{
-    _unitOfWork = unitOfWork;
-    _titleService = titleService;
-    _notifications = notifications;
-    _logger = logger; 
-}
+    private readonly IWebHostEnvironment _environment;
+
+    public UsersController(IUnitOfWork unitOfWork, ITitleService titleService, INotificationService notifications, ILogger<UsersController> logger, IWebHostEnvironment environment)
+    {
+        _unitOfWork = unitOfWork;
+        _titleService = titleService;
+        _notifications = notifications;
+        _logger = logger;
+        _environment = environment;
+    }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<UserProfileDto>> GetProfile(Guid id)
@@ -522,11 +525,7 @@ public async Task<IActionResult> UploadAvatar(IFormFile avatar)
             return NotFound();
         }
 
-        var uploadsRoot = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "SekaiLib",
-            "uploads",
-            "avatars");
+        var uploadsRoot = Path.Combine(_environment.ContentRootPath, "uploads", "avatars");
 
         if (!Directory.Exists(uploadsRoot)) Directory.CreateDirectory(uploadsRoot);
 
@@ -546,10 +545,7 @@ public async Task<IActionResult> UploadAvatar(IFormFile avatar)
             await avatar.CopyToAsync(stream);
         }
 
-        var request = HttpContext.Request;
-        var baseUrl = $"{request.Scheme}://{request.Host}";
-        var relativePath = $"/uploads/avatars/{fileName}";
-        user.AvatarUrl = baseUrl + relativePath;
+        user.AvatarUrl = $"/uploads/avatars/{fileName}";
 
         await _unitOfWork.SaveChangesAsync();
 

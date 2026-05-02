@@ -53,7 +53,6 @@ export const TitleDetailsPage = () => {
     }
   }, [user]);
 
-  // Reset team filter when title changes
   useEffect(() => {
     setSelectedTeamId(null);
   }, [id]);
@@ -157,7 +156,7 @@ export const TitleDetailsPage = () => {
             </div>
           </div>
 
-          {/* Translation teams */}
+          {}
           {currentTitle.translationTeams && currentTitle.translationTeams.length > 0 && (
             <div className="mt-6">
               <h2 className="text-xl font-semibold text-text-primary mb-2">Команди перекладачів</h2>
@@ -188,7 +187,7 @@ export const TitleDetailsPage = () => {
               )}
             </div>
 
-            {/* Team filter */}
+            {}
             {currentTitle.translationTeams && currentTitle.translationTeams.length > 1 && (
               <div className="flex flex-wrap gap-2 mb-4">
                 <button

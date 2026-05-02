@@ -107,6 +107,7 @@ export interface Review {
   createdAt: string;
   updatedAt: string;
   comments?: ReviewComment[];
+  reviewerScore: number;
 }
 
 export interface ReviewComment {

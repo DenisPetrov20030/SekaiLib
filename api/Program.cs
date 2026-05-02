@@ -51,7 +51,7 @@ using (var scope = app.Services.CreateScope())
         }
         else
         {
-            logger.LogInformation("No migrations found; ensuring database is created.");
+            logger.LogInformation("No pending migrations; database is up to date.");
             context.Database.EnsureCreated();
         }
 
@@ -77,11 +77,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseGlobalExceptionHandler();
 
@@ -89,13 +86,13 @@ app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 
-app.UseStaticFiles();
+var uploadsRoot = Path.GetFullPath(Path.Combine(app.Environment.ContentRootPath, "uploads"));
 
-var uploadsRoot = Path.Combine(
-    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-    "SekaiLib",
-    "uploads");
-Directory.CreateDirectory(uploadsRoot);
+if (!Directory.Exists(uploadsRoot))
+{
+    Directory.CreateDirectory(uploadsRoot);
+}
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsRoot),

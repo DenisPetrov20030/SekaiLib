@@ -216,9 +216,8 @@ public class AppDbContext : DbContext
             .HasForeignKey(v => v.ChapterId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Fast lookup: did this user already view this chapter?
         entity.HasIndex(v => new { v.ChapterId, v.UserId });
-        // Fast lookup for anonymous (by IP hash)
+
         entity.HasIndex(v => new { v.ChapterId, v.IpHash });
     });
 }

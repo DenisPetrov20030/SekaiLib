@@ -100,7 +100,6 @@ public class ChapterService : IChapterService
         if (user == null)
             throw new UnauthorizedException();
 
-        // Check permission: publisher, admin, or any member of the selected team.
         var canCreate = title.PublisherId == userId || user.Role == UserRole.Administrator;
 
         if (!canCreate && request.TranslationTeamId.HasValue)
@@ -138,7 +137,6 @@ public class ChapterService : IChapterService
         await _unitOfWork.Chapters.AddAsync(chapter);
         await _unitOfWork.SaveChangesAsync();
 
-        // Notify reading list followers (title subscribers)
         var followerIds = await _unitOfWork.ReadingLists.Query()
             .Where(rl => rl.TitleId == titleId)
             .Select(rl => rl.UserId)
@@ -159,7 +157,6 @@ public class ChapterService : IChapterService
             ));
         }
 
-        // Notify team subscribers if chapter is from a team
         if (request.TranslationTeamId.HasValue)
         {
             var teamSubscriberIds = await _unitOfWork.TranslationTeamSubscriptions.Query()
@@ -582,8 +579,7 @@ public class ChapterService : IChapterService
     private static string HashIp(string ip)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(ip));
-        return Convert.ToHexString(bytes)[..16]; // first 8 bytes enough for dedup
-    }
+        return Convert.ToHexString(bytes)[..16];     }
 
     private async Task<Guid> GetChapterIdByCommentId(Guid commentId)
     {

@@ -14,8 +14,7 @@ public class UserListRepository : Repository<UserList>, IUserListRepository
     public async Task<IEnumerable<UserList>> GetUserListsWithTitlesAsync(Guid userId)
     {
         return await _context.UserLists
-            .AsNoTracking() // Оптимізація для читання
-            .Include(x => x.ReadingListItems) 
+            .AsNoTracking()             .Include(x => x.ReadingListItems) 
                 .ThenInclude(rl => rl.Title) 
             .Where(x => x.UserId == userId)
             .ToListAsync();
