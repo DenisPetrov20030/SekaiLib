@@ -13,4 +13,5 @@ jobs:
       - name: Push to GitLab
         run: |
           git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@git.ztu.edu.ua/ipz/2022-2026/ipz-22-4/petrov-denys/sekailib.git
-          git push gitlab "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*"
+          git push gitlab "refs/heads/*:refs/heads/*" "refs/tags/*:refs/tags/*" || true
+          git push gitlab --tags || true
