@@ -54,4 +54,25 @@ public class UserListsController : ControllerBase
         if (list == null) return NotFound();
         return Ok(list);
     }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserListRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _service.UpdateListNameAsync(userId, id, request.Name);
+        return Ok();
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _service.DeleteListAsync(userId, id);
+        return Ok();
+    }
+}
+
+public class UpdateUserListRequest
+{
+    public string Name { get; set; } = string.Empty;
 }

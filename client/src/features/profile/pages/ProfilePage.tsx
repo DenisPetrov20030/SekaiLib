@@ -4,10 +4,10 @@ import { useAppDispatch, useAppSelector } from '../../../app/store/hooks';
 import { usersApi, messagesApi } from '../../../core/api';
 import { TitleCard } from '../../catalog/components/TitleCard';
 import { Pagination } from '../../catalog/components/Pagination';
-import { Button, Modal } from '../../../shared/components';
+import { Button } from '../../../shared/components';
 import { ROUTES } from '../../../core/constants';
 import type { TitleDto } from '../../../core/types/dtos';
-import type { PagedResponse, UserList, UserProfile } from '../../../core/types';
+import type { PagedResponse, UserProfile } from '../../../core/types';
 import { fetchProfile } from '../store/profileSlice';
 import { getCurrentUser } from '../../auth/store/authSlice';
 
@@ -18,7 +18,6 @@ export const ProfilePage = () => {
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [titles, setTitles] = useState<PagedResponse<TitleDto> | null>(null);
-  const [customLists, setCustomLists] = useState<UserList[]>([]); 
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [conversations, setConversations] = useState<Array<any>>([]);
@@ -29,7 +28,6 @@ export const ProfilePage = () => {
 
   useEffect(() => {
     loadProfile();
-    loadCustomLists();
     loadConversations();
   }, []);
 
@@ -72,15 +70,6 @@ export const ProfilePage = () => {
     }
   };
 
-  const loadCustomLists = async () => {
-    try {
-      const data = await usersApi.getCustomLists();
-      setCustomLists(data);
-    } catch (error) {
-      console.error('Не вдалося завантажити кастомні списки:', error);
-    }
-  };
-
   const loadConversations = async () => {
     try {
       setConvLoading(true);
@@ -105,31 +94,6 @@ export const ProfilePage = () => {
       console.error('Не вдалося завантажити назви:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreateList = async () => {
-    setIsCreateModalOpen(true);
-  };
-
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newListName, setNewListName] = useState('');
-
-  const submitCreateList = async () => {
-    if (customLists.length >= 5) {
-      alert('Ви досягли ліміту: можна створити не більше 5 кастомних списків.');
-      return;
-    }
-    const name = newListName?.trim();
-    if (!name) return;
-    try {
-      await usersApi.createCustomList(name);
-      setIsCreateModalOpen(false);
-      setNewListName('');
-      await loadCustomLists();
-    } catch (error) {
-      console.error('Помилка при створенні списку:', error);
-      alert('Не вдалося створити список. Можливо, назва занадто довга або виникла помилка на сервері.');
     }
   };
 
@@ -194,7 +158,7 @@ export const ProfilePage = () => {
                   </span>
                 </div>
               )}
-              {}
+              {/* Plus button to upload avatar (only for own profile) */}
               {authUser?.id === profile.id && (
                 <>
                   <button
@@ -306,64 +270,13 @@ export const ProfilePage = () => {
                       {c.lastMessageText || 'Немає повідомлень'}
                     </div>
                   </div>
-                  {}
+                  {/* Removed extra unread badge; count shown at right */}
                 </div>
               </Link>
             ))}
           </div>
         )}
       </div>
-      <div className="mb-12 bg-surface rounded-lg p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-text-primary">
-            Мої списки <span className="text-lg font-normal text-text-muted ml-2">({customLists.length}/5)</span>
-          </h2>
-          {customLists.length < 5 && (
-            <Button onClick={handleCreateList} className="text-sm">
-              + Створити список
-            </Button>
-          )}
-        </div>
-
-        {customLists.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {customLists.map((list) => (
-              <Link key={list.id} to={`/user-lists/${list.id}`} className="p-4 bg-surface-hover rounded-lg border border-divider hover:border-primary-500 transition-colors group">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-bold text-lg text-text-primary group-hover:text-primary-500">{list.name}</h3>
-                  <span className="text-xs bg-surface p-1 rounded border border-divider">
-                    {list.titlesCount || 0} творів
-                  </span>
-                </div>
-                <p className="text-text-muted text-sm mt-2 line-clamp-1">
-                  {list.description || 'Немає опису'}
-                </p>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-6 border-2 border-dashed border-divider rounded-lg">
-            <p className="text-text-muted">У вас ще немає кастомних списків</p>
-          </div>
-        )}
-      </div>
-
-      {}
-      <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} title="Створити новий список">
-        <div>
-          <input
-            value={newListName}
-            onChange={(e) => setNewListName(e.target.value)}
-            placeholder="Назва списку"
-            className="w-full p-2 border rounded mb-4 bg-surface-800"
-          />
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>Скасувати</Button>
-            <Button onClick={submitCreateList}>Створити</Button>
-          </div>
-        </div>
-      </Modal>
-
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-text-primary">
           Мої твори <span className="text-lg font-normal text-text-muted ml-2">({titles?.totalCount || 0})</span>

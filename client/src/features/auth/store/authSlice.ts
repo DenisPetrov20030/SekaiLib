@@ -19,7 +19,7 @@ const initialState: AuthState = {
   user: null,
   accessToken: null,
   isAuthenticated: false,
-  loading: false,
+  loading: true,
   error: null,
 };
 
@@ -126,6 +126,13 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(initializeAuth.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(initializeAuth.rejected, (state) => {
+        state.loading = false;
+      })
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -167,10 +174,15 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
       })
       .addCase(initializeAuth.fulfilled, (state, action) => {
+        state.loading = false;
         if (action.payload) {
           state.user = action.payload.user;
           state.accessToken = action.payload.accessToken;
           state.isAuthenticated = true;
+        } else {
+          state.user = null;
+          state.accessToken = null;
+          state.isAuthenticated = false;
         }
       });
   },

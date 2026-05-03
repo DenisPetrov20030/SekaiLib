@@ -60,6 +60,20 @@ public class UserListService
         await _unitOfWork.SaveChangesAsync();
     }
 
+    public async Task UpdateListNameAsync(Guid userId, Guid listId, string name)
+    {
+        var list = await _unitOfWork.UserLists.GetByIdAsync(listId);
+        if (list == null || list.UserId != userId)
+            throw new Exception("Список не знайдено або доступ заборонено.");
+
+        if (string.IsNullOrWhiteSpace(name))
+            throw new Exception("Назва списку не може бути пустою.");
+
+        list.Name = name.Trim();
+        await _unitOfWork.UserLists.UpdateAsync(list);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     public async Task<UserListDto?> GetUserListByIdAsync(Guid userId, Guid listId)
     {
         var lists = await _unitOfWork.UserLists.GetUserListsWithTitlesAsync(userId);

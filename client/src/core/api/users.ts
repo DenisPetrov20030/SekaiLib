@@ -39,6 +39,14 @@ export const usersApi = {
     });
   },
 
+  updateCustomList: async (listId: string, data: { name: string }): Promise<void> => {
+    await apiClient.put(`/userlists/${listId}`, data);
+  },
+
+  deleteCustomList: async (listId: string): Promise<void> => {
+    await apiClient.delete(`/userlists/${listId}`);
+  },
+
   uploadAvatar: async (file: File): Promise<{ avatarUrl: string }> => {
     const form = new FormData();
     form.append('avatar', file);

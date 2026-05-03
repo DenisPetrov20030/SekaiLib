@@ -12,10 +12,10 @@ function ReviewerScoreBadge({ score }: { score: number }) {
     score >= 100
       ? { pill: 'bg-amber-400/10 border-amber-400/20 text-amber-300', dot: 'bg-amber-400', label: 'Легенда' }
       : score >= 50
-      ? { pill: 'bg-emerald-400/10 border-emerald-400/20 text-emerald-400', dot: 'bg-emerald-400', label: 'Топ ревьюер' }
+      ? { pill: 'bg-emerald-400/10 border-emerald-400/20 text-emerald-400', dot: 'bg-emerald-400', label: 'Топ рецензент' }
       : score >= 10
       ? { pill: 'bg-sky-400/10 border-sky-400/20 text-sky-400', dot: 'bg-sky-400', label: 'Корисний' }
-      : { pill: 'bg-surface-600/60 border-surface-500/30 text-text-muted', dot: 'bg-surface-500', label: 'Ревьюер' };
+      : { pill: 'bg-surface-600/60 border-surface-500/30 text-text-muted', dot: 'bg-surface-500', label: 'Рецензент' };
 
   return (
     <div className="group relative inline-flex">
@@ -26,7 +26,7 @@ function ReviewerScoreBadge({ score }: { score: number }) {
         <span>{score > 0 ? `+${score}` : score}</span>
       </div>
       <div className="pointer-events-none absolute bottom-full left-0 mb-2 z-50 w-56 rounded-lg bg-surface-900 border border-surface-700 shadow-xl p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-        <p className="text-xs font-semibold text-text-primary mb-1">Репутація ревьюера</p>
+        <p className="text-xs font-semibold text-text-primary mb-1">Репутація рецензента</p>
         <p className="text-xs text-text-muted leading-relaxed">
           Сума лайків − дизлайків по всіх рецензіях цього користувача. Показує, наскільки читачі вважають його думку корисною.
         </p>
