@@ -32,6 +32,15 @@ export const ROUTES = {
   TEAM_DETAILS: '/teams/:teamId',
   TEAM_CREATE: '/teams/create',
   NOT_FOUND: '/404',
+  NEWS: '/news',
+  NEWS_DETAILS: '/news/:id',
+  FAQ: '/faq',
+  ADMIN_BANS: '/admin/bans',
+  ADMIN_REPORTS: '/admin/reports',
+  ADMIN_NEWS: '/admin/news',
+  ADMIN_NEWS_CREATE: '/admin/news/create',
+  ADMIN_NEWS_EDIT: '/admin/news/:id',
+  ADMIN_FAQ: '/admin/faq',
 } as const;
 
 export const PAGINATION = {

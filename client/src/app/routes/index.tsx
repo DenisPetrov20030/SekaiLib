@@ -12,8 +12,10 @@ import { UserCustomListsPage } from '../../features/userlists/pages/UserCustomLi
 import { FriendsPage, ProfilePage, UserProfilePage } from '../../features/profile/pages';
 import { ChatPage } from '../../features/messages/pages/ChatPage';
 import { NotificationsPage } from '../../features/notifications';
-import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage } from '../../features/admin';
+import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage, AdminBansPage, AdminReportsPage, AdminNewsPage, AdminNewsEditPage, AdminFaqPage } from '../../features/admin';
 import { TeamsPage, TeamDetailsPage, CreateTeamPage } from '../../features/teams';
+import { NewsPage, NewsDetailsPage } from '../../features/news';
+import { FaqPage } from '../../features/faq';
 import { ROUTES } from '../../core/constants';
 import { HomePage } from '../../features/home/pages/HomePage.tsx';
 import { NotFoundPage } from '../../features/home/pages/NotFoundPage';
@@ -54,6 +56,18 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.TEAM_DETAILS,
         element: <TeamDetailsPage />,
+      },
+      {
+        path: ROUTES.NEWS,
+        element: <NewsPage />,
+      },
+      {
+        path: ROUTES.NEWS_DETAILS,
+        element: <NewsDetailsPage />,
+      },
+      {
+        path: ROUTES.FAQ,
+        element: <FaqPage />,
       },
       {
         path: ROUTES.USER_PROFILE,
@@ -150,6 +164,30 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.ADMIN_TITLE_EDIT,
             element: <AdminTitleEditPage />,
+          },
+          {
+            path: ROUTES.ADMIN_BANS,
+            element: <AdminBansPage />,
+          },
+          {
+            path: ROUTES.ADMIN_REPORTS,
+            element: <AdminReportsPage />,
+          },
+          {
+            path: ROUTES.ADMIN_NEWS,
+            element: <AdminNewsPage />,
+          },
+          {
+            path: ROUTES.ADMIN_NEWS_CREATE,
+            element: <AdminNewsEditPage />,
+          },
+          {
+            path: ROUTES.ADMIN_NEWS_EDIT,
+            element: <AdminNewsEditPage />,
+          },
+          {
+            path: ROUTES.ADMIN_FAQ,
+            element: <AdminFaqPage />,
           },
         ],
       },

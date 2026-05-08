@@ -37,6 +37,11 @@ public class AppDbContext : DbContext
     public DbSet<FriendRequest> FriendRequests { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<ChapterView> ChapterViews { get; set; }
+    public DbSet<UserBan> UserBans { get; set; }
+    public DbSet<Report> Reports { get; set; }
+    public DbSet<UserBlock> UserBlocks { get; set; }
+    public DbSet<News> News { get; set; }
+    public DbSet<FaqItem> FaqItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
@@ -219,6 +224,55 @@ public class AppDbContext : DbContext
         entity.HasIndex(v => new { v.ChapterId, v.UserId });
 
         entity.HasIndex(v => new { v.ChapterId, v.IpHash });
+    });
+
+    modelBuilder.Entity<UserBan>(entity =>
+    {
+        entity.HasOne(b => b.User)
+            .WithMany()
+            .HasForeignKey(b => b.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(b => b.BannedByUser)
+            .WithMany()
+            .HasForeignKey(b => b.BannedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+    });
+
+    modelBuilder.Entity<Report>(entity =>
+    {
+        entity.HasOne(r => r.Reporter)
+            .WithMany()
+            .HasForeignKey(r => r.ReporterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(r => r.ReviewedByUser)
+            .WithMany()
+            .HasForeignKey(r => r.ReviewedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+    });
+
+    modelBuilder.Entity<UserBlock>(entity =>
+    {
+        entity.HasIndex(b => new { b.BlockerId, b.BlockedUserId }).IsUnique();
+
+        entity.HasOne(b => b.Blocker)
+            .WithMany()
+            .HasForeignKey(b => b.BlockerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(b => b.BlockedUser)
+            .WithMany()
+            .HasForeignKey(b => b.BlockedUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<News>(entity =>
+    {
+        entity.HasOne(n => n.Author)
+            .WithMany()
+            .HasForeignKey(n => n.AuthorId)
+            .OnDelete(DeleteBehavior.Restrict);
     });
 }
 

@@ -223,6 +223,18 @@ export const Header = () => {
                 >
                   Команди
                 </Link>
+                <Link
+                  to={ROUTES.NEWS}
+                  className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Новини
+                </Link>
+                <Link
+                  to={ROUTES.FAQ}
+                  className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  FAQ
+                </Link>
                 {isAuthenticated && (
                   <>
                     <Link

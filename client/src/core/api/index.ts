@@ -7,3 +7,8 @@ export * from './genres';
 export * from './chapters';
 export { notificationsApi } from './notifications';
 export { teamsApi } from './teams';
+export { bansApi } from './bans';
+export { reportsApi } from './reports';
+export { blocksApi } from './blocks';
+export { newsApi } from './news';
+export { faqApi } from './faq';

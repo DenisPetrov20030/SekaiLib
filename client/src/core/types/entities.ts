@@ -1,4 +1,4 @@
-import { UserRole, TitleStatus, ReadingStatus, ReactionType } from './enums';
+import { UserRole, TitleStatus, ReadingStatus, ReactionType, ReportTargetType, ReportStatus } from './enums';
 
 export interface User {
   id: string;
@@ -137,4 +137,55 @@ export interface UserList {
   titles?: Title[];
   titlesCount?: number;
   description?: string;
+}
+
+export interface UserBan {
+  id: string;
+  userId: string;
+  username: string;
+  avatarUrl?: string;
+  bannedByUserId: string;
+  bannedByUsername: string;
+  reason: string;
+  expiresAt?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Report {
+  id: string;
+  reporterId: string;
+  reporterUsername: string;
+  targetType: ReportTargetType;
+  targetId: string;
+  reason: string;
+  description?: string;
+  status: ReportStatus;
+  adminNote?: string;
+  reviewedByUserId?: string;
+  reviewedByUsername?: string;
+  reviewedAt?: string;
+  createdAt: string;
+}
+
+export interface NewsItem {
+  id: string;
+  title: string;
+  content: string;
+  authorId: string;
+  authorUsername: string;
+  authorAvatarUrl?: string;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+  order: number;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

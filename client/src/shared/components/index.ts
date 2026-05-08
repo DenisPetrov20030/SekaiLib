@@ -8,3 +8,5 @@ export * from './Textarea';
 export * from './Modal';
 export * from './IconButton';
 export * from './Select';
+export * from './ReportButton';
+export * from './BlockButton';

@@ -2,3 +2,8 @@ export * from './AdminDashboard';
 export * from './AdminTitlesPage';
 export * from './AdminTitleEditPage';
 export * from './GenresManagementPage';
+export * from './AdminBansPage';
+export * from './AdminReportsPage';
+export * from './AdminNewsPage';
+export * from './AdminNewsEditPage';
+export * from './AdminFaqPage';

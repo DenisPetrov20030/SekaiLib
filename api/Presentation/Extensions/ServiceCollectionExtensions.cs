@@ -34,6 +34,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IOAuthFlowService, OAuthFlowService>();
         services.AddScoped<IOAuthStateStore, OAuthStateStore>();
         services.AddScoped<IExternalAuthTicketStore, ExternalAuthTicketStore>();
+        services.AddScoped<IUserBanService, UserBanService>();
+        services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IUserBlockService, UserBlockService>();
+        services.AddScoped<INewsService, NewsService>();
+        services.AddScoped<IFaqService, FaqService>();
 
         return services;
     }

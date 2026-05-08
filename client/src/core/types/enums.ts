@@ -55,3 +55,21 @@ export const ReaderWidth = {
 } as const;
 
 export type ReaderWidth = typeof ReaderWidth[keyof typeof ReaderWidth];
+
+export const ReportTargetType = {
+  User: 0,
+  Review: 1,
+  ReviewComment: 2,
+  ChapterComment: 3,
+  Title: 4,
+} as const;
+
+export type ReportTargetType = typeof ReportTargetType[keyof typeof ReportTargetType];
+
+export const ReportStatus = {
+  Pending: 0,
+  Reviewed: 1,
+  Dismissed: 2,
+} as const;
+
+export type ReportStatus = typeof ReportStatus[keyof typeof ReportStatus];

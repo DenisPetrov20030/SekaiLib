@@ -86,6 +86,26 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<ChapterView> ChapterViews =>
         _chapterViews ??= new Repository<ChapterView>(_context);
 
+    private IRepository<UserBan>? _userBans;
+    public IRepository<UserBan> UserBans =>
+        _userBans ??= new Repository<UserBan>(_context);
+
+    private IRepository<Report>? _reports;
+    public IRepository<Report> Reports =>
+        _reports ??= new Repository<Report>(_context);
+
+    private IRepository<UserBlock>? _userBlocks;
+    public IRepository<UserBlock> UserBlocks =>
+        _userBlocks ??= new Repository<UserBlock>(_context);
+
+    private IRepository<News>? _news;
+    public IRepository<News> News =>
+        _news ??= new Repository<News>(_context);
+
+    private IRepository<FaqItem>? _faqItems;
+    public IRepository<FaqItem> FaqItems =>
+        _faqItems ??= new Repository<FaqItem>(_context);
+
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync();

@@ -27,5 +27,10 @@ public interface IUnitOfWork
     IRepository<FriendRequest> FriendRequests { get; }
     IRepository<Notification> Notifications { get; }
     IRepository<ChapterView> ChapterViews { get; }
+    IRepository<UserBan> UserBans { get; }
+    IRepository<Report> Reports { get; }
+    IRepository<UserBlock> UserBlocks { get; }
+    IRepository<News> News { get; }
+    IRepository<FaqItem> FaqItems { get; }
     Task<int> SaveChangesAsync();
 }
