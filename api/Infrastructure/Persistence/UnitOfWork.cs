@@ -12,6 +12,7 @@ public class UnitOfWork : IUnitOfWork
     public IUserRepository Users { get; }
     public ITitleRepository Titles { get; }
     public IChapterRepository Chapters { get; }
+    public ITitleCommentRepository TitleComments { get; }
     public IReadingListRepository ReadingLists { get; }
     public IReviewRepository Reviews { get; }
     public ITitleRatingRepository TitleRatings { get; }
@@ -35,6 +36,7 @@ public class UnitOfWork : IUnitOfWork
         IUserRepository users,
         ITitleRepository titles,
         IChapterRepository chapters,
+        ITitleCommentRepository titleComments,
         IReadingListRepository readingLists,
         IReviewRepository reviews,
         ITitleRatingRepository titleRatings,
@@ -48,6 +50,7 @@ public class UnitOfWork : IUnitOfWork
         Users = users;
         Titles = titles;
         Chapters = chapters;
+        TitleComments = titleComments;
         ReadingLists = readingLists;
         Reviews = reviews;
         TitleRatings = titleRatings;

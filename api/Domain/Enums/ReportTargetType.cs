@@ -6,5 +6,6 @@ public enum ReportTargetType
     Review = 1,
     ReviewComment = 2,
     ChapterComment = 3,
-    Title = 4
+    Title = 4,
+    TitleComment = 5
 }

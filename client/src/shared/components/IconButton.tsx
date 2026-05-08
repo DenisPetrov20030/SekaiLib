@@ -5,6 +5,7 @@ interface IconButtonProps {
   count?: number;
   disabled?: boolean;
   variant?: 'like' | 'dislike' | 'default';
+  type?: 'button' | 'submit' | 'reset';
 }
 
 const variantColors = {
@@ -29,11 +30,13 @@ export function IconButton({
   count,
   disabled = false,
   variant = 'default',
+  type = 'button',
 }: IconButtonProps) {
   const colors = variantColors[variant];
 
   return (
     <button
+      type={type}
       onClick={onClick}
       disabled={disabled}
       className={`

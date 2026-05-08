@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IReadingListService, ReadingListService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<ITitleCommentService, TitleCommentService>();
         services.AddScoped<ITitleRatingService, TitleRatingService>();
         services.AddScoped<UserListService>();
         services.AddScoped<IMessagingService, MessagingService>();
@@ -56,6 +57,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ITitleRepository, TitleRepository>();
         services.AddScoped<IChapterRepository, ChapterRepository>();
+        services.AddScoped<ITitleCommentRepository, TitleCommentRepository>();
         services.AddScoped<IReadingListRepository, ReadingListRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<ITitleRatingRepository, TitleRatingRepository>();

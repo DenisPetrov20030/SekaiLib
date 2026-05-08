@@ -13,7 +13,7 @@ export function ReviewForm({
   onSubmit,
   initialContent = '',
   initialRating = 5,
-  submitLabel = 'Відправити',
+  submitLabel = 'Надіслати',
   onCancel,
 }: ReviewFormProps) {
   const [content, setContent] = useState(initialContent);

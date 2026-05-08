@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchTitleDetails } from '../store';
-import { RatingButtons, ReviewList, AddToListButton } from '../components';
+import { RatingButtons, ReviewList, AddToListButton, TitleCommentsList } from '../components';
 import { AuthDialog, Button } from '../../../shared/components';
 import { ratingsApi } from '../../../core/api';
 import { teamsApi } from '../../../core/api/teams';
 import { UserRole } from '../../../core/types/enums';
 import type { TitleRating } from '../../../core/types';
+
+type DiscussionTab = 'comments' | 'reviews';
 
 const translateCountry = (country: string): string => {
   const translations: { [key: string]: string } = {
@@ -29,6 +31,7 @@ export const TitleDetailsPage = () => {
   const [rating, setRating] = useState<TitleRating | undefined>();
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [hasTeamMembership, setHasTeamMembership] = useState(false);
+  const [activeDiscussionTab, setActiveDiscussionTab] = useState<DiscussionTab>('comments');
 
   const isPublisherOrAdmin = user && currentTitle && (
     user.id === currentTitle.publisher?.id ||
@@ -261,11 +264,43 @@ export const TitleDetailsPage = () => {
           </div>
 
           <div className="mt-8">
-            <h2 className="text-xl font-semibold text-text-primary mb-4">Рецензії</h2>
-            <ReviewList
-              titleId={currentTitle.id}
-              onLoginRequired={() => setShowLogin(true)}
-            />
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-text-primary">Обговорення</h2>
+              <div className="flex items-center gap-2 rounded-lg bg-surface-800 p-1 border border-surface-700">
+                <button
+                  onClick={() => setActiveDiscussionTab('comments')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    activeDiscussionTab === 'comments'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  Коментарі
+                </button>
+                <button
+                  onClick={() => setActiveDiscussionTab('reviews')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    activeDiscussionTab === 'reviews'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  Рецензії
+                </button>
+              </div>
+            </div>
+
+            {activeDiscussionTab === 'comments' ? (
+              <TitleCommentsList
+                titleId={currentTitle.id}
+                onLoginRequired={() => setShowLogin(true)}
+              />
+            ) : (
+              <ReviewList
+                titleId={currentTitle.id}
+                onLoginRequired={() => setShowLogin(true)}
+              />
+            )}
           </div>
         </div>
       </div>

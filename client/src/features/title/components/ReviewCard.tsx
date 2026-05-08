@@ -4,7 +4,8 @@ import { useAppSelector } from '../../../app/store/hooks';
 import type { Review, ReviewComment } from '../../../core/types';
 import { ReactionType } from '../../../core/types/enums';
 import { reviewsApi } from '../../../core/api';
-import { IconButton, Button } from '../../../shared/components';
+import { IconButton, Button, ReportButton } from '../../../shared/components';
+import { ReportTargetType } from '../../../core/types/enums';
 import { ReviewForm } from './ReviewForm';
 
 function ReviewerScoreBadge({ score }: { score: number }) {
@@ -196,7 +197,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
             ) : (
               <div className="mt-2 bg-surface-700 rounded p-3">
                 <textarea
-                  className="w-full resize-y bg-surface-800 text-text-primary rounded p-2 placeholder-text-muted"
+                  className="w-full resize-y bg-surface-800 text-text-primary rounded p-2 placeholder-text-muted border border-red-500/40 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-colors"
                   rows={3}
                   value={editText}
                   onChange={(e) => setEditText(e.target.value)}
@@ -376,7 +377,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
             {showChildReply && (
               <div className="mt-2 bg-surface-700 rounded p-3">
                 <textarea
-                  className="w-full resize-y bg-surface-800 text-text-primary rounded p-2 placeholder-text-muted"
+                  className="w-full resize-y bg-surface-800 text-text-primary rounded p-2 placeholder-text-muted border border-red-500/40 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-colors"
                   rows={2}
                   placeholder="Напишіть відповідь..."
                   value={childText}
@@ -494,15 +495,19 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
         <Button size="sm" variant="primary" className="rounded-full" onClick={toggleReply}>
           Відповісти
         </Button>
-        <Button size="sm" variant="primary" className="rounded-full" disabled>
-          Скарга
-        </Button>
+        <ReportButton
+          targetType={ReportTargetType.Review}
+          targetId={currentReview.id}
+          className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-primary-500 text-white hover:bg-primary-600 transition-colors text-sm font-medium"
+          label="Скарга"
+          showIcon={false}
+        />
       </div>
 
       {showReply && (
         <div className="mt-3 bg-surface-700 rounded p-3">
           <textarea
-            className="w-full resize-y bg-surface-800 text-text-primary rounded p-2 placeholder-text-muted"
+            className="w-full resize-y bg-surface-800 text-text-primary rounded p-2 placeholder-text-muted border border-red-500/40 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-colors"
             rows={3}
             placeholder="Напишіть відповідь..."
             value={replyText}

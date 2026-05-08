@@ -28,6 +28,8 @@ public class AppDbContext : DbContext
     public DbSet<ReviewCommentReaction> ReviewCommentReactions { get; set; }
     public DbSet<ChapterComment> ChapterComments { get; set; }
     public DbSet<ChapterCommentReaction> ChapterCommentReactions { get; set; }
+    public DbSet<TitleComment> TitleComments { get; set; }
+    public DbSet<TitleCommentReaction> TitleCommentReactions { get; set; }
     public DbSet<TitleRating> TitleRatings { get; set; }
     public DbSet<UserReadingProgress> UserReadingProgresses { get; set; }
     public DbSet<Conversation> Conversations { get; set; }
@@ -134,6 +136,37 @@ public class AppDbContext : DbContext
         entity.HasOne(r => r.User)
             .WithMany()
             .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<TitleComment>(entity =>
+    {
+        entity.HasOne(tc => tc.Title)
+            .WithMany()
+            .HasForeignKey(tc => tc.TitleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(tc => tc.User)
+            .WithMany()
+            .HasForeignKey(tc => tc.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(tc => tc.ParentComment)
+            .WithMany(p => p.Replies)
+            .HasForeignKey(tc => tc.ParentCommentId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<TitleCommentReaction>(entity =>
+    {
+        entity.HasOne(tcr => tcr.Comment)
+            .WithMany(c => c.Reactions)
+            .HasForeignKey(tcr => tcr.CommentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(tcr => tcr.User)
+            .WithMany()
+            .HasForeignKey(tcr => tcr.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     });
 

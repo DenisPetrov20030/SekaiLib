@@ -19,15 +19,18 @@ const TARGET_NAMES: Record<ReportTargetType, string> = {
   [ReportTargetType.ReviewComment]: 'коментар',
   [ReportTargetType.ChapterComment]: 'коментар',
   [ReportTargetType.Title]: 'твір',
+  [ReportTargetType.TitleComment]: 'коментар',
 };
 
 interface ReportButtonProps {
   targetType: ReportTargetType;
   targetId: string;
   className?: string;
+  label?: string;
+  showIcon?: boolean;
 }
 
-export function ReportButton({ targetType, targetId, className }: ReportButtonProps) {
+export function ReportButton({ targetType, targetId, className, label, showIcon = true }: ReportButtonProps) {
   const user = useAppSelector((state) => state.auth.user);
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState(REASONS[0]);
@@ -60,15 +63,18 @@ export function ReportButton({ targetType, targetId, className }: ReportButtonPr
   return (
     <>
       <button
+        type="button"
         onClick={() => setOpen(true)}
         className={className ?? 'text-text-muted hover:text-red-400 transition-colors text-sm flex items-center gap-1'}
-        title={`Поскаржитися на ${TARGET_NAMES[targetType]}`}
+        title={label ?? `Поскаржитися на ${TARGET_NAMES[targetType]}`}
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
-        </svg>
-        <span>Поскаржитися</span>
+        {showIcon && (
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+          </svg>
+        )}
+        <span>{label ?? 'Поскаржитися'}</span>
       </button>
 
       <Modal isOpen={open} onClose={handleClose} title={`Скарга на ${TARGET_NAMES[targetType]}`}>

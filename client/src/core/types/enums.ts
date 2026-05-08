@@ -62,6 +62,7 @@ export const ReportTargetType = {
   ReviewComment: 2,
   ChapterComment: 3,
   Title: 4,
+  TitleComment: 5,
 } as const;
 
 export type ReportTargetType = typeof ReportTargetType[keyof typeof ReportTargetType];

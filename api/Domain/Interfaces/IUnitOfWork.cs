@@ -8,6 +8,7 @@ public interface IUnitOfWork
     IUserRepository Users { get; }
     ITitleRepository Titles { get; }
     IChapterRepository Chapters { get; }
+    ITitleCommentRepository TitleComments { get; }
     IReadingListRepository ReadingLists { get; }
     IReviewRepository Reviews { get; }
     ITitleRatingRepository TitleRatings { get; }
