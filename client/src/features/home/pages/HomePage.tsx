@@ -5,14 +5,18 @@ import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { apiClient } from '../../../core/api';
+import { newsApi } from '../../../core/api/news';
 import { teamsApi } from '../../../core/api/teams';
 import { ROUTES } from '../../../core/constants';
 import { useAppSelector } from '../../../app/store/hooks';
 import type { SubscribedTeamChapterDto } from '../../../core/types/dtos';
+import type { NewsItem } from '../../../core/types/entities';
 
 export const HomePage = () => {
     const navigate = useNavigate();
     const { user } = useAppSelector((state) => state.auth);
+    const [showNewsSlider, setShowNewsSlider] = useState(true);
+    const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
     const [latestChapters, setLatestChapters] = useState<any[]>([]);
     const [latestTitles, setLatestTitles] = useState<any[]>([]);
     const [readingProgress, setReadingProgress] = useState<any[]>([]);
@@ -36,12 +40,14 @@ export const HomePage = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const [chaptersRes, titlesRes, progressRes] = await Promise.all([
+                const [newsRes, chaptersRes, titlesRes, progressRes] = await Promise.all([
+                    newsApi.getPublished(1, 8).catch(() => ({ data: { data: [] as NewsItem[] } })),
                     apiClient.get<any[]>('/titles/latest-chapters'),
                     apiClient.get<any[]>('/titles/latest'),
                     apiClient.get('/users/reading-progress').catch(() => ({ data: [] as any[] }))
                 ]);
 
+                setNewsItems(Array.isArray(newsRes.data.data) ? newsRes.data.data : []);
                 setLatestChapters(chaptersRes.data);
                 setLatestTitles(titlesRes.data);
                 setReadingProgress(Array.isArray(progressRes.data) ? progressRes.data : []);
@@ -117,8 +123,67 @@ export const HomePage = () => {
         }
     };
 
+    const handleHideNewsSlider = () => {
+        setShowNewsSlider(false);
+    };
+
     return (
         <div className="container mx-auto px-4 py-8 space-y-12">
+
+            {showNewsSlider && newsItems.length > 0 && (
+                <section className="relative bg-gray-900/50 rounded-2xl border border-gray-800 p-4 sm:p-6">
+                    <button
+                        type="button"
+                        onClick={handleHideNewsSlider}
+                        aria-label="Приховати новини"
+                        className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition-colors"
+                    >
+                        ×
+                    </button>
+
+                    <div className="flex items-center gap-2 mb-4 pr-10">
+                        <span className="w-1 h-7 bg-amber-500 rounded-full"></span>
+                        <h2 className="text-xl sm:text-2xl font-bold text-white">Новини</h2>
+                    </div>
+
+                    <Swiper
+                        modules={[Navigation]}
+                        navigation
+                        spaceBetween={12}
+                        slidesPerView={1}
+                        breakpoints={{
+                            768: { slidesPerView: 2 },
+                            1200: { slidesPerView: 3 },
+                        }}
+                    >
+                        {newsItems.map((item) => (
+                            <SwiperSlide key={item.id}>
+                                <Link
+                                    to={ROUTES.NEWS_DETAILS.replace(':id', item.id)}
+                                    className="group block h-full rounded-xl border border-gray-700 bg-gradient-to-br from-gray-900 via-gray-850 to-gray-800 p-4 hover:border-amber-500/60 transition-colors"
+                                >
+                                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-amber-400/80 mb-2">
+                                        <span>Новина</span>
+                                        <span className="text-gray-500">•</span>
+                                        <span className="text-gray-400 normal-case tracking-normal">
+                                            {new Date(item.createdAt).toLocaleDateString('uk-UA')}
+                                        </span>
+                                    </div>
+                                    <h3 className="text-white font-semibold leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
+                                        {item.title}
+                                    </h3>
+                                    <p className="mt-2 text-sm text-gray-300 line-clamp-3">
+                                        {item.content.replace(/<[^>]*>/g, '').trim()}
+                                    </p>
+                                    <p className="mt-3 text-xs text-gray-500">
+                                        {item.authorUsername}
+                                    </p>
+                                </Link>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
+                </section>
+            )}
 
             <section>
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-white">
