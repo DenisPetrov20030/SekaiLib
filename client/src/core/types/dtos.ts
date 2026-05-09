@@ -21,6 +21,9 @@ export interface AuthResponse {
     username: string;
     role: UserRole;
     createdAt: string;
+    isBanned?: boolean;
+    banReason?: string | null;
+    banExpiresAt?: string | null;
   };
 }
 

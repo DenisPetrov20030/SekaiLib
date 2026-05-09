@@ -313,9 +313,7 @@ function CommentItem({
                 </div>
               )}
             </div>
-          ) : (
-            <ReportButton targetType={ReportTargetType.TitleComment} targetId={comment.id} className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-primary-500 text-white hover:bg-primary-600 transition-colors text-sm font-medium" label="Скарга" showIcon={false} />
-          )}
+          ) : null}
         </div>
       </div>
 

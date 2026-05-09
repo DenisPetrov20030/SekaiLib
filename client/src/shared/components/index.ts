@@ -10,3 +10,4 @@ export * from './IconButton';
 export * from './Select';
 export * from './ReportButton';
 export * from './BlockButton';
+export * from './BannedAccessScreen';

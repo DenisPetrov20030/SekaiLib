@@ -146,7 +146,7 @@ public class AuthService : IAuthService
         var newRefreshToken = _tokenService.GenerateRefreshToken();
         await _tokenService.SaveRefreshTokenAsync(user.Id, newRefreshToken);
 
-        var userDto = new UserDto(user.Id, user.Email, user.Username, user.Role);
+        var userDto = await BuildUserDtoAsync(user);
         return new AuthResponse(accessToken, newRefreshToken, userDto);
     }
 
@@ -156,7 +156,7 @@ public class AuthService : IAuthService
         if (user == null)
             throw new NotFoundException("User", userId);
 
-        return new UserDto(user.Id, user.Email, user.Username, user.Role);
+        return await BuildUserDtoAsync(user);
     }
 
     private async Task<AuthResponse> IssueTokensAsync(User user)
@@ -165,8 +165,25 @@ public class AuthService : IAuthService
         var refreshToken = _tokenService.GenerateRefreshToken();
         await _tokenService.SaveRefreshTokenAsync(user.Id, refreshToken);
 
-        var userDto = new UserDto(user.Id, user.Email, user.Username, user.Role);
+        var userDto = await BuildUserDtoAsync(user);
         return new AuthResponse(accessToken, refreshToken, userDto);
+    }
+
+    private async Task<UserDto> BuildUserDtoAsync(User user)
+    {
+        var activeBan = await _unitOfWork.UserBans.Query()
+            .Where(b => b.UserId == user.Id && b.IsActive && (b.ExpiresAt == null || b.ExpiresAt > DateTime.UtcNow))
+            .OrderByDescending(b => b.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        return new UserDto(
+            user.Id,
+            user.Email,
+            user.Username,
+            user.Role,
+            activeBan is not null,
+            activeBan?.Reason,
+            activeBan?.ExpiresAt);
     }
 
     private async Task<string> BuildUniqueUsernameAsync(string preferredUsername)

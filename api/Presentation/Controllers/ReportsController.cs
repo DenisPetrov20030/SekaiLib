@@ -37,6 +37,32 @@ public class ReportsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("reviewed")]
+    [Authorize(Roles = "Administrator,Moderator")]
+    public async Task<ActionResult<PagedResult<ReportDto>>> GetReviewed(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var result = await _reportService.GetReviewedAsync(page, pageSize);
+        return Ok(result);
+    }
+
+    [HttpGet("{reportId}")]
+    [Authorize]
+    public async Task<ActionResult<ReportDto>> GetById(Guid reportId)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _reportService.GetByIdAsync(reportId);
+        
+        // Allow user to view their own report or admins/moderators to view any report
+        if (result.ReporterId != userId && !User.IsInRole("Administrator") && !User.IsInRole("Moderator"))
+        {
+            return Forbid();
+        }
+
+        return Ok(result);
+    }
+
     [HttpPut("{reportId}/review")]
     [Authorize(Roles = "Administrator,Moderator")]
     public async Task<ActionResult<ReportDto>> Review(Guid reportId, [FromBody] ReviewReportRequest request)
@@ -44,5 +70,13 @@ public class ReportsController : ControllerBase
         var adminId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var result = await _reportService.ReviewAsync(adminId, reportId, request);
         return Ok(result);
+    }
+
+    [HttpDelete("{reportId}")]
+    [Authorize(Roles = "Administrator,Moderator")]
+    public async Task<ActionResult> Delete(Guid reportId)
+    {
+        await _reportService.DeleteAsync(reportId);
+        return NoContent();
     }
 }

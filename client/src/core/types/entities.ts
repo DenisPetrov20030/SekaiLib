@@ -7,6 +7,9 @@ export interface User {
   avatarUrl?: string;
   role: UserRole;
   createdAt: string;
+  isBanned?: boolean;
+  banReason?: string | null;
+  banExpiresAt?: string | null;
 }
 
 export interface Title {
@@ -158,6 +161,8 @@ export interface Report {
   reporterUsername: string;
   targetType: ReportTargetType;
   targetId: string;
+  targetUserId?: string | null;
+  targetUsername?: string | null;
   reason: string;
   description?: string;
   status: ReportStatus;

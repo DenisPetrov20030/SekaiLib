@@ -9,6 +9,8 @@ public class ReportDto
     public string ReporterUsername { get; set; } = string.Empty;
     public ReportTargetType TargetType { get; set; }
     public Guid TargetId { get; set; }
+    public Guid? TargetUserId { get; set; }
+    public string? TargetUsername { get; set; }
     public string Reason { get; set; } = string.Empty;
     public string? Description { get; set; }
     public ReportStatus Status { get; set; }

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Modal } from '../../../shared/components/Modal';
 import { reportsApi } from '../../../core/api/reports';
+import { bansApi } from '../../../core/api/bans';
 import { ReportStatus, ReportTargetType } from '../../../core/types/enums';
 import type { Report } from '../../../core/types/entities';
 
@@ -23,6 +25,16 @@ const STATUS_COLORS: Record<number, string> = {
   [ReportStatus.Dismissed]: 'bg-surface-600 text-text-muted',
 };
 
+const BAN_DURATIONS = [
+  { value: '1d', label: '1 день' },
+  { value: '3d', label: '3 дні' },
+  { value: '7d', label: '7 днів' },
+  { value: '30d', label: '30 днів' },
+  { value: 'permanent', label: 'Назавжди' },
+];
+
+const BAN_REASON = 'Блокування за скаргою';
+
 export function AdminReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +42,10 @@ export function AdminReportsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [adminNote, setAdminNote] = useState('');
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [banDuration, setBanDuration] = useState('7d');
+  const [banning, setBanning] = useState(false);
 
   useEffect(() => {
     loadReports(page);
@@ -54,6 +70,76 @@ export function AdminReportsPage() {
       setAdminNote('');
     } catch {
       alert('Помилка при оновленні скарги');
+    }
+  };
+
+  const handleDeleteReport = async (reportId: string) => {
+    const confirmed = window.confirm('Видалити цю скаргу?');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await reportsApi.delete(reportId);
+      setReports((prev) => prev.filter((r) => r.id !== reportId));
+      if (selectedReport?.id === reportId) {
+        setSelectedReport(null);
+      }
+
+      if (reports.length === 1 && page > 1) {
+        setPage((prev) => Math.max(1, prev - 1));
+      } else {
+        await loadReports(page);
+      }
+    } catch {
+      alert('Помилка при видаленні скарги');
+    }
+  };
+
+  const handleOpenDetails = async (reportId: string) => {
+    setDetailsLoading(true);
+    try {
+      const res = await reportsApi.getById(reportId);
+      setSelectedReport(res.data);
+    } catch {
+      alert('Помилка при завантаженні деталей скарги');
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedReport(null);
+  };
+
+  const handleBanTargetUser = async () => {
+    if (!selectedReport?.targetUserId) {
+      return;
+    }
+
+    setBanning(true);
+    try {
+      const expiresAt = (() => {
+        if (banDuration === 'permanent') {
+          return undefined;
+        }
+
+        const amount = Number.parseInt(banDuration, 10);
+        const date = new Date();
+        date.setDate(date.getDate() + amount);
+        return date.toISOString();
+      })();
+
+      await bansApi.banUser(selectedReport.targetUserId, {
+        reason: BAN_REASON,
+        expiresAt,
+      });
+
+      alert('Користувача заблоковано');
+    } catch {
+      alert('Помилка при блокуванні користувача');
+    } finally {
+      setBanning(false);
     }
   };
 
@@ -103,11 +189,20 @@ export function AdminReportsPage() {
                   <span>·</span>
                   <span>{new Date(report.createdAt).toLocaleDateString('uk-UA')}</span>
                 </div>
-                {report.adminNote && (
-                  <div className="mt-2 text-sm bg-surface-700 rounded px-3 py-2 text-text-secondary">
-                    Примітка адміна: {report.adminNote}
-                  </div>
-                )}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => handleOpenDetails(report.id)}
+                    className="px-4 py-2 bg-surface-700 hover:bg-surface-600 text-text-primary rounded-lg text-sm transition-colors"
+                  >
+                    Деталі
+                  </button>
+                  <button
+                    onClick={() => handleDeleteReport(report.id)}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors"
+                  >
+                    Видалити
+                  </button>
+                </div>
                 {reviewingId === report.id && (
                   <div className="mt-4 space-y-3 border-t border-surface-700 pt-4">
                     <input
@@ -135,12 +230,107 @@ export function AdminReportsPage() {
                 )}
               </div>
             ))}
+
+            <Modal isOpen={!!selectedReport} onClose={handleCloseDetails} title="Деталі скарги">
+              <div className="p-6 space-y-4">
+                {detailsLoading || !selectedReport ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className={`text-xs px-2 py-0.5 rounded ${STATUS_COLORS[selectedReport.status]}`}>
+                          {STATUS_LABELS[selectedReport.status]}
+                        </span>
+                        <span className="text-xs bg-surface-700 text-text-muted px-2 py-0.5 rounded">
+                          {TARGET_LABELS[selectedReport.targetType]}
+                        </span>
+                      </div>
+                      <p className="text-lg font-semibold text-text-primary">{selectedReport.reason}</p>
+                      {selectedReport.description && (
+                        <p className="mt-2 text-sm text-text-secondary whitespace-pre-line">{selectedReport.description}</p>
+                      )}
+                    </div>
+
+                    <div className="grid gap-3 text-sm text-text-secondary">
+                      <div>Автор: {selectedReport.reporterUsername}</div>
+                      <div>ID цілі: {selectedReport.targetId}</div>
+                      {selectedReport.targetUsername && (
+                        <div>Користувач цілі: {selectedReport.targetUsername}</div>
+                      )}
+                      <div>Дата створення: {new Date(selectedReport.createdAt).toLocaleString('uk-UA')}</div>
+                      {selectedReport.reviewedByUsername && (
+                        <div>Розглянув: {selectedReport.reviewedByUsername}</div>
+                      )}
+                      {selectedReport.reviewedAt && (
+                        <div>Дата розгляду: {new Date(selectedReport.reviewedAt).toLocaleString('uk-UA')}</div>
+                      )}
+                      {selectedReport.adminNote && (
+                        <div className="rounded-lg bg-surface-700 px-3 py-2 text-text-primary">
+                          Примітка адміна: {selectedReport.adminNote}
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedReport.targetUserId && (
+                      <div className="rounded-lg border border-surface-700 p-4 space-y-3">
+                        <div className="text-sm font-medium text-text-primary">
+                          Швидке блокування користувача
+                        </div>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                          <select
+                            value={banDuration}
+                            onChange={(e) => setBanDuration(e.target.value)}
+                            className="w-full sm:w-48 bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:border-primary-500 text-sm"
+                          >
+                            {BAN_DURATIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={handleBanTargetUser}
+                            disabled={banning}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white rounded-lg text-sm transition-colors"
+                          >
+                            {banning ? 'Блокування...' : 'Заблокувати користувача'}
+                          </button>
+                        </div>
+                        <p className="text-xs text-text-muted">
+                          Причина буде автоматично встановлена як: {BAN_REASON}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end">
+                      <div className="flex flex-wrap gap-2 justify-end">
+                        <button
+                          onClick={() => handleDeleteReport(selectedReport.id)}
+                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors"
+                        >
+                          Видалити скаргу
+                        </button>
+                        <button
+                          onClick={handleCloseDetails}
+                          className="px-4 py-2 bg-surface-700 hover:bg-surface-600 text-text-primary rounded-lg text-sm transition-colors"
+                        >
+                          Закрити
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </Modal>
           </div>
         )}
       </div>
 
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
@@ -148,7 +338,29 @@ export function AdminReportsPage() {
           >
             ←
           </button>
-          <span className="px-4 py-2 text-text-muted">{page} / {totalPages}</span>
+          {Array.from({ length: totalPages }, (_, index) => index + 1)
+            .filter((pageNumber) => pageNumber === 1 || pageNumber === totalPages || Math.abs(pageNumber - page) <= 1)
+            .map((pageNumber, index, array) => {
+              const previous = array[index - 1];
+              const showEllipsis = index > 0 && previous !== undefined && pageNumber - previous > 1;
+
+              return (
+                <div key={pageNumber} className="flex items-center gap-2">
+                  {showEllipsis && <span className="px-2 text-text-muted">...</span>}
+                  <button
+                    onClick={() => setPage(pageNumber)}
+                    className={`min-w-10 rounded-lg px-3 py-2 text-sm transition-colors ${
+                      page === pageNumber
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-surface-800 text-text-primary hover:bg-surface-700'
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                </div>
+              );
+            })}
+          <span className="px-3 py-2 text-text-muted">{page} / {totalPages}</span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
