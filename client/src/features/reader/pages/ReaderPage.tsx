@@ -7,8 +7,8 @@ import { renderChapterContent } from '../../../shared/utils/textRender';
 import { apiClient } from '../../../core/api';
 import { chapterCommentsApi } from '../../../core/api/chapterComments';
 import type { ReviewComment } from '../../../core/types';
-import { ReactionType } from '../../../core/types/enums';
-import { IconButton, Button } from '../../../shared/components';
+import { ReactionType, ReportTargetType } from '../../../core/types/enums';
+import { IconButton, Button, ReportButton } from '../../../shared/components';
 
 function formatRelativeTime(input: string | Date): string {
   const now = Date.now();
@@ -629,7 +629,13 @@ function CommentItem({ comment, chapterId, theme, onDelete }: { comment: ReviewC
           </div>
           <div className="mt-2 flex items-center gap-3">
             <Button size="sm" variant="primary" className="rounded-full" onClick={() => setShowReply(s => !s)}>Відповісти</Button>
-            <Button size="sm" variant="primary" className="rounded-full" disabled>Скарга</Button>
+            <ReportButton
+              targetType={ReportTargetType.ChapterComment}
+              targetId={localComment.id}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary-500 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-primary-600"
+              label="Скарга"
+              showIcon={false}
+            />
             {isOwner && (
               <div className="relative ml-1" ref={menuContainerRef}>
                 <button

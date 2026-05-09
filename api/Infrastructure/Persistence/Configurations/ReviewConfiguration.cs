@@ -10,11 +10,19 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
     {
         builder.HasKey(r => r.Id);
 
+        builder.Property(r => r.ReviewTitle)
+            .HasMaxLength(200)
+            .IsRequired();
+
         builder.Property(r => r.Content)
             .HasMaxLength(2000)
             .IsRequired();
 
         builder.Property(r => r.Rating)
+            .IsRequired();
+
+        builder.Property(r => r.ViewCount)
+            .HasDefaultValue(0)
             .IsRequired();
 
         builder.HasOne(r => r.User)

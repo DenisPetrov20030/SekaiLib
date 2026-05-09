@@ -28,6 +28,7 @@ public interface IUnitOfWork
     IRepository<FriendRequest> FriendRequests { get; }
     IRepository<Notification> Notifications { get; }
     IRepository<ChapterView> ChapterViews { get; }
+    IRepository<ReviewView> ReviewViews { get; }
     IRepository<UserBan> UserBans { get; }
     IRepository<Report> Reports { get; }
     IRepository<UserBlock> UserBlocks { get; }

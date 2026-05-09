@@ -14,6 +14,7 @@ export const ROUTES = {
   CHAPTER_CREATE: '/titles/:titleId/chapters/create',
   CHAPTER_EDIT: '/titles/:titleId/chapters/:chapterId/edit',
   READER: '/titles/:titleId/chapters/:chapterNumber',
+  REVIEW_DETAILS: '/titles/:titleId/reviews/:reviewId',
   READING_LISTS: '/reading-lists',
   READING_LIST_STATUS: '/reading-lists/:status',
   PROFILE: '/profile',

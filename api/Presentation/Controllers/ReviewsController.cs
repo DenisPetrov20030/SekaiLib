@@ -27,6 +27,15 @@ public class ReviewsController : ControllerBase
         return Ok(reviews);
     }
 
+    [HttpGet("{reviewId}")]
+    public async Task<ActionResult<ReviewResponse>> GetById(Guid titleId, Guid reviewId)
+    {
+        var userId = GetCurrentUserId();
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var review = await _reviewService.GetByIdAsync(titleId, reviewId, userId, ip);
+        return Ok(review);
+    }
+
     [HttpPost]
     [Authorize]
     public async Task<ActionResult<ReviewResponse>> Create(Guid titleId, CreateReviewRequest request)

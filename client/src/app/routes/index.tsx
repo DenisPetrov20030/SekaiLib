@@ -2,7 +2,7 @@
 import { MainLayout, ProtectedRoute } from '../../shared/components';
 import { OAuthCallbackPage, LegacyAuthRedirectPage } from '../../features/auth/pages';
 import { CatalogPage } from '../../features/catalog/pages';
-import { TitleDetailsPage, CreateTitlePage } from '../../features/title/pages';
+import { TitleDetailsPage, CreateTitlePage, ReviewDetailsPage } from '../../features/title/pages';
 import { ChapterEditorPage } from '../../features/chapter';
 import { ReaderPage } from '../../features/reader/pages';
 import { ReadingListsPage } from '../../features/reading-lists/pages';
@@ -48,6 +48,10 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.TITLE_DETAILS,
         element: <TitleDetailsPage />,
+      },
+      {
+        path: ROUTES.REVIEW_DETAILS,
+        element: <ReviewDetailsPage />,
       },
       {
         path: ROUTES.TEAMS,

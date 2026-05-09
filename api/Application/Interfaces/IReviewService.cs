@@ -6,6 +6,7 @@ namespace SekaiLib.Application.Interfaces;
 public interface IReviewService
 {
     Task<IEnumerable<ReviewResponse>> GetByTitleAsync(Guid titleId, Guid? currentUserId);
+    Task<ReviewResponse> GetByIdAsync(Guid titleId, Guid reviewId, Guid? currentUserId, string ipAddress);
     Task<ReviewResponse> CreateAsync(Guid userId, Guid titleId, CreateReviewRequest request);
     Task<ReviewResponse> UpdateAsync(Guid userId, Guid reviewId, UpdateReviewRequest request);
     Task DeleteAsync(Guid userId, Guid reviewId, bool isAdmin);

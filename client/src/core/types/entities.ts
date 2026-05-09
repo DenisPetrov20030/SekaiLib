@@ -102,10 +102,13 @@ export interface Review {
   username: string;
   avatarUrl?: string;
   titleId: string;
+  title: string;
   content: string;
   rating: number;
   likesCount: number;
   dislikesCount: number;
+  viewCount: number;
+  commentsCount?: number;
   userReaction?: ReactionType;
   createdAt: string;
   updatedAt: string;

@@ -4,11 +4,13 @@ import type { ReviewComment } from '../types';
 import type { ReactionType } from '../types/enums';
 
 export interface CreateReviewRequest {
+  title: string;
   content: string;
   rating: number;
 }
 
 export interface UpdateReviewRequest {
+  title: string;
   content: string;
   rating: number;
 }
@@ -25,6 +27,11 @@ export interface CreateReviewCommentRequest {
 export const reviewsApi = {
   getByTitle: async (titleId: string): Promise<Review[]> => {
     const response = await axiosInstance.get<Review[]>(`/titles/${titleId}/reviews`);
+    return response.data;
+  },
+
+  getById: async (titleId: string, reviewId: string): Promise<Review> => {
+    const response = await axiosInstance.get<Review>(`/titles/${titleId}/reviews/${reviewId}`);
     return response.data;
   },
 

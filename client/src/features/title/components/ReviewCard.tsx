@@ -53,6 +53,10 @@ function formatRelativeTime(input: string | Date): string {
   return `${diffYears} р тому`;
 }
 
+function countTopLevelComments(comments?: Review['comments']): number {
+  return comments?.filter((comment) => comment.parentCommentId == null).length ?? 0;
+}
+
 interface ReviewCardProps {
   review: Review;
   titleId: string;
@@ -69,6 +73,8 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
   const [replyText, setReplyText] = useState('');
 
   const isOwner = user?.id === currentReview.userId;
+  const displayTitle = currentReview.title?.trim() || currentReview.content.slice(0, 120).trim() || 'Рецензія';
+  const commentsCount = currentReview.commentsCount ?? countTopLevelComments(currentReview.comments);
 
   const handleReaction = async (type: ReactionType) => {
     if (!isAuthenticated) {
@@ -81,8 +87,8 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
     onUpdate(updated);
   };
 
-  const handleUpdate = async (content: string, rating: number) => {
-    const updated = await reviewsApi.update(titleId, currentReview.id, { content, rating });
+  const handleUpdate = async (title: string, content: string, rating: number) => {
+    const updated = await reviewsApi.update(titleId, currentReview.id, { title, content, rating });
     setCurrentReview(updated);
     onUpdate(updated);
     setEditing(false);
@@ -103,6 +109,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
     const updated: Review = {
       ...currentReview,
       comments: [created, ...(currentReview.comments ?? [])],
+      commentsCount: commentsCount + 1,
     };
     setCurrentReview(updated);
     onUpdate(updated);
@@ -131,8 +138,8 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
         return c;
       });
     };
-    const nextComments = addUnderParent(currentReview.comments ?? []);
-    const updatedReview = { ...currentReview, comments: nextComments };
+      const nextComments = addUnderParent(currentReview.comments ?? []);
+      const updatedReview = { ...currentReview, comments: nextComments, commentsCount: countTopLevelComments(nextComments) };
     setCurrentReview(updatedReview);
     onUpdate(updatedReview);
   }
@@ -219,7 +226,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
                       });
                     };
                     const nextComments = preserveReplies(currentReview.comments ?? [], updated);
-                    const updatedReview = { ...currentReview, comments: nextComments };
+                    const updatedReview = { ...currentReview, comments: nextComments, commentsCount };
                     setCurrentReview(updatedReview);
                     onUpdate(updatedReview);
                     setIsEditing(false);
@@ -254,7 +261,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
                       });
                     };
                     const nextComments = preserveReplies(currentReview.comments ?? [], updatedLocal);
-                    const updatedReview = { ...currentReview, comments: nextComments };
+                    const updatedReview = { ...currentReview, comments: nextComments, commentsCount };
                     setCurrentReview(updatedReview);
                     onUpdate(updatedReview);
                   } else {
@@ -271,7 +278,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
                       });
                     };
                     const nextComments = preserveReplies(currentReview.comments ?? [], updated);
-                    const updatedReview = { ...currentReview, comments: nextComments };
+                    const updatedReview = { ...currentReview, comments: nextComments, commentsCount };
                     setCurrentReview(updatedReview);
                     onUpdate(updatedReview);
                   }
@@ -303,7 +310,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
                       });
                     };
                     const nextComments = preserveReplies(currentReview.comments ?? [], updatedLocal);
-                    const updatedReview = { ...currentReview, comments: nextComments };
+                    const updatedReview = { ...currentReview, comments: nextComments, commentsCount };
                     setCurrentReview(updatedReview);
                     onUpdate(updatedReview);
                   } else {
@@ -320,7 +327,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
                       });
                     };
                     const nextComments = preserveReplies(currentReview.comments ?? [], updated);
-                    const updatedReview = { ...currentReview, comments: nextComments };
+                    const updatedReview = { ...currentReview, comments: nextComments, commentsCount };
                     setCurrentReview(updatedReview);
                     onUpdate(updatedReview);
                   }
@@ -330,7 +337,13 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
             </div>
             <div className="mt-2 flex items-center gap-3">
               <Button size="sm" variant="primary" className="rounded-full" onClick={handleReplyClick}>Відповісти</Button>
-              <Button size="sm" variant="primary" className="rounded-full" disabled>Скарга</Button>
+              <ReportButton
+                targetType={ReportTargetType.ReviewComment}
+                targetId={comment.id}
+                className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-primary-500 text-white hover:bg-primary-600 transition-colors text-sm font-medium"
+                label="Скарга"
+                showIcon={false}
+              />
               {isOwner && (
                 <div className="relative ml-1" ref={menuContainerRef}>
                   <button
@@ -360,7 +373,11 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
                               .map(c => ({ ...c, replies: c.replies ? removeFromTree(c.replies, id) : [] }));
                           };
                           const next = removeFromTree(currentReview.comments ?? [], comment.id);
-                          const updatedReview = { ...currentReview, comments: next };
+                          const updatedReview = {
+                            ...currentReview,
+                            comments: next,
+                            commentsCount: comment.parentCommentId == null ? Math.max(0, commentsCount - 1) : commentsCount,
+                          };
                           setCurrentReview(updatedReview);
                           onUpdate(updatedReview);
                           setMenuOpen(false);
@@ -408,6 +425,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
       <div className="bg-surface-800 rounded-lg p-4">
         <ReviewForm
           onSubmit={handleUpdate}
+            initialTitle={displayTitle}
           initialContent={currentReview.content}
           initialRating={currentReview.rating}
           submitLabel="Зберегти"
@@ -462,7 +480,13 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
           )}
         </div>
       </div>
+      <h3 className="mt-4 text-2xl font-bold text-text-primary">{displayTitle}</h3>
       <p className="mt-4 text-text-secondary whitespace-pre-line">{currentReview.content}</p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-text-muted">
+        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/20 px-3 py-1">👁 {currentReview.viewCount}</span>
+        <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/20 px-3 py-1">💬 {commentsCount}</span>
+      </div>
 
       {}
       <div className="mt-3 flex items-center gap-2">

@@ -1,4 +1,6 @@
-﻿using SekaiLib.Application.DTOs.Reviews;
+﻿using System.Security.Cryptography;
+using System.Text;
+using SekaiLib.Application.DTOs.Reviews;
 using SekaiLib.Application.DTOs.Notifications;
 using SekaiLib.Application.Exceptions;
 using SekaiLib.Application.Interfaces;
@@ -33,8 +35,73 @@ public class ReviewService : IReviewService
         });
     }
 
+    public async Task<ReviewResponse> GetByIdAsync(Guid titleId, Guid reviewId, Guid? currentUserId, string ipAddress)
+    {
+        var review = await _unitOfWork.Reviews.GetByTitleIdAsync(titleId);
+        var target = review.FirstOrDefault(r => r.Id == reviewId);
+
+        if (target == null)
+            throw new NotFoundException("Review", reviewId);
+
+        if (await RecordViewAsync(target.Id, currentUserId, ipAddress))
+        {
+            target.ViewCount++;
+            await _unitOfWork.Reviews.UpdateAsync(target);
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+
+        var refreshed = await _unitOfWork.Reviews.GetByTitleIdAsync(titleId);
+        var updatedReview = refreshed.FirstOrDefault(r => r.Id == reviewId) ?? target;
+        var reviewerScore = await _unitOfWork.Reviews.GetReviewerScoreAsync(updatedReview.UserId);
+        return MapToResponse(updatedReview, currentUserId, reviewerScore);
+    }
+
+    private async Task<bool> RecordViewAsync(Guid reviewId, Guid? userId, string ipAddress)
+    {
+        var ipHash = HashIp(ipAddress);
+
+        var alreadyViewed = userId.HasValue
+            ? await _unitOfWork.ReviewViews.Query().AnyAsync(v => v.ReviewId == reviewId && v.UserId == userId.Value)
+            : await _unitOfWork.ReviewViews.Query().AnyAsync(v => v.ReviewId == reviewId && v.UserId == null && v.IpHash == ipHash);
+
+        if (alreadyViewed)
+            return false;
+
+        await _unitOfWork.ReviewViews.AddAsync(new ReviewView
+        {
+            Id = Guid.NewGuid(),
+            ReviewId = reviewId,
+            UserId = userId,
+            IpHash = ipHash,
+            ViewedAt = DateTime.UtcNow
+        });
+
+        return true;
+    }
+
+    private static string HashIp(string ip)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(ip));
+        return Convert.ToHexString(bytes)[..16];
+    }
+
     public async Task<ReviewResponse> CreateAsync(Guid userId, Guid titleId, CreateReviewRequest request)
     {
+        var reviewTitle = request.Title?.Trim() ?? string.Empty;
+        var content = request.Content?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(reviewTitle))
+            throw new ValidationException(nameof(request.Title), "Заголовок рецензії не може бути порожнім");
+
+        if (reviewTitle.Length > 200)
+            throw new ValidationException(nameof(request.Title), "Зменшіть кількість символів у заголовку рецензії");
+
+        if (string.IsNullOrWhiteSpace(content))
+            throw new ValidationException(nameof(request.Content), "Рецензія не може бути порожньою");
+
+        if (content.Length > 2000)
+            throw new ValidationException(nameof(request.Content), "Зменшіть кількість символів у рецензії");
+
         var existingReview = await _unitOfWork.Reviews.GetByUserAndTitleAsync(userId, titleId);
         if (existingReview != null)
             throw new ValidationException(new Dictionary<string, string[]> { { "Review", new[] { "You have already reviewed this title" } } });
@@ -48,8 +115,10 @@ public class ReviewService : IReviewService
             Id = Guid.NewGuid(),
             UserId = userId,
             TitleId = titleId,
-            Content = request.Content,
+            ReviewTitle = reviewTitle,
+            Content = content,
             Rating = Math.Clamp(request.Rating, 1, 10),
+            ViewCount = 0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -76,6 +145,20 @@ public class ReviewService : IReviewService
 
     public async Task<ReviewResponse> UpdateAsync(Guid userId, Guid reviewId, UpdateReviewRequest request)
     {
+        var title = request.Title?.Trim() ?? string.Empty;
+        var content = request.Content?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ValidationException(nameof(request.Title), "Заголовок рецензії не може бути порожнім");
+
+        if (title.Length > 200)
+            throw new ValidationException(nameof(request.Title), "Зменшіть кількість символів у заголовку рецензії");
+
+        if (string.IsNullOrWhiteSpace(content))
+            throw new ValidationException(nameof(request.Content), "Рецензія не може бути порожньою");
+
+        if (content.Length > 2000)
+            throw new ValidationException(nameof(request.Content), "Зменшіть кількість символів у рецензії");
+
         var review = await _unitOfWork.Reviews.GetByIdAsync(reviewId);
         if (review == null)
             throw new NotFoundException("Review", reviewId);
@@ -83,7 +166,8 @@ public class ReviewService : IReviewService
         if (review.UserId != userId)
             throw new ForbiddenException("You can only edit your own reviews");
 
-        review.Content = request.Content;
+        review.ReviewTitle = title;
+        review.Content = content;
         review.Rating = Math.Clamp(request.Rating, 1, 10);
         review.UpdatedAt = DateTime.UtcNow;
 
@@ -203,16 +287,21 @@ public class ReviewService : IReviewService
             .Select(MapComment)
             .ToList();
 
+        var commentsCount = allComments.Count(c => c.ParentCommentId == null);
+
         return new ReviewResponse(
             review.Id,
             review.UserId,
             review.User?.Username ?? "Unknown",
             review.User?.AvatarUrl,
             review.TitleId,
+            review.ReviewTitle,
             review.Content,
             review.Rating,
             likesCount,
             dislikesCount,
+            review.ViewCount,
+            commentsCount,
             userReaction,
             review.CreatedAt,
             review.UpdatedAt,

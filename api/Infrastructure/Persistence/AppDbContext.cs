@@ -26,6 +26,7 @@ public class AppDbContext : DbContext
     public DbSet<ReviewReaction> ReviewReactions { get; set; }
     public DbSet<ReviewComment> ReviewComments { get; set; }
     public DbSet<ReviewCommentReaction> ReviewCommentReactions { get; set; }
+    public DbSet<ReviewView> ReviewViews { get; set; }
     public DbSet<ChapterComment> ChapterComments { get; set; }
     public DbSet<ChapterCommentReaction> ChapterCommentReactions { get; set; }
     public DbSet<TitleComment> TitleComments { get; set; }

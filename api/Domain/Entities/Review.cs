@@ -5,8 +5,10 @@ public class Review
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
     public Guid TitleId { get; set; }
+    public string ReviewTitle { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public int Rating { get; set; }
+    public int ViewCount { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public User User { get; set; } = null!;

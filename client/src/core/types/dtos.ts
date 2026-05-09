@@ -105,6 +105,18 @@ export interface UpdateTitleRequest {
   genreIds: string[];
 }
 
+export interface CreateReviewRequest {
+  title: string;
+  content: string;
+  rating: number;
+}
+
+export interface UpdateReviewRequest {
+  title: string;
+  content: string;
+  rating: number;
+}
+
 export interface TitleDto {
   id: string;
   name: string;

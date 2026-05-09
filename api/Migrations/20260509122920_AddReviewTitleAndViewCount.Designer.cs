@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SekaiLib.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using SekaiLib.Infrastructure.Persistence;
 namespace SekaiLib.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260509122920_AddReviewTitleAndViewCount")]
+    partial class AddReviewTitleAndViewCount
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -698,35 +701,6 @@ namespace SekaiLib.Migrations
                         .IsUnique();
 
                     b.ToTable("ReviewReactions");
-                });
-
-            modelBuilder.Entity("SekaiLib.Domain.Entities.ReviewView", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("IpHash")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<Guid>("ReviewId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("ViewedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReviewId", "IpHash");
-
-                    b.HasIndex("ReviewId", "UserId");
-
-                    b.ToTable("ReviewViews");
                 });
 
             modelBuilder.Entity("SekaiLib.Domain.Entities.Title", b =>
@@ -1510,17 +1484,6 @@ namespace SekaiLib.Migrations
                     b.Navigation("Review");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("SekaiLib.Domain.Entities.ReviewView", b =>
-                {
-                    b.HasOne("SekaiLib.Domain.Entities.Review", "Review")
-                        .WithMany()
-                        .HasForeignKey("ReviewId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Review");
                 });
 
             modelBuilder.Entity("SekaiLib.Domain.Entities.Title", b =>

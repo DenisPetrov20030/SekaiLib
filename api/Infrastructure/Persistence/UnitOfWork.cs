@@ -89,6 +89,10 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<ChapterView> ChapterViews =>
         _chapterViews ??= new Repository<ChapterView>(_context);
 
+    private IRepository<ReviewView>? _reviewViews;
+    public IRepository<ReviewView> ReviewViews =>
+        _reviewViews ??= new Repository<ReviewView>(_context);
+
     private IRepository<UserBan>? _userBans;
     public IRepository<UserBan> UserBans =>
         _userBans ??= new Repository<UserBan>(_context);
