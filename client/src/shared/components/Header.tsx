@@ -94,8 +94,12 @@ export const Header = () => {
       case 'personal':
         return notifications.filter((n) => n.type === NotificationType.DirectMessage);
       case 'other':
+        // ДОДАНО: Сповіщення від команди тепер у вкладці "Інше" для випадаючого меню
         return notifications.filter(
-          (n) => n.type === NotificationType.FriendRequest || n.type === NotificationType.TitleCompleted
+          (n) =>
+            n.type === NotificationType.FriendRequest ||
+            n.type === NotificationType.TitleCompleted ||
+            n.type === NotificationType.NewTeamChapter
         );
       default:
         return notifications;
@@ -201,7 +205,7 @@ export const Header = () => {
 
   return (
     <>
-     <header className="bg-surface shadow-sm">
+      <header className="bg-surface shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
@@ -326,6 +330,7 @@ export const Header = () => {
                                 >
                                   <div className="relative shrink-0">
                                     <div className="w-11 h-15 rounded-lg bg-zinc-800 overflow-hidden border border-white/10 group-hover:border-red-500/50 transition-colors">
+                                      {/* ДОДАНО: Правильне відображення картинки для різних типів сповіщень */}
                                       {notification.type === NotificationType.NewChapter && notification.titleCoverImageUrl ? (
                                         <img src={notification.titleCoverImageUrl} alt="" className="w-full h-full object-cover" />
                                       ) : (
@@ -422,4 +427,3 @@ export const Header = () => {
     </>
   );
 };
-

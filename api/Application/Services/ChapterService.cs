@@ -137,13 +137,63 @@ public class ChapterService : IChapterService
         await _unitOfWork.Chapters.AddAsync(chapter);
         await _unitOfWork.SaveChangesAsync();
 
+        // ---------------------------------------------------------
+        // РОЗУМНИЙ ФІЛЬТР ДЛЯ ПІДПИСНИКІВ ТАЙТЛУ
+        // ---------------------------------------------------------
         var followerIds = await _unitOfWork.ReadingLists.Query()
             .Where(rl => rl.TitleId == titleId)
             .Select(rl => rl.UserId)
             .Distinct()
             .ToListAsync();
 
-        foreach (var followerId in followerIds.Where(id => id != userId))
+        var finalFollowerIds = new List<Guid>();
+
+        if (request.TranslationTeamId.HasValue)
+        {
+            // Отримуємо всі унікальні команди, які перекладають цей тайтл
+            var teamsOnThisTitle = await _unitOfWork.Chapters.Query()
+                .Where(c => c.TitleId == titleId && c.TranslationTeamId != null)
+                .Select(c => c.TranslationTeamId.Value)
+                .Distinct()
+                .ToListAsync();
+
+            // Знаходимо всі підписки користувачів-фоловерів на ці команди
+            var followerSubscriptions = await _unitOfWork.TranslationTeamSubscriptions.Query()
+                .Where(s => followerIds.Contains(s.UserId) && teamsOnThisTitle.Contains(s.TeamId))
+                .ToListAsync();
+
+            foreach (var followerId in followerIds.Where(id => id != userId))
+            {
+                // Дивимося, чи обрав користувач якісь конкретні команди для цього тайтлу
+                var userSubscribedTeams = followerSubscriptions
+                    .Where(s => s.UserId == followerId)
+                    .Select(s => s.TeamId)
+                    .ToList();
+
+                if (userSubscribedTeams.Any())
+                {
+                    // Юзер має "дзвіночки" на командах. 
+                    // Надсилаємо сповіщення ТІЛЬКИ якщо глава від обраної команди.
+                    if (userSubscribedTeams.Contains(request.TranslationTeamId.Value))
+                    {
+                        finalFollowerIds.Add(followerId);
+                    }
+                }
+                else
+                {
+                    // Юзер не натискав жодних дзвіночків, просто читає тайтл — відправляємо.
+                    finalFollowerIds.Add(followerId);
+                }
+            }
+        }
+        else
+        {
+            // Якщо главу завантажили без вказання команди, відправляємо всім читачам
+            finalFollowerIds = followerIds.Where(id => id != userId).ToList();
+        }
+
+        // Розсилаємо сповіщення відфільтрованому списку читачів
+        foreach (var followerId in finalFollowerIds)
         {
             await _notifications.CreateAsync(new CreateNotificationRequest(
                 followerId,
@@ -157,31 +207,37 @@ public class ChapterService : IChapterService
             ));
         }
 
+        // ---------------------------------------------------------
+        // СПОВІЩЕННЯ "КОМАНДА РОЗПОЧАЛА ПЕРЕВЕДЕННЯ" (Лише перша глава команди)
+        // ---------------------------------------------------------
         if (request.TranslationTeamId.HasValue)
         {
-            var teamSubscriberIds = await _unitOfWork.TranslationTeamSubscriptions.Query()
-                .Where(s => s.TeamId == request.TranslationTeamId.Value)
-                .Select(s => s.UserId)
-                .Distinct()
-                .ToListAsync();
+            var teamChaptersCount = await _unitOfWork.Chapters.Query()
+                .CountAsync(c => c.TitleId == titleId && c.TranslationTeamId == request.TranslationTeamId.Value);
 
-            var alreadyNotified = new HashSet<Guid>(followerIds);
-            alreadyNotified.Add(userId);
-
-            var team = await _unitOfWork.TranslationTeams.GetByIdAsync(request.TranslationTeamId.Value);
-
-            foreach (var subscriberId in teamSubscriberIds.Where(id => !alreadyNotified.Contains(id)))
+            if (teamChaptersCount == 1)
             {
-                await _notifications.CreateAsync(new CreateNotificationRequest(
-                    subscriberId,
-                    NotificationType.NewTeamChapter,
-                    "Нова глава від команди",
-                    $"{team?.Name ?? "Команда"}: {title.Name} — Глава {chapter.Number}",
-                    $"/titles/{titleId}/chapters/{chapter.Number}",
-                    userId,
-                    titleId,
-                    chapter.Id
-                ));
+                var teamSubscriberIds = await _unitOfWork.TranslationTeamSubscriptions.Query()
+                    .Where(s => s.TeamId == request.TranslationTeamId.Value)
+                    .Select(s => s.UserId)
+                    .Distinct()
+                    .ToListAsync();
+
+                var team = await _unitOfWork.TranslationTeams.GetByIdAsync(request.TranslationTeamId.Value);
+
+                foreach (var subscriberId in teamSubscriberIds.Where(id => id != userId))
+                {
+                    await _notifications.CreateAsync(new CreateNotificationRequest(
+                        subscriberId,
+                        NotificationType.NewTeamChapter,
+                        "КОМАНДА РОЗПОЧАЛА ПЕРЕВЕДЕННЯ",
+                        $"{team?.Name ?? "Команда"} розпочала переведення: {title.Name}",
+                        $"/titles/{titleId}",
+                        userId,
+                        titleId,
+                        chapter.Id
+                    ));
+                }
             }
         }
 
@@ -261,7 +317,7 @@ public class ChapterService : IChapterService
     }
 
     public async Task<IEnumerable<LatestChapterDto>> GetLatestChaptersAsync(int count)
-{
+    {
         var chapters = await _unitOfWork.Chapters.GetAllAsync();
 
         return chapters
@@ -284,9 +340,10 @@ public class ChapterService : IChapterService
                 0
             )
         });
-}
+    }
+    
     public async Task UpdateReadingProgressAsync(Guid userId, Guid titleId, int chapterNumber, int page)
-{
+    {
         var progress = await _unitOfWork.UserReadingProgresses
             .Query()
             .FirstOrDefaultAsync(p => p.UserId == userId && p.TitleId == titleId);
@@ -308,6 +365,7 @@ public class ChapterService : IChapterService
 
         await _unitOfWork.SaveChangesAsync();
     }
+    
     private string PrepareTextForDb(string input)
     {
         if (string.IsNullOrWhiteSpace(input)) return input;

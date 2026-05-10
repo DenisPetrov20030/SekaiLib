@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchTitleDetails } from '../store';
@@ -30,6 +30,7 @@ export const TitleDetailsPage = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [rating, setRating] = useState<TitleRating | undefined>();
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [teamSubscriptions, setTeamSubscriptions] = useState<Record<string, boolean>>({});
   const [hasTeamMembership, setHasTeamMembership] = useState(false);
   const [activeDiscussionTab, setActiveDiscussionTab] = useState<DiscussionTab>('comments');
 
@@ -38,6 +39,32 @@ export const TitleDetailsPage = () => {
     user.role === UserRole.Administrator
   );
   const canManageChapters = isPublisherOrAdmin || hasTeamMembership;
+
+  // Витягуємо всі унікальні команди з розділів або з бекенду
+  const availableTeams = useMemo(() => {
+    if (!currentTitle) return [];
+    
+    const teamsMap = new Map<string, { id: string; name: string }>();
+    
+    // Якщо бекенд щось передав
+    if (currentTitle.translationTeams) {
+      currentTitle.translationTeams.forEach(t => teamsMap.set(t.id, t));
+    }
+    
+    // Додаємо команди з розділів (якщо бекенд їх забув додати в translationTeams)
+    if (currentTitle.chapters) {
+      currentTitle.chapters.forEach(c => {
+        // У тебе в DTO є translationTeamId та translationTeamName
+        if (c.translationTeamId && c.translationTeamName) {
+          if (!teamsMap.has(c.translationTeamId)) {
+            teamsMap.set(c.translationTeamId, { id: c.translationTeamId, name: c.translationTeamName });
+          }
+        }
+      });
+    }
+    
+    return Array.from(teamsMap.values());
+  }, [currentTitle]);
 
   useEffect(() => {
     if (id) {
@@ -60,6 +87,75 @@ export const TitleDetailsPage = () => {
     setSelectedTeamId(null);
   }, [id]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSubscriptions = async () => {
+      if (!user || availableTeams.length === 0) {
+        setTeamSubscriptions({});
+        return;
+      }
+
+      const entries = await Promise.all(
+        availableTeams.map(async (team) => {
+          try {
+            const subscribed = await teamsApi.isSubscribed(team.id);
+            return [team.id, subscribed] as const;
+          } catch {
+            return [team.id, false] as const;
+          }
+        })
+      );
+
+      if (!cancelled) {
+        setTeamSubscriptions(Object.fromEntries(entries));
+      }
+    };
+
+    loadSubscriptions().catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [availableTeams, user]);
+
+  const handleTeamBellClick = async (teamId: string) => {
+    if (!user) {
+      setShowLogin(true);
+      return;
+    }
+
+    const isSubscribed = teamSubscriptions[teamId] ?? false;
+
+    setTeamSubscriptions((prev) => ({
+      ...prev,
+      [teamId]: !isSubscribed,
+    }));
+
+    try {
+      if (isSubscribed) {
+        await teamsApi.unsubscribe(teamId);
+      } else {
+        await teamsApi.subscribe(teamId);
+      }
+    } catch {
+      setTeamSubscriptions((prev) => ({
+        ...prev,
+        [teamId]: isSubscribed,
+      }));
+    }
+  };
+
+  const getTeamInitials = (teamName: string) => {
+    const parts = teamName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return 'T';
+
+    return parts
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || 'T';
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -79,7 +175,7 @@ export const TitleDetailsPage = () => {
   }
 
   const filteredChapters = selectedTeamId
-    ? currentTitle.chapters.filter((c) => c.translationTeamId === selectedTeamId)
+    ? currentTitle.chapters.filter((c) => c.translationTeamId === selectedTeamId || !c.translationTeamId)
     : currentTitle.chapters;
 
   return (
@@ -159,21 +255,103 @@ export const TitleDetailsPage = () => {
             </div>
           </div>
 
-          {}
-          {currentTitle.translationTeams && currentTitle.translationTeams.length > 0 && (
+          {/* Блок команд перекладачів з дзвіночками */}
+          {availableTeams.length > 0 && (
             <div className="mt-6">
-              <h2 className="text-xl font-semibold text-text-primary mb-2">Команди перекладачів</h2>
-              <div className="flex flex-wrap gap-2">
-                {currentTitle.translationTeams.map((team) => (
-                  <Link
-                    key={team.id}
-                    to={`/teams/${team.id}`}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-surface-hover text-primary-400 hover:text-primary-300 transition-colors"
-                  >
-                    {team.name}
-                  </Link>
-                ))}
-              </div>
+              <h2 className="text-xl font-semibold text-text-primary mb-3">Команди перекладачів</h2>
+              
+              {availableTeams.length > 1 ? (
+                <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-surface to-surface-hover p-4 sm:p-5 shadow-lg shadow-black/20">
+                  <div className="mb-4">
+                    <p className="text-sm font-semibold text-text-primary">Команди перекладачів</p>
+                    <p className="text-xs text-text-muted">Оберіть команду, щоб отримувати сповіщення про нові розділи саме від неї.</p>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {availableTeams.map((team) => {
+                      const isSubscribed = teamSubscriptions[team.id] ?? false;
+
+                      return (
+                        <div
+                          key={team.id}
+                          className={`flex items-center gap-3 rounded-xl border transition-all px-4 py-3 ${
+                            selectedTeamId === team.id 
+                            ? 'border-primary-500/50 bg-primary-500/5' 
+                            : 'border-white/10 bg-black/20 hover:border-white/20'
+                          }`}
+                        >
+                          <div 
+                            onClick={() => setSelectedTeamId(selectedTeamId === team.id ? null : team.id)}
+                            className="flex min-w-0 flex-1 items-center gap-3 cursor-pointer"
+                          >
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 text-sm font-black text-white shadow-md">
+                              {getTeamInitials(team.name)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-text-primary">{team.name}</p>
+                              <p className="text-[10px] text-text-muted uppercase tracking-wider">Переклад</p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTeamBellClick(team.id);
+                            }}
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-all ${
+                              isSubscribed
+                                ? 'border-red-500/40 bg-red-500/20 text-red-400 shadow-inner'
+                                : 'border-white/10 bg-white/5 text-text-muted hover:border-red-500/30 hover:text-red-400'
+                            }`}
+                            title={isSubscribed ? "Відписатися від оновлень команди" : "Підписатися на оновлення команди"}
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill={isSubscribed ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {availableTeams.map((team) => {
+                    const isSubscribed = teamSubscriptions[team.id] ?? false;
+
+                    return (
+                      <div
+                        key={team.id}
+                        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-surface-hover px-2 py-1"
+                      >
+                        <Link
+                          to={`/teams/${team.id}`}
+                          className="inline-flex items-center px-2 py-1 text-sm font-medium text-primary-400 hover:text-primary-300 transition-colors"
+                        >
+                          {team.name}
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleTeamBellClick(team.id)}
+                          className={`flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
+                            isSubscribed
+                              ? 'border-red-500/40 bg-red-500/15 text-red-400'
+                              : 'border-white/10 bg-white/5 text-text-muted hover:border-red-500/30 hover:text-red-400'
+                          }`}
+                          aria-label={isSubscribed ? `Відписатися від ${team.name}` : `Підписатися на ${team.name}`}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill={isSubscribed ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -190,8 +368,7 @@ export const TitleDetailsPage = () => {
               )}
             </div>
 
-            {}
-            {currentTitle.translationTeams && currentTitle.translationTeams.length > 1 && (
+            {availableTeams.length > 1 && (
               <div className="flex flex-wrap gap-2 mb-4">
                 <button
                   onClick={() => setSelectedTeamId(null)}
@@ -203,7 +380,7 @@ export const TitleDetailsPage = () => {
                 >
                   Всі переклади
                 </button>
-                {currentTitle.translationTeams.map((team) => (
+                {availableTeams.map((team) => (
                   <button
                     key={team.id}
                     onClick={() => setSelectedTeamId(team.id)}

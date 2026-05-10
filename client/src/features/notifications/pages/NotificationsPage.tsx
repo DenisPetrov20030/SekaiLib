@@ -42,7 +42,12 @@ export const NotificationsPage = () => {
       case 'personal':
         return n.type === NotificationType.DirectMessage;
       case 'other':
-        return n.type === NotificationType.FriendRequest || n.type === NotificationType.TitleCompleted;
+        // ДОДАНО: Тепер сповіщення від команди потрапляють у вкладку "Інше"
+        return (
+          n.type === NotificationType.FriendRequest || 
+          n.type === NotificationType.TitleCompleted || 
+          n.type === NotificationType.NewTeamChapter
+        );
       default:
         return true;
     }
@@ -208,8 +213,11 @@ export const NotificationsPage = () => {
                   </p>
                   <div className="flex items-center gap-2 text-xs text-text-muted">
                     <span className="px-2 py-0.5 bg-surface-hover rounded">
+                      {/* ДОДАНО: Лейбл для нового типу сповіщення */}
                       {notification.type === NotificationType.NewChapter
                         ? 'Новий розділ'
+                        : notification.type === NotificationType.NewTeamChapter
+                        ? 'Від команди'
                         : notification.type === NotificationType.CommentReply
                         ? 'Відповідь'
                         : notification.type === NotificationType.DirectMessage
