@@ -10,6 +10,7 @@ using SekaiLib.Domain.Enums;
 using SekaiLib.Application.DTOs.Users;
 using SekaiLib.Application.DTOs.Notifications;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace SekaiLib.Presentation.Controllers;
 
@@ -32,6 +33,25 @@ public class UsersController : ControllerBase
         _environment = environment;
     }
 
+    [Authorize]
+    [HttpPut("me/genre-filter")]
+    public async Task<IActionResult> UpdateGenreFilter([FromBody] UpdateGenreFilterRequest request)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdClaim);
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null) return NotFound();
+
+        user.BlockedGenres = JsonSerializer.Serialize(request.BlockedGenreIds ?? new List<Guid>());
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return Ok(new { blockedGenreIds = request.BlockedGenreIds ?? new List<Guid>() });
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<UserProfileDto>> GetProfile(Guid id)
     {
@@ -40,12 +60,37 @@ public class UsersController : ControllerBase
         if (user == null)
             return NotFound();
 
+        // Парсим настройки уведомлений из JSON
+        var notifyListStatuses = new int[] { };
+        var notifyUserListIds = new string[] { };
+        
+        try
+        {
+            if (!string.IsNullOrEmpty(user.NotifyListStatuses))
+                notifyListStatuses = JsonSerializer.Deserialize<int[]>(user.NotifyListStatuses) ?? new int[] { };
+        }
+        catch { }
+        
+        try
+        {
+            if (!string.IsNullOrEmpty(user.NotifyUserListIds))
+                notifyUserListIds = JsonSerializer.Deserialize<string[]>(user.NotifyUserListIds) ?? new string[] { };
+        }
+        catch { }
+
         var userProfile = new UserProfileDto(
             user.Id,
             user.Username,
             user.Email,
             user.AvatarUrl,
-            user.CreatedAt
+            user.CreatedAt,
+            user.Gender,
+            user.AboutMe,
+            notifyListStatuses,
+            notifyUserListIds,
+            user.NotifyTitleCompleted,
+            user.NotifyFriendRequests,
+            user.ProfileVisibility ?? 0
         );
 
         return Ok(userProfile);
@@ -57,16 +102,141 @@ public class UsersController : ControllerBase
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var user = await _unitOfWork.Users.GetByIdAsync(userId);
-        
+
         if (user == null)
             return NotFound();
+
+        var notifyListStatuses = new int[] { };
+        var notifyUserListIds = new string[] { };
+        Guid[] blockedGenres = Array.Empty<Guid>();
+
+        try
+        {
+            if (!string.IsNullOrEmpty(user.NotifyListStatuses))
+                notifyListStatuses = JsonSerializer.Deserialize<int[]>(user.NotifyListStatuses) ?? new int[] { };
+        }
+        catch { }
+
+        try
+        {
+            if (!string.IsNullOrEmpty(user.NotifyUserListIds))
+                notifyUserListIds = JsonSerializer.Deserialize<string[]>(user.NotifyUserListIds) ?? new string[] { };
+        }
+        catch { }
+
+        try
+        {
+            if (!string.IsNullOrEmpty(user.BlockedGenres))
+                blockedGenres = JsonSerializer.Deserialize<Guid[]>(user.BlockedGenres) ?? Array.Empty<Guid>();
+        }
+        catch { }
 
         var userProfile = new UserProfileDto(
             user.Id,
             user.Username,
             user.Email,
             user.AvatarUrl,
-            user.CreatedAt
+            user.CreatedAt,
+            user.Gender,
+            user.AboutMe,
+            notifyListStatuses,
+            notifyUserListIds,
+            user.NotifyTitleCompleted,
+            user.NotifyFriendRequests,
+            user.ProfileVisibility ?? 0,
+            blockedGenres
+        );
+
+        return Ok(userProfile);
+    }
+
+    [Authorize]
+    [HttpPut("me")]
+    public async Task<ActionResult<UserProfileDto>> UpdateCurrentUserProfile([FromBody] UpdateProfileRequest request)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdClaim);
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+            return NotFound();
+
+        var trimmedUsername = request.Username.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedUsername))
+            return BadRequest(new { message = "Нікнейм не може бути порожнім." });
+
+        var existingUser = await _unitOfWork.Users.GetByUsernameAsync(trimmedUsername);
+        if (existingUser != null && existingUser.Id != user.Id)
+            return Conflict(new { message = "Такий нікнейм уже зайнятий." });
+
+        user.Username = trimmedUsername;
+        user.Gender = request.Gender;
+        user.AboutMe = string.IsNullOrWhiteSpace(request.AboutMe) ? null : request.AboutMe.Trim();
+        
+        // Сохраняем настройки уведомлений как JSON
+        if (request.NotifyListStatuses != null)
+            user.NotifyListStatuses = JsonSerializer.Serialize(request.NotifyListStatuses);
+        
+        if (request.NotifyUserListIds != null)
+            user.NotifyUserListIds = JsonSerializer.Serialize(request.NotifyUserListIds);
+
+        if (request.NotifyTitleCompleted.HasValue)
+            user.NotifyTitleCompleted = request.NotifyTitleCompleted.Value;
+
+        if (request.NotifyFriendRequests.HasValue)
+            user.NotifyFriendRequests = request.NotifyFriendRequests.Value;
+
+        if (request.ProfileVisibility.HasValue)
+            user.ProfileVisibility = request.ProfileVisibility.Value;
+
+        if (request.BlockedGenreIds != null)
+            user.BlockedGenres = JsonSerializer.Serialize(request.BlockedGenreIds);
+
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _unitOfWork.SaveChangesAsync();
+
+        // Парсим обратно для ответа
+        var notifyListStatuses = new int[] { };
+        var notifyUserListIds = new string[] { };
+        Guid[] blockedGenres = Array.Empty<Guid>();
+
+        try
+        {
+            if (!string.IsNullOrEmpty(user.NotifyListStatuses))
+                notifyListStatuses = JsonSerializer.Deserialize<int[]>(user.NotifyListStatuses) ?? new int[] { };
+        }
+        catch { }
+
+        try
+        {
+            if (!string.IsNullOrEmpty(user.NotifyUserListIds))
+                notifyUserListIds = JsonSerializer.Deserialize<string[]>(user.NotifyUserListIds) ?? new string[] { };
+        }
+        catch { }
+
+        try
+        {
+            if (!string.IsNullOrEmpty(user.BlockedGenres))
+                blockedGenres = JsonSerializer.Deserialize<Guid[]>(user.BlockedGenres) ?? Array.Empty<Guid>();
+        }
+        catch { }
+
+        var userProfile = new UserProfileDto(
+            user.Id,
+            user.Username,
+            user.Email,
+            user.AvatarUrl,
+            user.CreatedAt,
+            user.Gender,
+            user.AboutMe,
+            notifyListStatuses,
+            notifyUserListIds,
+            user.NotifyTitleCompleted,
+            user.NotifyFriendRequests,
+            user.ProfileVisibility ?? 0,
+            blockedGenres
         );
 
         return Ok(userProfile);
@@ -500,9 +670,10 @@ public async Task<IActionResult> RejectFriendRequest(Guid requestId)
     }
 
     public record UpdateProgressRequest(Guid TitleId, int ChapterNumber, int Page);
+    public record UpdateGenreFilterRequest(List<Guid>? BlockedGenreIds);
 
     [Authorize]
-[HttpPost("me/avatar")]
+    [HttpPost("me/avatar")]
 [Consumes("multipart/form-data")]
 public async Task<IActionResult> UploadAvatar(IFormFile avatar)
 {

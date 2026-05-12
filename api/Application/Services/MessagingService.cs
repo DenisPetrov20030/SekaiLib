@@ -3,6 +3,7 @@ using SekaiLib.Presentation.Hubs;
 using Microsoft.EntityFrameworkCore;
 using SekaiLib.Application.DTOs.Messages;
 using SekaiLib.Application.DTOs.Notifications;
+using SekaiLib.Application.Exceptions;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Domain.Entities;
 using SekaiLib.Domain.Enums;
@@ -15,16 +16,22 @@ namespace SekaiLib.Application.Services;
         private readonly IHubContext<ChatHub> _hub;
     private readonly IUnitOfWork _uow;
         private readonly INotificationService _notifications;
-        public MessagingService(IUnitOfWork uow, IHubContext<ChatHub> hub, INotificationService notifications)
+        private readonly IUserBlockService _userBlockService;
+
+        public MessagingService(IUnitOfWork uow, IHubContext<ChatHub> hub, INotificationService notifications, IUserBlockService userBlockService)
         {
             _uow = uow;
             _hub = hub;
             _notifications = notifications;
+            _userBlockService = userBlockService;
         }
 
     public async Task<MessageDto> SendDirectMessageAsync(Guid senderId, Guid recipientId, string text)
     {
         if (senderId == recipientId) throw new Exception("Неможливо відправити повідомлення самому собі.");
+
+        if (await _userBlockService.IsBlockedAsync(recipientId, senderId) || await _userBlockService.IsBlockedAsync(senderId, recipientId))
+            throw new ForbiddenException("Неможливо відправити повідомлення через налаштування ігнор-листа.");
 
         var conversation = await _uow.Conversations.Query()
             .Include(c => c.Participants)
@@ -167,6 +174,17 @@ namespace SekaiLib.Application.Services;
             .AnyAsync(p => p.ConversationId == conversationId && p.UserId == userId);
         if (!isParticipant) throw new Exception("Доступ заборонено.");
 
+        var participantIds = await _uow.ConversationParticipants.Query()
+            .Where(p => p.ConversationId == conversationId)
+            .Select(p => p.UserId)
+            .ToListAsync();
+
+        foreach (var participantId in participantIds.Where(id => id != userId))
+        {
+            if (await _userBlockService.IsBlockedAsync(participantId, userId) || await _userBlockService.IsBlockedAsync(userId, participantId))
+                throw new ForbiddenException("Неможливо відправити повідомлення через налаштування ігнор-листа.");
+        }
+
         var message = new Message
         {
             Id = Guid.NewGuid(),
@@ -186,11 +204,6 @@ namespace SekaiLib.Application.Services;
         await _uow.SaveChangesAsync();
 
         var dto = new MessageDto(message.Id, message.ConversationId, message.SenderId, message.Text, message.CreatedAt);
-
-        var participantIds = await _uow.ConversationParticipants.Query()
-            .Where(p => p.ConversationId == conversationId)
-            .Select(p => p.UserId)
-            .ToListAsync();
 
         foreach (var uid in participantIds)
         {

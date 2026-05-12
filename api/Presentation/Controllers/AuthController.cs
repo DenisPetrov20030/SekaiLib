@@ -15,12 +15,21 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly IExternalAuthService _externalAuthService;
+    private readonly IPasswordResetService _passwordResetService;
+    private readonly IAccountLinkService _accountLinkService;
     private readonly OAuthOptions _oAuthOptions;
 
-    public AuthController(IAuthService authService, IExternalAuthService externalAuthService, IOptions<OAuthOptions> oAuthOptions)
+    public AuthController(
+        IAuthService authService,
+        IExternalAuthService externalAuthService,
+        IPasswordResetService passwordResetService,
+        IAccountLinkService accountLinkService,
+        IOptions<OAuthOptions> oAuthOptions)
     {
         _authService = authService;
         _externalAuthService = externalAuthService;
+        _passwordResetService = passwordResetService;
+        _accountLinkService = accountLinkService;
         _oAuthOptions = oAuthOptions.Value;
     }
 
@@ -59,6 +68,51 @@ public class AuthController : ControllerBase
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var user = await _authService.GetCurrentUserAsync(userId);
         return Ok(user);
+    }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        // Завжди 200 — не розкриваємо чи існує email
+        var token = await _passwordResetService.RequestResetAsync(request.Email);
+
+        // TODO: надіслати email
+        // Тимчасово повертаємо токен у dev-режимі
+        return Ok(new { message = "Якщо email зареєстровано, ви отримаєте листа з інструкціями.", devToken = token });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        await _passwordResetService.ResetAsync(request.Token, request.NewPassword);
+        return Ok(new { message = "Пароль успішно змінено." });
+    }
+
+    [HttpPut("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _passwordResetService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
+        return Ok(new { message = "Пароль успішно змінено." });
+    }
+
+    [HttpGet("linked-accounts")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<LinkedAccountDto>>> GetLinkedAccounts()
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var accounts = await _accountLinkService.GetLinkedAccountsAsync(userId);
+        return Ok(accounts);
+    }
+
+    [HttpDelete("linked-accounts/{provider}")]
+    [Authorize]
+    public async Task<IActionResult> UnlinkAccount(string provider)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        await _accountLinkService.UnlinkAccountAsync(userId, provider);
+        return NoContent();
     }
 
     [HttpGet("oauth/{provider}/start")]

@@ -16,11 +16,13 @@ public class ChapterService : IChapterService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notifications;
+    private readonly IUserBlockService _userBlockService;
 
-    public ChapterService(IUnitOfWork unitOfWork, INotificationService notifications)
+    public ChapterService(IUnitOfWork unitOfWork, INotificationService notifications, IUserBlockService userBlockService)
     {
         _unitOfWork = unitOfWork;
         _notifications = notifications;
+        _userBlockService = userBlockService;
     }
 
     public async Task<IEnumerable<ChapterDto>> GetChaptersByTitleAsync(Guid titleId, Guid? teamId = null)
@@ -139,32 +141,86 @@ public class ChapterService : IChapterService
 
         // ---------------------------------------------------------
         // РОЗУМНИЙ ФІЛЬТР ДЛЯ ПІДПИСНИКІВ ТАЙТЛУ
+        // Ураховуємо налаштування користувачів: стандартні статуси і власні списки
         // ---------------------------------------------------------
-        var followerIds = await _unitOfWork.ReadingLists.Query()
+        var readingEntries = await _unitOfWork.ReadingLists.Query()
             .Where(rl => rl.TitleId == titleId)
-            .Select(rl => rl.UserId)
-            .Distinct()
+            .Select(rl => new { rl.UserId, rl.Status, rl.UserListId })
             .ToListAsync();
 
-        var finalFollowerIds = new List<Guid>();
+        var followerGroups = readingEntries.GroupBy(e => e.UserId);
 
+        var finalFollowers = new List<Guid>();
+
+        foreach (var group in followerGroups)
+        {
+            var followerId = group.Key;
+            if (followerId == userId) continue;
+
+            // Загружаємо налаштування користувача
+            var follower = await _unitOfWork.Users.GetByIdAsync(followerId);
+            if (follower == null) continue;
+
+            int[] notifyStatuses = Array.Empty<int>();
+            string[] notifyUserListIds = Array.Empty<string>();
+            try
+            {
+                if (!string.IsNullOrEmpty(follower.NotifyListStatuses))
+                    notifyStatuses = System.Text.Json.JsonSerializer.Deserialize<int[]>(follower.NotifyListStatuses) ?? Array.Empty<int>();
+            }
+            catch { }
+            try
+            {
+                if (!string.IsNullOrEmpty(follower.NotifyUserListIds))
+                    notifyUserListIds = System.Text.Json.JsonSerializer.Deserialize<string[]>(follower.NotifyUserListIds) ?? Array.Empty<string>();
+            }
+            catch { }
+
+            var shouldNotify = false;
+
+            foreach (var entry in group)
+            {
+                // Custom list entry
+                if (entry.UserListId.HasValue)
+                {
+                    var listIdStr = entry.UserListId.Value.ToString();
+                    if (notifyUserListIds.Contains(listIdStr))
+                    {
+                        shouldNotify = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    // Standard list entry (status)
+                    if (notifyStatuses.Contains((int)entry.Status))
+                    {
+                        shouldNotify = true;
+                        break;
+                    }
+                }
+            }
+
+            if (shouldNotify)
+                finalFollowers.Add(followerId);
+        }
+
+        // Якщо глава прив'язана до команди — додатково фільтруємо тих, хто підписаний на конкретні команди (дзвінки)
         if (request.TranslationTeamId.HasValue)
         {
-            // Отримуємо всі унікальні команди, які перекладають цей тайтл
             var teamsOnThisTitle = await _unitOfWork.Chapters.Query()
                 .Where(c => c.TitleId == titleId && c.TranslationTeamId != null)
                 .Select(c => c.TranslationTeamId.Value)
                 .Distinct()
                 .ToListAsync();
 
-            // Знаходимо всі підписки користувачів-фоловерів на ці команди
             var followerSubscriptions = await _unitOfWork.TranslationTeamSubscriptions.Query()
-                .Where(s => followerIds.Contains(s.UserId) && teamsOnThisTitle.Contains(s.TeamId))
+                .Where(s => finalFollowers.Contains(s.UserId) && teamsOnThisTitle.Contains(s.TeamId))
                 .ToListAsync();
 
-            foreach (var followerId in followerIds.Where(id => id != userId))
+            var filtered = new List<Guid>();
+            foreach (var followerId in finalFollowers)
             {
-                // Дивимося, чи обрав користувач якісь конкретні команди для цього тайтлу
                 var userSubscribedTeams = followerSubscriptions
                     .Where(s => s.UserId == followerId)
                     .Select(s => s.TeamId)
@@ -172,28 +228,21 @@ public class ChapterService : IChapterService
 
                 if (userSubscribedTeams.Any())
                 {
-                    // Юзер має "дзвіночки" на командах. 
-                    // Надсилаємо сповіщення ТІЛЬКИ якщо глава від обраної команди.
                     if (userSubscribedTeams.Contains(request.TranslationTeamId.Value))
-                    {
-                        finalFollowerIds.Add(followerId);
-                    }
+                        filtered.Add(followerId);
                 }
                 else
                 {
-                    // Юзер не натискав жодних дзвіночків, просто читає тайтл — відправляємо.
-                    finalFollowerIds.Add(followerId);
+                    // Якщо юзер не вибирав дзвіночків — залишаємо як є
+                    filtered.Add(followerId);
                 }
             }
-        }
-        else
-        {
-            // Якщо главу завантажили без вказання команди, відправляємо всім читачам
-            finalFollowerIds = followerIds.Where(id => id != userId).ToList();
+
+            finalFollowers = filtered;
         }
 
         // Розсилаємо сповіщення відфільтрованому списку читачів
-        foreach (var followerId in finalFollowerIds)
+        foreach (var followerId in finalFollowers)
         {
             await _notifications.CreateAsync(new CreateNotificationRequest(
                 followerId,
@@ -386,6 +435,12 @@ public class ChapterService : IChapterService
 
         var comments = await _unitOfWork.Chapters.GetCommentsByChapterIdAsync(chapterId);
 
+        if (currentUserId.HasValue)
+        {
+            var blockedIds = (await _userBlockService.GetBlockedUserIdsAsync(currentUserId.Value)).ToHashSet();
+            comments = comments.Where(c => !blockedIds.Contains(c.UserId)).ToList();
+        }
+
         var byId = comments.ToDictionary(c => c.Id);
         var roots = new List<ChapterComment>();
         foreach (var c in comments)
@@ -435,6 +490,16 @@ public class ChapterService : IChapterService
         var user = await _unitOfWork.Users.GetByIdAsync(userId);
         if (user == null)
             throw new UnauthorizedException();
+
+        if (request.ParentCommentId.HasValue)
+        {
+            var parent = await _unitOfWork.Chapters.GetCommentByIdAsync(request.ParentCommentId.Value);
+            if (parent == null)
+                throw new NotFoundException("ChapterComment", request.ParentCommentId.Value);
+
+            if (await _userBlockService.IsBlockedAsync(parent.UserId, userId))
+                throw new ForbiddenException("Ви не можете відповідати на коментарі цього користувача.");
+        }
 
         var comment = new ChapterComment
         {
@@ -555,6 +620,9 @@ public class ChapterService : IChapterService
         var all = await _unitOfWork.Chapters.GetCommentsByChapterIdAsync(
             await GetChapterIdByCommentId(commentId)
         );
+
+        var blockedIds = (await _userBlockService.GetBlockedUserIdsAsync(currentUserId)).ToHashSet();
+        all = all.Where(c => !blockedIds.Contains(c.UserId)).ToList();
 
         var dict = all.ToDictionary(c => c.Id);
         foreach (var c in all)

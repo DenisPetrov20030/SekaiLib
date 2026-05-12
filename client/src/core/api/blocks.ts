@@ -1,15 +1,26 @@
-import { axiosInstance } from './client';
+import { apiClient } from './client';
+import type { BlockedUserDto, MessageAccessDto } from '../types/dtos';
 
 export const blocksApi = {
   block: (userId: string) =>
-    axiosInstance.post(`/blocks/${userId}`),
+    apiClient.post(`/blocks/${userId}`),
 
   unblock: (userId: string) =>
-    axiosInstance.delete(`/blocks/${userId}`),
+    apiClient.delete(`/blocks/${userId}`),
 
   isBlocked: (userId: string) =>
-    axiosInstance.get<boolean>(`/blocks/${userId}/status`),
+    apiClient.get<boolean>(`/blocks/${userId}/status`),
+
+  getMessageAccess: async (userId: string): Promise<MessageAccessDto> => {
+    const response = await apiClient.get<MessageAccessDto>(`/blocks/${userId}/message-access`);
+    return response.data;
+  },
 
   getBlockedUsers: () =>
-    axiosInstance.get<string[]>('/blocks'),
+    apiClient.get<string[]>('/blocks'),
+
+  getBlockedUsersWithDetails: async (): Promise<BlockedUserDto[]> => {
+    const response = await apiClient.get<BlockedUserDto[]>('/blocks/details');
+    return response.data;
+  },
 };

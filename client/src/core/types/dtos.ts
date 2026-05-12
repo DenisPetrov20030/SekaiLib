@@ -1,5 +1,6 @@
 ﻿export type AuthProvider = 'google';
 import { ReadingStatus, TitleStatus, UserRole } from './enums';
+import { Gender } from './enums';
 
 export interface LoginRequest {
   email: string;
@@ -59,10 +60,34 @@ export interface UpdateReadingProgressRequest {
 }
 
 export interface UpdateProfileRequest {
-  username?: string;
-  email?: string;
-  currentPassword?: string;
-  newPassword?: string;
+  username: string;
+  gender: Gender;
+  aboutMe?: string | null;
+  notifyListStatuses?: number[] | null;
+  notifyUserListIds?: string[] | null;
+  notifyTitleCompleted?: boolean | null;
+  notifyFriendRequests?: boolean | null;
+  profileVisibility?: number | null;
+  blockedGenreIds?: string[] | null;
+}
+
+export interface LinkedAccountDto {
+  provider: string;
+  providerUserId: string;
+  linkedAt: string;
+}
+
+export interface BlockedUserDto {
+  userId: string;
+  username: string;
+  avatarUrl?: string | null;
+  blockedAt: string;
+}
+
+export interface MessageAccessDto {
+  canMessage: boolean;
+  blockedByMe: boolean;
+  blockedByUser: boolean;
 }
 
 export interface PublisherDto {

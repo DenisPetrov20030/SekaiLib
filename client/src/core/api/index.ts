@@ -12,3 +12,5 @@ export { reportsApi } from './reports';
 export { blocksApi } from './blocks';
 export { newsApi } from './news';
 export { faqApi } from './faq';
+export { userListsApi } from './userLists';
+export { authApi } from './auth';

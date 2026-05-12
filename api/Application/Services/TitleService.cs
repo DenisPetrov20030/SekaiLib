@@ -31,7 +31,8 @@ public class TitleService : ITitleService
             Search = filter.Search,
             GenreIds = filter.GenreIds,
             Country = filter.Country,
-            Status = filter.Status
+            Status = filter.Status,
+            ExcludeGenreIds = filter.ExcludeGenreIds
         };
 
         var result = await _unitOfWork.Titles.GetCatalogAsync(catalogFilter, page, pageSize);
@@ -182,23 +183,78 @@ public class TitleService : ITitleService
 
         if (previousStatus != TitleStatus.Completed && title.Status == TitleStatus.Completed)
         {
-            var followerIds = await _unitOfWork.ReadingLists.Query()
+            var readingEntries = await _unitOfWork.ReadingLists.Query()
                 .Where(rl => rl.TitleId == titleId)
-                .Select(rl => rl.UserId)
-                .Distinct()
+                .Select(rl => new { rl.UserId, rl.Status, rl.UserListId })
                 .ToListAsync();
 
-            foreach (var followerId in followerIds.Where(id => id != userId))
+            var followerGroups = readingEntries.GroupBy(e => e.UserId);
+
+            foreach (var group in followerGroups)
             {
-                await _notifications.CreateAsync(new CreateNotificationRequest(
-                    followerId,
-                    NotificationType.TitleCompleted,
-                    "Тайтл завершено",
-                    $"{title.Name} отримав статус завершено",
-                    $"/titles/{titleId}",
-                    userId,
-                    titleId
-                ));
+                var followerId = group.Key;
+                if (followerId == userId) continue;
+
+                var follower = await _unitOfWork.Users.GetByIdAsync(followerId);
+                if (follower == null) continue;
+
+                int[] notifyStatuses = Array.Empty<int>();
+                string[] notifyUserListIds = Array.Empty<string>();
+                try
+                {
+                    if (!string.IsNullOrEmpty(follower.NotifyListStatuses))
+                        notifyStatuses = System.Text.Json.JsonSerializer.Deserialize<int[]>(follower.NotifyListStatuses) ?? Array.Empty<int>();
+                }
+                catch { }
+                try
+                {
+                    if (!string.IsNullOrEmpty(follower.NotifyUserListIds))
+                        notifyUserListIds = System.Text.Json.JsonSerializer.Deserialize<string[]>(follower.NotifyUserListIds) ?? Array.Empty<string>();
+                }
+                catch { }
+
+                var shouldNotify = false;
+                
+                // Перевіря основний флаг
+                if (!follower.NotifyTitleCompleted)
+                {
+                    continue;
+                }
+                
+                // Потім перевіряємо список читання та налаштування
+                foreach (var entry in group)
+                {
+                    if (entry.UserListId.HasValue)
+                    {
+                        var listIdStr = entry.UserListId.Value.ToString();
+                        if (notifyUserListIds.Contains(listIdStr))
+                        {
+                            shouldNotify = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (notifyStatuses.Contains((int)entry.Status))
+                        {
+                            shouldNotify = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (shouldNotify)
+                {
+                    await _notifications.CreateAsync(new CreateNotificationRequest(
+                        followerId,
+                        NotificationType.TitleCompleted,
+                        "Тайтл завершено",
+                        $"{title.Name} отримав статус завершено",
+                        $"/titles/{titleId}",
+                        userId,
+                        titleId
+                    ));
+                }
             }
         }
 

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using SekaiLib.Application.DTOs.Users;
 using SekaiLib.Application.Interfaces;
 
 namespace SekaiLib.Presentation.Controllers;
@@ -41,11 +42,33 @@ public class UserBlocksController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{userId}/message-access")]
+    public async Task<ActionResult<MessageAccessDto>> GetMessageAccess(Guid userId)
+    {
+        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var blockedByMe = await _blockService.IsBlockedAsync(currentUserId, userId);
+        var blockedByUser = await _blockService.IsBlockedAsync(userId, currentUserId);
+
+        return Ok(new MessageAccessDto(
+            CanMessage: !blockedByMe && !blockedByUser,
+            BlockedByMe: blockedByMe,
+            BlockedByUser: blockedByUser
+        ));
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Guid>>> GetBlockedUsers()
     {
         var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var result = await _blockService.GetBlockedUserIdsAsync(currentUserId);
+        return Ok(result);
+    }
+
+    [HttpGet("details")]
+    public async Task<ActionResult<IEnumerable<BlockedUserDto>>> GetBlockedUsersWithDetails()
+    {
+        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _blockService.GetBlockedUsersWithDetailsAsync(currentUserId);
         return Ok(result);
     }
 }

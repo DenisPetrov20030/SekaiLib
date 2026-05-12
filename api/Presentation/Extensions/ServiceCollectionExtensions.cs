@@ -40,6 +40,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserBlockService, UserBlockService>();
         services.AddScoped<INewsService, NewsService>();
         services.AddScoped<IFaqService, FaqService>();
+        services.AddScoped<IPasswordResetService, PasswordResetService>();
+        services.AddScoped<IAccountLinkService, AccountLinkService>();
 
         return services;
     }

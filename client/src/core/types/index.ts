@@ -8,4 +8,12 @@ export interface UserProfile {
   email: string;
   avatarUrl?: string;
   createdAt: string;
+  gender: import('./enums').Gender;
+  aboutMe?: string | null;
+  notifyListStatuses?: number[];
+  notifyUserListIds?: string[];
+  notifyTitleCompleted?: boolean;
+  notifyFriendRequests?: boolean;
+  profileVisibility?: number;
+  blockedGenres?: string[];
 }

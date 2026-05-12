@@ -34,5 +34,6 @@ public interface IUnitOfWork
     IRepository<UserBlock> UserBlocks { get; }
     IRepository<News> News { get; }
     IRepository<FaqItem> FaqItems { get; }
+    IRepository<PasswordResetToken> PasswordResetTokens { get; }
     Task<int> SaveChangesAsync();
 }

@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using System.Text.Json;
 using SekaiLib.Application.DTOs;
 using SekaiLib.Application.DTOs.Chapters;
 using SekaiLib.Application.DTOs.Titles;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Domain.Enums;
+using SekaiLib.Domain.Interfaces;
 
 namespace SekaiLib.Presentation.Controllers;
 
@@ -15,11 +17,13 @@ public class TitlesController : ControllerBase
 {
     private readonly ITitleService _titleService;
     private readonly IChapterService _chapterService;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public TitlesController(ITitleService titleService, IChapterService chapterService)
+    public TitlesController(ITitleService titleService, IChapterService chapterService, IUnitOfWork unitOfWork)
     {
         _titleService = titleService;
         _chapterService = chapterService;
+        _unitOfWork = unitOfWork;
     }
 
     [HttpGet]
@@ -31,7 +35,23 @@ public class TitlesController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        var filter = new CatalogFilterDto(search, genreIds, country, status);
+        List<Guid>? excludeGenreIds = null;
+
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user != null && !string.IsNullOrEmpty(user.BlockedGenres))
+            {
+                try
+                {
+                    excludeGenreIds = JsonSerializer.Deserialize<List<Guid>>(user.BlockedGenres);
+                }
+                catch { }
+            }
+        }
+
+        var filter = new CatalogFilterDto(search, genreIds, country, status, excludeGenreIds);
         var result = await _titleService.GetCatalogAsync(filter, page, pageSize);
         return Ok(result);
     }

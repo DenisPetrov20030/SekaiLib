@@ -15,11 +15,13 @@ public class ReviewService : IReviewService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notifications;
+    private readonly IUserBlockService _userBlockService;
 
-    public ReviewService(IUnitOfWork unitOfWork, INotificationService notifications)
+    public ReviewService(IUnitOfWork unitOfWork, INotificationService notifications, IUserBlockService userBlockService)
     {
         _unitOfWork = unitOfWork;
         _notifications = notifications;
+        _userBlockService = userBlockService;
     }
 
     public async Task<IEnumerable<ReviewResponse>> GetByTitleAsync(Guid titleId, Guid? currentUserId)
@@ -31,7 +33,7 @@ public class ReviewService : IReviewService
         return reviewsList.Select(r =>
         {
             scores.TryGetValue(r.UserId, out var score);
-            return MapToResponse(r, currentUserId, score);
+            return MapToResponse(r, currentUserId, score, null);
         });
     }
 
@@ -54,7 +56,11 @@ public class ReviewService : IReviewService
         var refreshed = await _unitOfWork.Reviews.GetByTitleIdAsync(titleId);
         var updatedReview = refreshed.FirstOrDefault(r => r.Id == reviewId) ?? target;
         var reviewerScore = await _unitOfWork.Reviews.GetReviewerScoreAsync(updatedReview.UserId);
-        return MapToResponse(updatedReview, currentUserId, reviewerScore);
+        HashSet<Guid>? blockedIds = null;
+        if (currentUserId.HasValue)
+            blockedIds = (await _userBlockService.GetBlockedUserIdsAsync(currentUserId.Value)).ToHashSet();
+
+        return MapToResponse(updatedReview, currentUserId, reviewerScore, blockedIds);
     }
 
     private async Task<bool> RecordViewAsync(Guid reviewId, Guid? userId, string ipAddress)
@@ -140,7 +146,7 @@ public class ReviewService : IReviewService
         }
 
         var reviewerScore = await _unitOfWork.Reviews.GetReviewerScoreAsync(userId);
-        return MapToResponse(createdReview, userId, reviewerScore);
+        return MapToResponse(createdReview, userId, reviewerScore, null);
     }
 
     public async Task<ReviewResponse> UpdateAsync(Guid userId, Guid reviewId, UpdateReviewRequest request)
@@ -176,7 +182,7 @@ public class ReviewService : IReviewService
 
         var updatedReview = await _unitOfWork.Reviews.GetByUserAndTitleAsync(userId, review.TitleId);
         var reviewerScore = await _unitOfWork.Reviews.GetReviewerScoreAsync(userId);
-        return MapToResponse(updatedReview!, userId, reviewerScore);
+        return MapToResponse(updatedReview!, userId, reviewerScore, null);
     }
 
     public async Task DeleteAsync(Guid userId, Guid reviewId, bool isAdmin)
@@ -228,7 +234,7 @@ public class ReviewService : IReviewService
 
         var updatedReview = await _unitOfWork.Reviews.GetByUserAndTitleAsync(review.UserId, review.TitleId);
         var reviewerScore = await _unitOfWork.Reviews.GetReviewerScoreAsync(review.UserId);
-        return MapToResponse(updatedReview!, userId, reviewerScore);
+        return MapToResponse(updatedReview!, userId, reviewerScore, null);
     }
 
     public async Task RemoveReactionAsync(Guid userId, Guid reviewId)
@@ -241,7 +247,7 @@ public class ReviewService : IReviewService
         }
     }
 
-    private static ReviewResponse MapToResponse(Review review, Guid? currentUserId, int reviewerScore = 0)
+    private ReviewResponse MapToResponse(Review review, Guid? currentUserId, int reviewerScore = 0, HashSet<Guid>? blockedIds = null)
     {
         var likesCount = review.Reactions?.Count(r => r.Type == ReactionType.Like) ?? 0;
         var dislikesCount = review.Reactions?.Count(r => r.Type == ReactionType.Dislike) ?? 0;
@@ -252,6 +258,9 @@ public class ReviewService : IReviewService
         var allComments = (review.Comments ?? new List<ReviewComment>())
             .OrderByDescending(c => c.CreatedAt)
             .ToList();
+
+        if (blockedIds is { Count: > 0 })
+            allComments = allComments.Where(c => !blockedIds.Contains(c.UserId)).ToList();
 
         ReviewCommentResponse MapComment(ReviewComment c)
         {
@@ -315,6 +324,16 @@ public class ReviewService : IReviewService
         var review = await _unitOfWork.Reviews.GetByIdAsync(reviewId);
         if (review == null)
             throw new NotFoundException("Review", reviewId);
+
+        if (request.ParentCommentId.HasValue)
+        {
+            var parent = await _unitOfWork.Reviews.GetCommentByIdAsync(request.ParentCommentId.Value);
+            if (parent == null)
+                throw new NotFoundException("ReviewComment", request.ParentCommentId.Value);
+
+            if (await _userBlockService.IsBlockedAsync(parent.UserId, userId))
+                throw new ForbiddenException("Ви не можете відповідати на коментарі цього користувача.");
+        }
 
         var comment = new ReviewComment
         {

@@ -36,6 +36,12 @@ public class TitleRepository : Repository<Title>, ITitleRepository
             );
         }
 
+        if (filter.ExcludeGenreIds is { Count: > 0 })
+        {
+            query = query.Where(t =>
+                !t.TitleGenres.Any(tg => filter.ExcludeGenreIds.Contains(tg.GenreId)));
+        }
+
         if (!string.IsNullOrWhiteSpace(filter.Country))
         {
             query = query.Where(t => t.CountryOfOrigin == filter.Country);

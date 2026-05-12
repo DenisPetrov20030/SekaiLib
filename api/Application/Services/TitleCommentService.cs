@@ -12,11 +12,13 @@ public class TitleCommentService : ITitleCommentService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notifications;
+    private readonly IUserBlockService _userBlockService;
 
-    public TitleCommentService(IUnitOfWork unitOfWork, INotificationService notifications)
+    public TitleCommentService(IUnitOfWork unitOfWork, INotificationService notifications, IUserBlockService userBlockService)
     {
         _unitOfWork = unitOfWork;
         _notifications = notifications;
+        _userBlockService = userBlockService;
     }
 
     public async Task<IEnumerable<TitleCommentResponse>> GetCommentsByTitleAsync(Guid titleId, Guid? currentUserId)
@@ -26,6 +28,12 @@ public class TitleCommentService : ITitleCommentService
             throw new NotFoundException("Title", titleId);
 
         var comments = await _unitOfWork.TitleComments.GetCommentsByTitleIdAsync(titleId);
+
+        if (currentUserId.HasValue)
+        {
+            var blockedIds = (await _userBlockService.GetBlockedUserIdsAsync(currentUserId.Value)).ToHashSet();
+            comments = comments.Where(c => !blockedIds.Contains(c.UserId)).ToList();
+        }
 
         var byId = comments.ToDictionary(c => c.Id);
         var roots = new List<TitleComment>();
@@ -77,6 +85,16 @@ public class TitleCommentService : ITitleCommentService
         var user = await _unitOfWork.Users.GetByIdAsync(userId);
         if (user == null)
             throw new UnauthorizedException();
+
+        if (request.ParentCommentId.HasValue)
+        {
+            var parent = await _unitOfWork.TitleComments.GetCommentByIdAsync(request.ParentCommentId.Value);
+            if (parent == null)
+                throw new NotFoundException("TitleComment", request.ParentCommentId.Value);
+
+            if (await _userBlockService.IsBlockedAsync(parent.UserId, userId))
+                throw new ForbiddenException("Ви не можете відповідати на коментарі цього користувача.");
+        }
 
         var comment = new TitleComment
         {
@@ -201,6 +219,8 @@ public class TitleCommentService : ITitleCommentService
             throw new NotFoundException("TitleComment", commentId);
 
         var all = await _unitOfWork.TitleComments.GetCommentsByTitleIdAsync(comment.TitleId);
+        var blockedIds = (await _userBlockService.GetBlockedUserIdsAsync(currentUserId)).ToHashSet();
+        all = all.Where(c => !blockedIds.Contains(c.UserId)).ToList();
 
         var dict = all.ToDictionary(c => c.Id);
         foreach (var c in all)

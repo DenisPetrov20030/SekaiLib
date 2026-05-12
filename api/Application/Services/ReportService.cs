@@ -38,7 +38,6 @@ public class ReportService : IReportService
         await _unitOfWork.SaveChangesAsync();
 
         var reporter = await _unitOfWork.Users.GetByIdAsync(reporterId);
-
         var targetInfo = await ResolveTargetUserAsync(report.TargetType, report.TargetId);
 
         return new ReportDto
@@ -99,7 +98,6 @@ public class ReportService : IReportService
 
         var total = await query.CountAsync();
         var reports = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-
         var targetInfos = await ResolveTargetUsersAsync(reports);
 
         return new PagedResult<ReportDto>

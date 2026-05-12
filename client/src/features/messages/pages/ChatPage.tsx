@@ -1,11 +1,12 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { messagesApi, usersApi } from '../../../core/api';
+import { blocksApi, messagesApi, usersApi } from '../../../core/api';
 import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchProfile } from '../../profile/store/profileSlice';
 import * as signalR from '@microsoft/signalr';
 import { API_BASE_URL, ACCESS_TOKEN_STORAGE_KEY, ROUTES } from '../../../core/constants';
 import { storage } from '../../../core/utils/storage';
+import { Modal } from '../../../shared/components';
 import type { ConversationDto, MessageDto } from '../../../core/types/dtos';
 
 export const ChatPage = () => {
@@ -27,6 +28,9 @@ export const ChatPage = () => {
     const [loadingMessages, setLoadingMessages] = useState(false);
     const [text, setText] = useState('');
     const [recipientInfo, setRecipientInfo] = useState<{ id?: string; username?: string; avatarUrl?: string | null }>({});
+    const [messageAccess, setMessageAccess] = useState<{ canMessage: boolean; blockedByMe: boolean; blockedByUser: boolean } | null>(null);
+    const [messageAccessLoading, setMessageAccessLoading] = useState(false);
+    const [showBlockedModal, setShowBlockedModal] = useState(false);
     const viewportRef = useRef<HTMLDivElement>(null);
     const connectionRef = useRef<signalR.HubConnection | null>(null);
 
@@ -58,6 +62,16 @@ export const ChatPage = () => {
     const openUserProfile = () => {
         if (!profileTargetUserId) return;
         navigate(ROUTES.USER_PROFILE.replace(':userId', profileTargetUserId));
+    };
+
+    const canSendMessage = !!profileTargetUserId && !messageAccessLoading && messageAccess?.canMessage !== false;
+
+    const handleSendWithBlockCheck = () => {
+        if (messageAccess && !messageAccess.canMessage) {
+            setShowBlockedModal(true);
+        } else {
+            send();
+        }
     };
 
     useEffect(() => {
@@ -96,6 +110,38 @@ export const ChatPage = () => {
             })();
         }
     }, [recipientInfo.id]);
+
+    useEffect(() => {
+        const targetUserId = profileTargetUserId;
+        if (!targetUserId || !authUser?.id || targetUserId === authUser.id) {
+            setMessageAccess(null);
+            return;
+        }
+
+        let cancelled = false;
+        (async () => {
+            try {
+                setMessageAccessLoading(true);
+                const access = await blocksApi.getMessageAccess(targetUserId);
+                if (!cancelled) {
+                    setMessageAccess(access);
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setMessageAccess(null);
+                }
+                console.error('Не вдалося перевірити доступ до повідомлень:', error);
+            } finally {
+                if (!cancelled) {
+                    setMessageAccessLoading(false);
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [profileTargetUserId, authUser?.id]);
 
     useEffect(() => {
         if (authUser?.id) {
@@ -171,7 +217,7 @@ export const ChatPage = () => {
 
     const send = async () => {
         const payload = text.trim();
-        if (!payload) return;
+        if (!payload || !canSendMessage) return;
         try {
             let msg: MessageDto;
             if (activeConversationId) {
@@ -187,7 +233,8 @@ export const ChatPage = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-6 h-[85vh] flex flex-col">
+        <>
+            <div className="max-w-7xl mx-auto px-4 py-6 h-[85vh] flex flex-col">
             {/* Header */}
             <header className="flex items-center justify-between px-6 py-4 bg-zinc-900 rounded-xl border border-white/5 mb-4">
                 <div className="flex items-center gap-4">
@@ -263,7 +310,9 @@ export const ChatPage = () => {
                         {loadingMessages ? (
                             <div className="h-full flex items-center justify-center"><div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin" /></div>
                         ) : messages.length === 0 ? (
-                            <div className="h-full flex items-center justify-center text-white/10 text-xs uppercase tracking-widest">Оберіть чат</div>
+                            <div className="h-full flex flex-col items-center justify-center gap-4 text-center">
+                                <div className="text-white/10 text-xs uppercase tracking-widest">Оберіть чат</div>
+                            </div>
                         ) : (
                             messages.map((m, idx) => {
                                 const isMe = m.senderId === authUser?.id;
@@ -332,15 +381,41 @@ export const ChatPage = () => {
 
                     {/* Input */}
                     <div className="p-4 bg-zinc-900 border-t border-white/5">
-                        <div className="max-w-4xl mx-auto flex gap-3">
-                            <input className="flex-1 bg-zinc-900 border border-white/10 rounded-xl px-5 py-3 text-sm text-white focus:border-red-600/50 outline-none" placeholder="Напишіть щось..." value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && send()} />
-                            <button className="w-12 h-12 rounded-xl bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-all disabled:opacity-50" disabled={!text.trim()} onClick={send}>
-                                <svg className="w-5 h-5 rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12l14-7-7 14-2-5-5-2z"/></svg>
-                            </button>
+                        <div className="max-w-4xl mx-auto flex flex-col gap-3">
+                            <div className="flex gap-3">
+                                <input className="flex-1 bg-zinc-900 border border-white/10 rounded-xl px-5 py-3 text-sm text-white focus:border-red-600/50 outline-none disabled:opacity-50" placeholder="Напишіть щось..." value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendWithBlockCheck()} disabled={!canSendMessage} />
+                                <button className="w-12 h-12 rounded-xl bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-all disabled:opacity-50" disabled={!text.trim() || !canSendMessage} onClick={handleSendWithBlockCheck}>
+                                    <svg className="w-5 h-5 rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12l14-7-7 14-2-5-5-2z"/></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </section>
             </div>
         </div>
+
+        <Modal
+            isOpen={showBlockedModal}
+            onClose={() => setShowBlockedModal(false)}
+            title="Не можна написати повідомлення"
+            size="sm"
+        >
+            <div className="space-y-4">
+                <p className="text-text-secondary">
+                    {messageAccess?.blockedByUser
+                        ? 'Цей користувач заблокував вас. Ви не можете написати йому повідомлення.'
+                        : 'Ви заблокували цього користувача. Спочатку розблокуйте його, щоб написати повідомлення.'}
+                </p>
+                <div className="flex gap-3 justify-end">
+                    <button
+                        className="px-4 py-2 rounded-lg bg-surface-hover text-text-primary hover:bg-surface-hover/80 transition-colors text-sm"
+                        onClick={() => setShowBlockedModal(false)}
+                    >
+                        Закрити
+                    </button>
+                </div>
+            </div>
+        </Modal>
+        </>
     );
 };

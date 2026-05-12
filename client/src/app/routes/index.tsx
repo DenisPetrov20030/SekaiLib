@@ -9,7 +9,7 @@ import { ReadingListsPage } from '../../features/reading-lists/pages';
 import { UserReadingListsPage } from '../../features/reading-lists/pages/UserReadingListsPage';
 import { UserListPage } from '../../features/userlists/pages/UserListPage';
 import { UserCustomListsPage } from '../../features/userlists/pages/UserCustomListsPage';
-import { FriendsPage, ProfilePage, UserProfilePage } from '../../features/profile/pages';
+import { FriendsPage, ProfilePage, ProfileSettingsPage, UserProfilePage } from '../../features/profile/pages';
 import { ChatPage } from '../../features/messages/pages/ChatPage';
 import { NotificationsPage } from '../../features/notifications';
 import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage, AdminBansPage, AdminReportsPage, AdminNewsPage, AdminNewsEditPage, AdminFaqPage } from '../../features/admin';
@@ -131,6 +131,14 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.PROFILE,
             element: <ProfilePage />,
+          },
+          {
+            path: ROUTES.PROFILE_SETTINGS,
+            element: <ProfileSettingsPage />,
+          },
+          {
+            path: ROUTES.PROFILE_SETTINGS_SECTION,
+            element: <ProfileSettingsPage />,
           },
           {
             path: ROUTES.MESSAGES,

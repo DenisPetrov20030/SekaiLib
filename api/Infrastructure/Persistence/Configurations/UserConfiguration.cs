@@ -18,6 +18,26 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(100);
 
+        builder.Property(u => u.Gender)
+            .IsRequired();
+
+        builder.Property(u => u.AboutMe)
+            .HasMaxLength(1000);
+
+        builder.Property(u => u.NotifyListStatuses)
+            .HasDefaultValue("0")
+            .HasMaxLength(1000);
+
+        builder.Property(u => u.NotifyUserListIds)
+            .HasDefaultValue("[]")
+            .HasMaxLength(5000);
+
+        builder.Property(u => u.NotifyTitleCompleted)
+            .HasDefaultValue(false);
+
+        builder.Property(u => u.NotifyFriendRequests)
+            .HasDefaultValue(false);
+
         builder.Property(u => u.PasswordHash)
             .IsRequired(false);
 

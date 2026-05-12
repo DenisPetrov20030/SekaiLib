@@ -7,12 +7,12 @@ import { ROUTES } from '../../../core/constants';
 import type { Genre } from '../../../core/types';
 
 interface TitleFormData {
-  title: string;
-  originalTitle: string;
+  name: string;
+  author: string;
   description: string;
-  coverUrl: string;
+  coverImageUrl: string;
   status: TitleStatus;
-  year: string;
+  countryOfOrigin: string;
   genreIds: string[];
 }
 
@@ -23,6 +23,13 @@ const statusOptions = [
   { value: String(TitleStatus.Cancelled), label: 'Випуск припинено' },
 ];
 
+const countryOptions = [
+  { value: 'Japan', label: 'Японія' },
+  { value: 'China', label: 'Китай' },
+  { value: 'Korea', label: 'Південна Корея' },
+  { value: 'Other', label: 'Інше' },
+];
+
 export function AdminTitleEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -31,12 +38,12 @@ export function AdminTitleEditPage() {
   const [genres, setGenres] = useState<Genre[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<TitleFormData>({
-    title: '',
-    originalTitle: '',
+    name: '',
+    author: '',
     description: '',
-    coverUrl: '',
+    coverImageUrl: '',
     status: TitleStatus.Ongoing,
-    year: '',
+    countryOfOrigin: 'Japan',
     genreIds: [],
   });
 
@@ -55,12 +62,12 @@ export function AdminTitleEditPage() {
         const response = await axiosInstance.get(`/titles/${titleId}`);
         const title = response.data;
         setFormData({
-          title: title.name || '',
-          originalTitle: '',
+          name: title.name || '',
+          author: title.author || '',
           description: title.description || '',
-          coverUrl: title.coverImageUrl || '',
+          coverImageUrl: title.coverImageUrl || '',
           status: title.status || TitleStatus.Ongoing,
-          year: '',
+          countryOfOrigin: title.countryOfOrigin || 'Japan',
           genreIds: title.genres?.map((g: Genre) => g.id) || [],
         });
       } catch {
@@ -80,13 +87,13 @@ export function AdminTitleEditPage() {
 
     try {
       const payload = {
-        title: formData.title,
-        originalTitle: formData.originalTitle || null,
-        description: formData.description || null,
-        coverUrl: formData.coverUrl || null,
+        name: formData.name,
+        author: formData.author,
+        description: formData.description,
+        coverImageUrl: formData.coverImageUrl || null,
         status: formData.status,
-        year: formData.year ? parseInt(formData.year) : null,
-        genreIds: formData.genreIds,
+        countryOfOrigin: formData.countryOfOrigin,
+        genreIds: formData.genreIds.map(id => id),
       };
 
       if (isCreate) {
@@ -120,15 +127,16 @@ export function AdminTitleEditPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <Input
           label="Назва твору"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           required
         />
 
         <Input
-          label="Оригінальна назва"
-          value={formData.originalTitle}
-          onChange={(e) => setFormData({ ...formData, originalTitle: e.target.value })}
+          label="Автор"
+          value={formData.author}
+          onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+          required
         />
 
         <Textarea
@@ -140,9 +148,16 @@ export function AdminTitleEditPage() {
 
         <Input
           label="URL обкладинки"
-          value={formData.coverUrl}
-          onChange={(e) => setFormData({ ...formData, coverUrl: e.target.value })}
+          value={formData.coverImageUrl}
+          onChange={(e) => setFormData({ ...formData, coverImageUrl: e.target.value })}
           type="url"
+        />
+
+        <Select
+          label="Країна походження"
+          value={formData.countryOfOrigin}
+          onChange={(v) => setFormData({ ...formData, countryOfOrigin: v })}
+          options={countryOptions}
         />
 
         <Select
@@ -150,15 +165,6 @@ export function AdminTitleEditPage() {
           value={String(formData.status)}
           onChange={(v) => setFormData({ ...formData, status: Number(v) as TitleStatus })}
           options={statusOptions}
-        />
-
-        <Input
-          label="Рік"
-          value={formData.year}
-          onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-          type="number"
-          min="1900"
-          max={new Date().getFullYear() + 1}
         />
 
         <div>

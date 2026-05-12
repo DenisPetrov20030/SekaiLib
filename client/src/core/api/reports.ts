@@ -24,7 +24,6 @@ export const reportsApi = {
   getById: (reportId: string) => axiosInstance.get<Report>(`/reports/${reportId}`),
 
   delete: (reportId: string) => axiosInstance.delete(`/reports/${reportId}`),
-
   review: (reportId: string, data: { status: ReportStatus; adminNote?: string }) =>
     axiosInstance.put<Report>(`/reports/${reportId}/review`, data),
 };

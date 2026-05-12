@@ -92,7 +92,6 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<ReviewView>? _reviewViews;
     public IRepository<ReviewView> ReviewViews =>
         _reviewViews ??= new Repository<ReviewView>(_context);
-
     private IRepository<UserBan>? _userBans;
     public IRepository<UserBan> UserBans =>
         _userBans ??= new Repository<UserBan>(_context);
@@ -112,6 +111,10 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<FaqItem>? _faqItems;
     public IRepository<FaqItem> FaqItems =>
         _faqItems ??= new Repository<FaqItem>(_context);
+
+    private IRepository<PasswordResetToken>? _passwordResetTokens;
+    public IRepository<PasswordResetToken> PasswordResetTokens =>
+        _passwordResetTokens ??= new Repository<PasswordResetToken>(_context);
 
     public async Task<int> SaveChangesAsync()
     {

@@ -1,9 +1,15 @@
 import { apiClient } from './client';
 import type { PagedResponse, TitleDto, UserProfile, UserList, FriendDto, FriendRequestDto } from '../types';
+import type { UpdateProfileRequest } from '../types';
 
 export const usersApi = {
   getCurrentProfile: async (): Promise<UserProfile> => {
     const response = await apiClient.get<UserProfile>('/users/me');
+    return response.data;
+  },
+
+  updateCurrentProfile: async (data: UpdateProfileRequest): Promise<UserProfile> => {
+    const response = await apiClient.put<UserProfile>('/users/me', data);
     return response.data;
   },
 
@@ -45,6 +51,10 @@ export const usersApi = {
 
   deleteCustomList: async (listId: string): Promise<void> => {
     await apiClient.delete(`/userlists/${listId}`);
+  },
+
+  updateGenreFilter: async (blockedGenreIds: string[]): Promise<void> => {
+    await apiClient.put('/users/me/genre-filter', { blockedGenreIds });
   },
 
   uploadAvatar: async (file: File): Promise<{ avatarUrl: string }> => {

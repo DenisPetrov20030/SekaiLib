@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SekaiLib.Application.DTOs.Users;
 using SekaiLib.Application.Exceptions;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Domain.Entities;
@@ -60,6 +61,20 @@ public class UserBlockService : IUserBlockService
         return await _unitOfWork.UserBlocks.Query()
             .Where(b => b.BlockerId == blockerId)
             .Select(b => b.BlockedUserId)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<BlockedUserDto>> GetBlockedUsersWithDetailsAsync(Guid blockerId)
+    {
+        return await _unitOfWork.UserBlocks.Query()
+            .Include(b => b.BlockedUser)
+            .Where(b => b.BlockerId == blockerId)
+            .OrderByDescending(b => b.CreatedAt)
+            .Select(b => new BlockedUserDto(
+                b.BlockedUserId,
+                b.BlockedUser.Username,
+                b.BlockedUser.AvatarUrl,
+                b.CreatedAt))
             .ToListAsync();
     }
 }

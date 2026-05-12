@@ -34,7 +34,6 @@ const BAN_DURATIONS = [
 ];
 
 const BAN_REASON = 'Блокування за скаргою';
-
 export function AdminReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
@@ -203,6 +202,11 @@ export function AdminReportsPage() {
                     Видалити
                   </button>
                 </div>
+                {report.adminNote && (
+                  <div className="mt-2 text-sm bg-surface-700 rounded px-3 py-2 text-text-secondary">
+                    Примітка адміна: {report.adminNote}
+                  </div>
+                )}
                 {reviewingId === report.id && (
                   <div className="mt-4 space-y-3 border-t border-surface-700 pt-4">
                     <input

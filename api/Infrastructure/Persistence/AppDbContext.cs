@@ -45,6 +45,7 @@ public class AppDbContext : DbContext
     public DbSet<UserBlock> UserBlocks { get; set; }
     public DbSet<News> News { get; set; }
     public DbSet<FaqItem> FaqItems { get; set; }
+    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
@@ -307,6 +308,16 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(n => n.AuthorId)
             .OnDelete(DeleteBehavior.Restrict);
+    });
+
+    modelBuilder.Entity<PasswordResetToken>(entity =>
+    {
+        entity.HasOne(t => t.User)
+            .WithMany()
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasIndex(t => t.Token).IsUnique();
     });
 }
 

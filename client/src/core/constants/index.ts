@@ -17,6 +17,8 @@ export const ROUTES = {
   READING_LISTS: '/reading-lists',
   READING_LIST_STATUS: '/reading-lists/:status',
   PROFILE: '/profile',
+  PROFILE_SETTINGS: '/profile/settings',
+  PROFILE_SETTINGS_SECTION: '/profile/settings/:section',
   USER_LIST: '/user-lists/:id',
   USER_PROFILE: '/users/:userId',
   USER_FRIENDS: '/users/:userId/friends',

@@ -56,6 +56,14 @@ export const ReaderWidth = {
 
 export type ReaderWidth = typeof ReaderWidth[keyof typeof ReaderWidth];
 
+export const Gender = {
+  NotSpecified: 0,
+  Male: 1,
+  Female: 2,
+} as const;
+
+export type Gender = typeof Gender[keyof typeof Gender];
+
 export const ReportTargetType = {
   User: 0,
   Review: 1,

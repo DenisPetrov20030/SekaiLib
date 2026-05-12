@@ -1,10 +1,10 @@
 ﻿import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { usersApi } from '../../../core/api';
+import { blocksApi, usersApi } from '../../../core/api';
 import { useAppSelector } from '../../../app/store/hooks';
 import { TitleCard } from '../../catalog/components/TitleCard';
 import { Pagination } from '../../catalog/components/Pagination';
-import { Button } from '../../../shared/components';
+import { Button, BlockButton, Modal } from '../../../shared/components';
 import { ROUTES } from '../../../core/constants';
 import type { UserProfile } from '../../../core/types';
 import type { TitleDto } from '../../../core/types/dtos';
@@ -23,11 +23,14 @@ export const UserProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [lists, setLists] = useState<UserList[]>([]);
   const [listsLoading, setListsLoading] = useState(true);
-const [listsError, setListsError] = useState<string | null>(null);
+  const [listsError, setListsError] = useState<string | null>(null);
   const [isFriend, setIsFriend] = useState(false);
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
   const [friendActionLoading, setFriendActionLoading] = useState(false);
   const [friendsCount, setFriendsCount] = useState(0);
+  const [messageAccess, setMessageAccess] = useState<{ canMessage: boolean; blockedByMe: boolean; blockedByUser: boolean } | null>(null);
+  const [messageAccessLoading, setMessageAccessLoading] = useState(false);
+  const [showBlockedModal, setShowBlockedModal] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -37,8 +40,9 @@ const [listsError, setListsError] = useState<string | null>(null);
       loadFriendshipStatus();
       loadPendingRequestStatus();
       loadFriendsCount();
+      loadMessageAccess();
     }
-  }, [userId]);
+  }, [userId, authUser?.id]);
 
   const loadProfile = async () => {
     try {
@@ -121,6 +125,32 @@ const [listsError, setListsError] = useState<string | null>(null);
     }
   };
 
+  const loadMessageAccess = async () => {
+    if (!userId || !authUser || authUser.id === userId) {
+      setMessageAccess(null);
+      return;
+    }
+
+    try {
+      setMessageAccessLoading(true);
+      const access = await blocksApi.getMessageAccess(userId);
+      setMessageAccess(access);
+    } catch (error) {
+      console.error('Не вдалося перевірити доступ до повідомлень:', error);
+      setMessageAccess(null);
+    } finally {
+      setMessageAccessLoading(false);
+    }
+  };
+
+  const handleMessageClick = () => {
+    if (messageAccess && !messageAccess.canMessage) {
+      setShowBlockedModal(true);
+    } else {
+      navigate(`/messages/to/${userId}`);
+    }
+  };
+
   const handleAddFriend = async () => {
     if (!userId) return;
 
@@ -176,7 +206,72 @@ const [listsError, setListsError] = useState<string | null>(null);
     );
   }
 
+  // Перевіряємо приватність профіля
+  const profileVisibility = (profile as any).profileVisibility ?? 0;
+  const isPrivate = profileVisibility === 3; // Private
+  const isFriendsOnly = profileVisibility === 1; // FriendsOnly
+  
+  // Якщо профіль приватний та користувач не власник
+  if (isPrivate && authUser?.id !== userId) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16">
+        <div className="bg-surface rounded-lg p-8 border border-divider text-center">
+          <div className="flex justify-center mb-4">
+            <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+              <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold text-text-primary mb-3">Профіль приватний</h1>
+          <p className="text-text-secondary mb-6">
+            Цей користувач повністю закрив доступ до свого профіля. Перегляд профілю недоступний для всіх інших користувачів.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Link to={ROUTES.CATALOG}>
+              <Button variant="secondary">Назад до каталогу</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Якщо профіль видимий тільки для друзів та користувач не власник та не друг
+  if (isFriendsOnly && authUser?.id !== userId && !isFriend) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16">
+        <div className="bg-surface rounded-lg p-8 border border-divider text-center">
+          <div className="flex justify-center mb-4">
+            <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+              <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold text-text-primary mb-3">Профіль видимий тільки для друзів</h1>
+          <p className="text-text-secondary mb-6">
+            Цей користувач закрив доступ до свого профіля для всіх крім друзів. Додайте його в друзі, щоб побачити його профіль.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              variant="primary"
+              onClick={handleAddFriend}
+              disabled={friendActionLoading || hasPendingRequest}
+            >
+              {friendActionLoading ? 'Зачекайте...' : hasPendingRequest ? 'Запит надіслано' : 'Додати в друзі'}
+            </Button>
+            <Link to={ROUTES.CATALOG}>
+              <Button variant="secondary">Назад до каталогу</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
+    <>
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="bg-surface rounded-lg p-6 mb-8">
         <div className="flex items-center justify-between gap-6">
@@ -206,7 +301,15 @@ const [listsError, setListsError] = useState<string | null>(null);
           </div>
           </div>
           <div className="shrink-0 flex items-center gap-2">
-            <Button variant="primary" onClick={() => navigate(`/messages/to/${userId}`)}>Написати повідомлення</Button>
+            <div className="flex flex-col items-end gap-2">
+              <Button
+                variant="primary"
+                onClick={handleMessageClick}
+                disabled={messageAccessLoading}
+              >
+                {messageAccessLoading ? 'Перевірка...' : 'Написати повідомлення'}
+              </Button>
+            </div>
             {authUser?.id !== userId && !isFriend && (
               <Button
                 variant="primary"
@@ -215,6 +318,10 @@ const [listsError, setListsError] = useState<string | null>(null);
               >
                 {friendActionLoading ? 'Зачекайте...' : hasPendingRequest ? 'Запит надіслано' : 'Додати в друзі'}
               </Button>
+            )}
+            {/* Block / Ignore button */}
+            {authUser?.id !== userId && (
+              <BlockButton userId={userId!} />
             )}
             <Link to={`/users/${userId}/reading-lists`}>
               <Button>Перейти до списків</Button>
@@ -291,5 +398,29 @@ const [listsError, setListsError] = useState<string | null>(null);
       )}
 
     </div>
+
+      <Modal
+        isOpen={showBlockedModal}
+        onClose={() => setShowBlockedModal(false)}
+        title="Не можна написати повідомлення"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-text-secondary">
+            {messageAccess?.blockedByUser
+              ? 'Цей користувач заблокував вас. Ви не можете написати йому повідомлення.'
+              : 'Ви заблокували цього користувача. Спочатку розблокуйте його, щоб написати повідомлення.'}
+          </p>
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="secondary"
+              onClick={() => setShowBlockedModal(false)}
+            >
+              Закрити
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };

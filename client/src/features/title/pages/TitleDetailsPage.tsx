@@ -217,7 +217,15 @@ export const TitleDetailsPage = () => {
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-900 text-primary-100">
-              {currentTitle.status}
+              {(() => {
+                const map: Record<number, string> = {
+                  0: 'Випускається',
+                  1: 'Завершений',
+                  2: 'Упинений',
+                  3: 'Випуск припинено'
+                };
+                return map[currentTitle.status] ?? currentTitle.status;
+              })()}
             </span>
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-surface-hover text-text-primary">
               {translateCountry(currentTitle.countryOfOrigin)}
