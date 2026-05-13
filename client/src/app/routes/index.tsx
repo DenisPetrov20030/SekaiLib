@@ -19,6 +19,10 @@ import { FaqPage } from '../../features/faq';
 import { ROUTES } from '../../core/constants';
 import { HomePage } from '../../features/home/pages/HomePage.tsx';
 import { NotFoundPage } from '../../features/home/pages/NotFoundPage';
+import { AboutPage } from '../../features/home/pages/AboutPage';
+import { ContactPage } from '../../features/home/pages/ContactPage';
+import { TermsPage } from '../../features/home/pages/TermsPage';
+import { PrivacyPolicyPage } from '../../features/home/pages/PrivacyPolicyPage';
 
 export const router = createBrowserRouter([
   {
@@ -72,6 +76,22 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.FAQ,
         element: <FaqPage />,
+      },
+      {
+        path: ROUTES.ABOUT,
+        element: <AboutPage />,
+      },
+      {
+        path: ROUTES.CONTACT,
+        element: <ContactPage />,
+      },
+      {
+        path: ROUTES.TERMS,
+        element: <TermsPage />,
+      },
+      {
+        path: ROUTES.PRIVACY,
+        element: <PrivacyPolicyPage />,
       },
       {
         path: ROUTES.USER_PROFILE,

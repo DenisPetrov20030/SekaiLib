@@ -43,6 +43,10 @@ export const ROUTES = {
   TEAM_DETAILS: '/teams/:teamId',
   TEAM_CREATE: '/teams/create',
   REVIEW_DETAILS: '/titles/:titleId/reviews/:reviewId',
+  ABOUT: '/about',
+  CONTACT: '/contact',
+  TERMS: '/terms',
+  PRIVACY: '/privacy',
   NOT_FOUND: '/404',
 } as const;
 
