@@ -41,6 +41,7 @@ public class FaqService : IFaqService
         {
             Id = Guid.NewGuid(),
             Question = request.Question,
+            CategoryId = request.CategoryId,
             Answer = request.Answer,
             Order = request.Order,
             IsPublished = request.IsPublished,
@@ -61,6 +62,7 @@ public class FaqService : IFaqService
 
         item.Question = request.Question;
         item.Answer = request.Answer;
+        item.CategoryId = request.CategoryId;
         item.Order = request.Order;
         item.IsPublished = request.IsPublished;
         item.UpdatedAt = DateTime.UtcNow;
@@ -85,6 +87,7 @@ public class FaqService : IFaqService
         Id = f.Id,
         Question = f.Question,
         Answer = f.Answer,
+        CategoryId = f.CategoryId,
         Order = f.Order,
         IsPublished = f.IsPublished,
         CreatedAt = f.CreatedAt,

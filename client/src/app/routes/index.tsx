@@ -15,7 +15,7 @@ import { NotificationsPage } from '../../features/notifications';
 import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage, AdminBansPage, AdminReportsPage, AdminNewsPage, AdminNewsEditPage, AdminFaqPage } from '../../features/admin';
 import { TeamsPage, TeamDetailsPage, CreateTeamPage } from '../../features/teams';
 import { NewsPage, NewsDetailsPage } from '../../features/news';
-import { FaqPage } from '../../features/faq';
+import { FaqPage, FaqCategoryPage } from '../../features/faq'; // Виправлено імпорт
 import { ROUTES } from '../../core/constants';
 import { HomePage } from '../../features/home/pages/HomePage.tsx';
 import { NotFoundPage } from '../../features/home/pages/NotFoundPage';
@@ -76,6 +76,10 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.FAQ,
         element: <FaqPage />,
+      },
+      {
+        path: '/faq/:categoryId', // Додано маршрут для категорій FAQ
+        element: <FaqCategoryPage />,
       },
       {
         path: ROUTES.ABOUT,
