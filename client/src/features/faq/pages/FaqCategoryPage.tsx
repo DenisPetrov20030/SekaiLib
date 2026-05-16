@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { faqApi } from '../../../core/api/faq';
 import type { FaqItem } from '../../../core/types/entities';
-import { FAQ_CATEGORIES } from './FaqPage'; // Імпортуємо масив категорій
+import { FAQ_CATEGORIES } from './FaqPage';
 
 export function FaqCategoryPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
@@ -11,7 +11,7 @@ export function FaqCategoryPage() {
   const [openId, setOpenId] = useState<string | null>(null);
 
   // Знаходимо назву поточної категорії для заголовка
-  const currentCategory = FAQ_CATEGORIES.find(c => c.id === categoryId);
+  const currentCategory = FAQ_CATEGORIES.find((category) => category.id === categoryId);
 
   useEffect(() => {
     setLoading(true);

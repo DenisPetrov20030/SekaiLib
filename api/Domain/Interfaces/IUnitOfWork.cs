@@ -20,6 +20,11 @@ public interface IUnitOfWork
     IRepository<RefreshToken> RefreshTokens { get; }
     IRepository<UserExternalLogin> UserExternalLogins { get; }
     IUserListRepository UserLists { get; }
+    IRepository<Collection> Collections { get; }
+    IRepository<CollectionSection> CollectionSections { get; }
+    IRepository<CollectionItem> CollectionItems { get; }
+    IRepository<CollectionReaction> CollectionReactions { get; }
+    IRepository<CollectionComment> CollectionComments { get; }
     IRepository<UserReadingProgress> UserReadingProgresses { get; }
     IRepository<Conversation> Conversations { get; }
     IRepository<ConversationParticipant> ConversationParticipants { get; }

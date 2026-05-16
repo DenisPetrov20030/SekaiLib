@@ -24,6 +24,11 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<RefreshToken> RefreshTokens { get; }
     public IRepository<UserExternalLogin> UserExternalLogins { get; }
     public IUserListRepository UserLists { get; }
+    private IRepository<Collection>? _collections;
+    private IRepository<CollectionSection>? _collectionSections;
+    private IRepository<CollectionItem>? _collectionItems;
+    private IRepository<CollectionReaction>? _collectionReactions;
+    private IRepository<CollectionComment>? _collectionComments;
     private IRepository<Conversation>? _conversations;
     private IRepository<ConversationParticipant>? _conversationParticipants;
     private IRepository<Message>? _messages;
@@ -63,6 +68,22 @@ public class UnitOfWork : IUnitOfWork
         UserExternalLogins = new Repository<UserExternalLogin>(_context);
         UserLists = userLists;
     }
+
+    public IRepository<Collection> Collections =>
+        _collections ??= new Repository<Collection>(_context);
+
+    public IRepository<CollectionSection> CollectionSections =>
+        _collectionSections ??= new Repository<CollectionSection>(_context);
+
+    public IRepository<CollectionItem> CollectionItems =>
+        _collectionItems ??= new Repository<CollectionItem>(_context);
+
+    public IRepository<CollectionReaction> CollectionReactions =>
+        _collectionReactions ??= new Repository<CollectionReaction>(_context);
+
+    public IRepository<CollectionComment> CollectionComments =>
+        _collectionComments ??= new Repository<CollectionComment>(_context);
+
     private IRepository<UserReadingProgress>? _userReadingProgresses;
     public IRepository<UserReadingProgress> UserReadingProgresses =>
         _userReadingProgresses ??= new Repository<UserReadingProgress>(_context);

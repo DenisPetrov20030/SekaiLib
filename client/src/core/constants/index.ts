@@ -9,6 +9,10 @@ export const ROUTES = {
   REGISTER: '/register',
   AUTH_CALLBACK: '/auth/callback',
   CATALOG: '/catalog',
+  ABOUT: '/about',
+  CONTACT: '/contact',
+  TERMS: '/terms',
+  PRIVACY: '/privacy',
   TITLE_DETAILS: '/titles/:id',
   TITLE_CREATE: '/titles/create',
   CHAPTER_CREATE: '/titles/:titleId/chapters/create',
@@ -28,6 +32,8 @@ export const ROUTES = {
   NEWS: '/news',
   NEWS_DETAILS: '/news/:id',
   FAQ: '/faq',
+  COLLECTIONS: '/collections',
+  COLLECTION_DETAILS: '/collections/:id',
   ADMIN: '/admin',
   ADMIN_BANS: '/admin/bans',
   ADMIN_REPORTS: '/admin/reports',
@@ -44,15 +50,6 @@ export const ROUTES = {
   TEAM_CREATE: '/teams/create',
   REVIEW_DETAILS: '/titles/:titleId/reviews/:reviewId',
   NOT_FOUND: '/404',
-  NEWS: '/news',
-  NEWS_DETAILS: '/news/:id',
-  FAQ: '/faq',
-  ADMIN_BANS: '/admin/bans',
-  ADMIN_REPORTS: '/admin/reports',
-  ADMIN_NEWS: '/admin/news',
-  ADMIN_NEWS_CREATE: '/admin/news/create',
-  ADMIN_NEWS_EDIT: '/admin/news/:id',
-  ADMIN_FAQ: '/admin/faq',
 } as const;
 
 export const PAGINATION = {
@@ -64,4 +61,3 @@ export const PAGINATION = {
 export const DEBOUNCE_DELAY = 500;
 
 export const READER_SETTINGS_STORAGE_KEY = 'readerSettings';
-

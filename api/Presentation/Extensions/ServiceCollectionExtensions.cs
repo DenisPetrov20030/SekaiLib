@@ -11,7 +11,6 @@ using SekaiLib.Domain.Interfaces.Repositories;
 using SekaiLib.Infrastructure.Auth;
 using SekaiLib.Infrastructure.Auth.Providers;
 using SekaiLib.Infrastructure.Caching;
-using SekaiLib.Infrastructure.Payments;
 using SekaiLib.Infrastructure.Persistence;
 using SekaiLib.Infrastructure.Persistence.Repositories;
 
@@ -46,8 +45,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAccountLinkService, AccountLinkService>();
         services.AddScoped<ICollectionService, CollectionService>();
         services.AddScoped<ICollectionCommentService, CollectionCommentService>();
-        services.AddScoped<IPaymentService, PaymentService>();
-        services.AddScoped<IForumService, ForumService>();
 
         return services;
     }
@@ -58,8 +55,6 @@ public static class ServiceCollectionExtensions
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
         services.Configure<OAuthOptions>(configuration.GetSection("OAuth"));
-        services.Configure<LiqPayOptions>(configuration.GetSection("LiqPay"));
-        services.AddScoped<ILiqPayService, LiqPayService>();
         services.AddMemoryCache(); // keep — still used by OAuthStateStore
         services.AddStackExchangeRedisCache(options =>
         {
