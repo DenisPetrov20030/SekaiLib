@@ -58,8 +58,6 @@ export const Header = () => {
     });
   };
 
-  const isAdmin = user?.role === UserRole.Administrator || user?.role === UserRole.Moderator;
-
   useEffect(() => {
     const auth = new URLSearchParams(location.search).get('auth');
     if (!isAuthenticated && (auth === 'login' || auth === 'register')) {

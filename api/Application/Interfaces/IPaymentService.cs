@@ -10,4 +10,6 @@ public interface IPaymentService
     Task<IEnumerable<PurchaseDto>> GetMyPurchasesAsync(Guid userId);
     Task<bool> HasChapterAccessAsync(Guid userId, Guid chapterId);
     Task SimulateSuccessAsync(string orderId);
+    /// <summary>Pulls current status directly from LiqPay API and applies it (fallback when server_url callback was missed).</summary>
+    Task<PaymentStatusDto?> RefreshFromLiqPayAsync(string orderId, Guid userId);
 }

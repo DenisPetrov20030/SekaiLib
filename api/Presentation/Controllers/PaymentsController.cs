@@ -49,6 +49,18 @@ public class PaymentsController : ControllerBase
         return Ok(status);
     }
 
+    /// <summary>Примусово перевірити статус у LiqPay (fallback, якщо server_url callback не дійшов).</summary>
+    [HttpPost("status/{orderId}/refresh")]
+    [Authorize]
+    public async Task<ActionResult<PaymentStatusDto>> RefreshStatus(string orderId)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var status = await _paymentService.RefreshFromLiqPayAsync(orderId, userId);
+        if (status == null)
+            return NotFound();
+        return Ok(status);
+    }
+
     /// <summary>Список придбаних розділів поточного користувача.</summary>
     [HttpGet("my-purchases")]
     [Authorize]

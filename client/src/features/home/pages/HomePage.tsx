@@ -15,7 +15,7 @@ import type { NewsItem } from '../../../core/types/entities';
 export const HomePage = () => {
     const navigate = useNavigate();
     const { user } = useAppSelector((state) => state.auth);
-    const [showNewsSlider, setShowNewsSlider] = useState(true);
+    const [showNewsSlider, setShowNewsSlider] = useState(false);
     const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
     const [latestChapters, setLatestChapters] = useState<any[]>([]);
     const [latestTitles, setLatestTitles] = useState<any[]>([]);
@@ -47,7 +47,15 @@ export const HomePage = () => {
                     apiClient.get('/users/reading-progress').catch(() => ({ data: [] as any[] }))
                 ]);
 
-                setNewsItems(Array.isArray(newsRes.data.data) ? newsRes.data.data : []);
+                const fetchedNews = Array.isArray(newsRes.data.data) ? newsRes.data.data : [];
+                setNewsItems(fetchedNews);
+
+                // Show banner only if user hasn't dismissed the latest news item
+                const latestId = fetchedNews[0]?.id;
+                const dismissedId = localStorage.getItem('news_banner_dismissed');
+                if (latestId && dismissedId !== latestId) {
+                    setShowNewsSlider(true);
+                }
                 setLatestChapters(chaptersRes.data);
                 setLatestTitles(titlesRes.data);
                 setReadingProgress(Array.isArray(progressRes.data) ? progressRes.data : []);
@@ -125,6 +133,10 @@ export const HomePage = () => {
 
     const handleHideNewsSlider = () => {
         setShowNewsSlider(false);
+        const latestId = newsItems[0]?.id;
+        if (latestId) {
+            localStorage.setItem('news_banner_dismissed', latestId);
+        }
     };
 
     return (

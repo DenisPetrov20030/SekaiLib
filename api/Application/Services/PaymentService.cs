@@ -155,7 +155,7 @@ public class PaymentService : IPaymentService
             .FirstOrDefaultAsync(p => p.OrderId == orderId && p.UserId == userId);
 
         return payment == null ? null : new PaymentStatusDto(
-            payment.OrderId, payment.Status, payment.Amount, payment.CreatedAt, payment.CompletedAt);
+            payment.OrderId, payment.Status.ToString(), payment.Amount, payment.CreatedAt, payment.CompletedAt);
     }
 
     public async Task<IEnumerable<PurchaseDto>> GetMyPurchasesAsync(Guid userId)
@@ -183,6 +183,75 @@ public class PaymentService : IPaymentService
     {
         return await _unitOfWork.UserPurchases.Query()
             .AnyAsync(p => p.UserId == userId && p.ChapterId == chapterId);
+    }
+
+    public async Task<PaymentStatusDto?> RefreshFromLiqPayAsync(string orderId, Guid userId)
+    {
+        var payment = await _unitOfWork.Payments.Query()
+            .FirstOrDefaultAsync(p => p.OrderId == orderId && p.UserId == userId);
+
+        if (payment == null) return null;
+
+        // Already in a terminal state — nothing to refresh
+        if (payment.Status == PaymentStatus.Success || payment.Status == PaymentStatus.Sandbox
+            || payment.Status == PaymentStatus.Failure || payment.Status == PaymentStatus.Reversed)
+        {
+            return new PaymentStatusDto(payment.OrderId, payment.Status.ToString(),
+                payment.Amount, payment.CreatedAt, payment.CompletedAt);
+        }
+
+        var cb = await _liqPay.FetchStatusAsync(orderId);
+        if (cb == null)
+        {
+            _logger.LogWarning("RefreshFromLiqPay: LiqPay API returned null for {OrderId}", orderId);
+            return new PaymentStatusDto(payment.OrderId, payment.Status.ToString(),
+                payment.Amount, payment.CreatedAt, payment.CompletedAt);
+        }
+
+        _logger.LogInformation("RefreshFromLiqPay: {OrderId} → {Status}", orderId, cb.Status);
+
+        // Reuse the same callback handler logic
+        payment.LiqPayStatus = cb.Status;
+        payment.LiqPayPaymentId = cb.PaymentId;
+
+        var isSuccess = cb.Status is "success" or "sandbox";
+        if (isSuccess)
+        {
+            payment.Status = cb.Status == "sandbox" ? PaymentStatus.Sandbox : PaymentStatus.Success;
+            payment.CompletedAt = DateTime.UtcNow;
+
+            var alreadyPurchased = await _unitOfWork.UserPurchases.Query()
+                .AnyAsync(p => p.PaymentId == payment.Id);
+
+            if (!alreadyPurchased && payment.ChapterId.HasValue)
+            {
+                await _unitOfWork.UserPurchases.AddAsync(new UserPurchase
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = payment.UserId,
+                    ChapterId = payment.ChapterId,
+                    PaymentId = payment.Id,
+                    PurchasedAt = DateTime.UtcNow
+                });
+            }
+        }
+        else if (cb.Status == "reversed")
+        {
+            payment.Status = PaymentStatus.Reversed;
+            payment.CompletedAt = DateTime.UtcNow;
+        }
+        else if (cb.Status is "error" or "failure")
+        {
+            payment.Status = PaymentStatus.Failure;
+            payment.CompletedAt = DateTime.UtcNow;
+        }
+        // "processing", "prepared", etc. → still pending, don't update status
+
+        await _unitOfWork.Payments.UpdateAsync(payment);
+        await _unitOfWork.SaveChangesAsync();
+
+        return new PaymentStatusDto(payment.OrderId, payment.Status.ToString(),
+            payment.Amount, payment.CreatedAt, payment.CompletedAt);
     }
 
     public async Task SimulateSuccessAsync(string orderId)

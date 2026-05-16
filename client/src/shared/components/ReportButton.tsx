@@ -20,6 +20,8 @@ const TARGET_NAMES: Record<ReportTargetType, string> = {
   [ReportTargetType.ChapterComment]: 'коментар',
   [ReportTargetType.Title]: 'твір',
   [ReportTargetType.TitleComment]: 'коментар',
+  [ReportTargetType.ForumPost]: 'пост',
+  [ReportTargetType.ForumThread]: 'тему',
 };
 
 interface ReportButtonProps {

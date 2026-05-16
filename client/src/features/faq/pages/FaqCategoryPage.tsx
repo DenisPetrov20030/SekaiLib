@@ -2,7 +2,22 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { faqApi } from '../../../core/api/faq';
 import type { FaqItem } from '../../../core/types/entities';
-import { FAQ_CATEGORIES } from './FaqPage';
+
+// Описуємо інтерфейс для категорії, щоб уникнути помилок типізації
+interface FaqCategory {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+}
+
+// Переносимо масив категорій сюди, оскільки в FaqPage його більше немає
+const FAQ_CATEGORIES: FaqCategory[] = [
+  { id: 'general', title: 'Загальні питання', description: 'Про платформу, її роботу та основні можливості', icon: '❓' },
+  { id: 'reading', title: 'Читання та інтерфейс', description: 'Налаштування читалки, шрифти, теми та функціонал', icon: '📖' },
+  { id: 'account', title: 'Акаунт та профіль', description: 'Керування профілем, списками читання, безпека акаунту', icon: '👤' },
+  { id: 'translations', title: 'Команди та переклади', description: 'Додавання тайтлів, розділів та робота перекладацьких команд', icon: '👥' }
+];
 
 export function FaqCategoryPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
@@ -10,15 +25,14 @@ export function FaqCategoryPage() {
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
 
-  // Знаходимо назву поточної категорії для заголовка
-  const currentCategory = FAQ_CATEGORIES.find((category) => category.id === categoryId);
+  // Знаходимо назву поточної категорії для заголовка за чітким типом
+  const currentCategory = FAQ_CATEGORIES.find((category: FaqCategory) => category.id === categoryId);
 
   useEffect(() => {
     setLoading(true);
     faqApi.getPublished()
       .then((res) => {
         // Якщо бекенд повертає всі питання, фільтруємо їх на фронтенді.
-        // (Припускаємо, що у FaqItem є поле categoryId)
         const filtered = res.data.filter((item) => {
           const typedItem = item as FaqItem & { categoryId?: string };
           return typedItem.categoryId === categoryId;

@@ -61,7 +61,7 @@ public static class ServiceCollectionExtensions
 
         services.Configure<OAuthOptions>(configuration.GetSection("OAuth"));
         services.Configure<LiqPayOptions>(configuration.GetSection("LiqPay"));
-        services.AddScoped<ILiqPayService, LiqPayService>();
+        services.AddHttpClient<ILiqPayService, LiqPayService>();
         services.AddMemoryCache(); // keep — still used by OAuthStateStore
         services.AddStackExchangeRedisCache(options =>
         {

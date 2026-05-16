@@ -10,11 +10,14 @@ namespace SekaiLib.Infrastructure.Payments;
 public class LiqPayService : ILiqPayService
 {
     private const string CheckoutUrl = "https://www.liqpay.ua/api/3/checkout";
+    private const string ApiUrl = "https://www.liqpay.ua/api/request";
     private readonly LiqPayOptions _options;
+    private readonly HttpClient _http;
 
-    public LiqPayService(IOptions<LiqPayOptions> options)
+    public LiqPayService(IOptions<LiqPayOptions> options, HttpClient http)
     {
         _options = options.Value;
+        _http = http;
     }
 
     public LiqPayCheckoutParams CreateCheckout(string orderId, decimal amount, string description)
@@ -61,6 +64,45 @@ public class LiqPayService : ILiqPayService
             Amount: root.TryGetProperty("amount", out var amt) ? amt.GetDecimal() : 0m,
             Currency: root.TryGetProperty("currency", out var cur) ? cur.GetString()! : "UAH"
         );
+    }
+
+    public async Task<LiqPayCallbackData?> FetchStatusAsync(string orderId)
+    {
+        var payload = new Dictionary<string, object>
+        {
+            ["version"] = 3,
+            ["public_key"] = _options.PublicKey,
+            ["action"] = "status",
+            ["order_id"] = orderId,
+        };
+
+        var json = JsonSerializer.Serialize(payload);
+        var data = Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
+        var signature = BuildSignature(data);
+
+        var form = new FormUrlEncodedContent([
+            new KeyValuePair<string, string>("data", data),
+            new KeyValuePair<string, string>("signature", signature),
+        ]);
+
+        var response = await _http.PostAsync(ApiUrl, form);
+        if (!response.IsSuccessStatusCode) return null;
+
+        var body = await response.Content.ReadAsStringAsync();
+        try { return ParseCallback(Convert.ToBase64String(Encoding.UTF8.GetBytes(body))); }
+        catch
+        {
+            // LiqPay returns raw JSON here, not base64
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+            return new LiqPayCallbackData(
+                OrderId: root.TryGetProperty("order_id", out var oid) ? oid.GetString()! : orderId,
+                Status: root.TryGetProperty("status", out var st) ? st.GetString()! : "error",
+                PaymentId: root.TryGetProperty("payment_id", out var pid) ? pid.GetRawText() : null,
+                Amount: root.TryGetProperty("amount", out var amt) ? amt.GetDecimal() : 0m,
+                Currency: root.TryGetProperty("currency", out var cur) ? cur.GetString()! : "UAH"
+            );
+        }
     }
 
     private string BuildSignature(string data)

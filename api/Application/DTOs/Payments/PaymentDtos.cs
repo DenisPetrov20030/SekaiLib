@@ -1,5 +1,3 @@
-using SekaiLib.Domain.Enums;
-
 namespace SekaiLib.Application.DTOs.Payments;
 
 public record CreateChapterPaymentResponse(
@@ -11,9 +9,11 @@ public record CreateChapterPaymentResponse(
     string ChapterName
 );
 
+// Status is returned as a string ("Pending", "Success", "Sandbox", "Failure", "Reversed")
+// so the frontend can compare without knowing the underlying integer values.
 public record PaymentStatusDto(
     string OrderId,
-    PaymentStatus Status,
+    string Status,
     decimal Amount,
     DateTime CreatedAt,
     DateTime? CompletedAt

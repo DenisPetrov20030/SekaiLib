@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { paymentsApi } from '../../../core/api/payments';
 import type { PaymentStatusDto } from '../../../core/api/payments';
@@ -14,10 +14,27 @@ export const PaymentResultPage = () => {
   const [status, setStatus] = useState<PaymentStatusDto | null>(null);
   const [pollCount, setPollCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isDone = (s: PaymentStatusDto) =>
     s.status === 'Success' || s.status === 'Sandbox' || s.status === 'Failure' || s.status === 'Reversed';
+
+  const handleManualRefresh = useCallback(async () => {
+    if (!orderId) return;
+    setRefreshing(true);
+    try {
+      const data = await paymentsApi.refreshStatus(orderId);
+      setStatus(data);
+      if (isDone(data) && intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    } catch {
+      setError('Не вдалося перевірити статус у LiqPay.');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [orderId]);
 
   useEffect(() => {
     if (!orderId) {
@@ -40,17 +57,36 @@ export const PaymentResultPage = () => {
       }
     };
 
-    poll();
-    intervalRef.current = setInterval(() => {
-      setPollCount(c => {
-        if (c >= MAX_POLLS) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          return c;
-        }
-        return c;
-      });
+    // Immediately try to pull status from LiqPay in case server_url callback was missed
+    paymentsApi.refreshStatus(orderId).then((data) => {
+      setStatus(data);
+      if (isDone(data)) return; // no need to start polling
+      // Start polling only if still pending
       poll();
-    }, POLL_INTERVAL);
+      intervalRef.current = setInterval(() => {
+        setPollCount(c => {
+          if (c >= MAX_POLLS) {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            return c;
+          }
+          return c;
+        });
+        poll();
+      }, POLL_INTERVAL);
+    }).catch(() => {
+      // refreshStatus failed (e.g. not authenticated) — fall back to plain polling
+      poll();
+      intervalRef.current = setInterval(() => {
+        setPollCount(c => {
+          if (c >= MAX_POLLS) {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            return c;
+          }
+          return c;
+        });
+        poll();
+      }, POLL_INTERVAL);
+    });
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -109,9 +145,16 @@ export const PaymentResultPage = () => {
               </svg>
             </div>
             <h2 className="text-xl font-bold text-text-primary mb-2">Перевіряємо оплату</h2>
-            <p className="text-text-secondary text-sm mb-6">
-              LiqPay ще обробляє платіж. Перевірте пізніше або зв'яжіться з підтримкою.
+            <p className="text-text-secondary text-sm mb-4">
+              Оновлення статусу не надійшло. Натисніть кнопку нижче щоб перевірити у LiqPay.
             </p>
+            <button
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+              className="w-full bg-yellow-600 hover:bg-yellow-500 disabled:opacity-50 text-white font-semibold rounded-xl py-3 px-6 transition-colors mb-2"
+            >
+              {refreshing ? 'Перевіряємо...' : 'Перевірити статус'}
+            </button>
           </>
         ) : (
           <>

@@ -19,4 +19,6 @@ public interface ILiqPayService
     LiqPayCheckoutParams CreateCheckout(string orderId, decimal amount, string description);
     bool VerifySignature(string data, string signature);
     LiqPayCallbackData ParseCallback(string data);
+    /// <summary>Calls LiqPay status API directly to get current payment status.</summary>
+    Task<LiqPayCallbackData?> FetchStatusAsync(string orderId);
 }
