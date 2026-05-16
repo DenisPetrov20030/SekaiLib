@@ -17,14 +17,24 @@ services:
       retries: 10
       start_period: 10s
 
+  redis:
+    image: redis:7-alpine
+    container_name: sekailib-redis
+    restart: unless-stopped
+    volumes:
+      - sekailib_redis_data:/data
+
   api:
     build: ./api
     container_name: sekailib-api
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=sekailib_db;Username=user;Password=password"
+      ConnectionStrings__Redis: "redis:6379"
     volumes:
       - uploads_data:/app/uploads
 
@@ -53,3 +63,4 @@ services:
 volumes:
   postgres_data:
   uploads_data:
+  sekailib_redis_data:

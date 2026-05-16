@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SekaiLib.Application.DTOs.Titles;
+using SekaiLib.Application.Interfaces;
 using SekaiLib.Domain.Entities;
 using SekaiLib.Domain.Interfaces;
 
@@ -12,18 +13,25 @@ namespace SekaiLib.Presentation.Controllers;
 public class GenresAdminController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IReadCacheService _readCache;
 
-    public GenresAdminController(IUnitOfWork unitOfWork)
+    public GenresAdminController(IUnitOfWork unitOfWork, IReadCacheService readCache)
     {
         _unitOfWork = unitOfWork;
+        _readCache = readCache;
     }
 
     [HttpGet]
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<GenreDto>>> GetAll()
     {
+        var cached = await _readCache.GetAsync<List<GenreDto>>("genres:all");
+        if (cached != null) return Ok(cached);
+
         var genres = await _unitOfWork.Genres.GetAllAsync();
-        return Ok(genres.Select(g => new GenreDto(g.Id, g.Name)));
+        var result = genres.Select(g => new GenreDto(g.Id, g.Name)).ToList();
+        await _readCache.SetAsync("genres:all", result, TimeSpan.FromMinutes(60));
+        return Ok(result);
     }
 
     [HttpPost]
@@ -60,6 +68,7 @@ public class GenresAdminController : ControllerBase
 
         await _unitOfWork.Genres.AddAsync(genre);
         await _unitOfWork.SaveChangesAsync();
+        await _readCache.RemoveAsync("genres:all");
 
         return CreatedAtAction(nameof(GetAll), new { id = genre.Id }, new GenreDto(genre.Id, genre.Name));
     }
@@ -79,6 +88,7 @@ public class GenresAdminController : ControllerBase
 
         await _unitOfWork.Genres.UpdateAsync(genre);
         await _unitOfWork.SaveChangesAsync();
+        await _readCache.RemoveAsync("genres:all");
 
         return Ok(new GenreDto(genre.Id, genre.Name));
     }
@@ -92,6 +102,7 @@ public class GenresAdminController : ControllerBase
 
         await _unitOfWork.Genres.DeleteAsync(genre);
         await _unitOfWork.SaveChangesAsync();
+        await _readCache.RemoveAsync("genres:all");
 
         return NoContent();
     }

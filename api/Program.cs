@@ -43,37 +43,16 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-        var pendingMigrations = context.Database.GetPendingMigrations();
-        if (pendingMigrations.Any())
-        {
-            context.Database.Migrate();
-            logger.LogInformation("Database migrations applied successfully.");
-        }
-        else
-        {
-            logger.LogInformation("No pending migrations; database is up to date.");
-            context.Database.EnsureCreated();
-        }
+        context.Database.Migrate();
+        logger.LogInformation("Database migrations applied successfully.");
 
         EnsureUserExternalLoginsTable(context, logger);
     }
     catch (Exception ex)
     {
-        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-        var log = loggerFactory.CreateLogger("DatabaseInit");
-        log.LogWarning(ex, "Failed to apply migrations, attempting to create database schema with EnsureCreated().");
-        try
-        {
-            var context = services.GetRequiredService<AppDbContext>();
-            context.Database.EnsureCreated();
-            EnsureUserExternalLoginsTable(context, log);
-            log.LogInformation("Database created with EnsureCreated().");
-        }
-        catch (Exception innerEx)
-        {
-            log.LogError(innerEx, "Failed to create database.");
-            throw;
-        }
+        var log = services.GetRequiredService<ILogger<Program>>();
+        log.LogError(ex, "Failed to apply database migrations. Startup aborted.");
+        throw;
     }
 }
 

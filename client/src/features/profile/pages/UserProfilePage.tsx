@@ -1,10 +1,10 @@
 ﻿import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { blocksApi, usersApi } from '../../../core/api';
+import { usersApi } from '../../../core/api';
 import { useAppSelector } from '../../../app/store/hooks';
 import { TitleCard } from '../../catalog/components/TitleCard';
 import { Pagination } from '../../catalog/components/Pagination';
-import { Button, BlockButton, Modal } from '../../../shared/components';
+import { Button, BlockButton } from '../../../shared/components';
 import { ROUTES } from '../../../core/constants';
 import type { UserProfile } from '../../../core/types';
 import type { TitleDto } from '../../../core/types/dtos';
@@ -23,14 +23,11 @@ export const UserProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [lists, setLists] = useState<UserList[]>([]);
   const [listsLoading, setListsLoading] = useState(true);
-  const [listsError, setListsError] = useState<string | null>(null);
+const [listsError, setListsError] = useState<string | null>(null);
   const [isFriend, setIsFriend] = useState(false);
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
   const [friendActionLoading, setFriendActionLoading] = useState(false);
   const [friendsCount, setFriendsCount] = useState(0);
-  const [messageAccess, setMessageAccess] = useState<{ canMessage: boolean; blockedByMe: boolean; blockedByUser: boolean } | null>(null);
-  const [messageAccessLoading, setMessageAccessLoading] = useState(false);
-  const [showBlockedModal, setShowBlockedModal] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -40,9 +37,8 @@ export const UserProfilePage = () => {
       loadFriendshipStatus();
       loadPendingRequestStatus();
       loadFriendsCount();
-      loadMessageAccess();
     }
-  }, [userId, authUser?.id]);
+  }, [userId]);
 
   const loadProfile = async () => {
     try {
@@ -122,32 +118,6 @@ export const UserProfilePage = () => {
       setFriendsCount(data.count);
     } catch (error) {
       console.error('Не вдалося завантажити кількість друзів:', error);
-    }
-  };
-
-  const loadMessageAccess = async () => {
-    if (!userId || !authUser || authUser.id === userId) {
-      setMessageAccess(null);
-      return;
-    }
-
-    try {
-      setMessageAccessLoading(true);
-      const access = await blocksApi.getMessageAccess(userId);
-      setMessageAccess(access);
-    } catch (error) {
-      console.error('Не вдалося перевірити доступ до повідомлень:', error);
-      setMessageAccess(null);
-    } finally {
-      setMessageAccessLoading(false);
-    }
-  };
-
-  const handleMessageClick = () => {
-    if (messageAccess && !messageAccess.canMessage) {
-      setShowBlockedModal(true);
-    } else {
-      navigate(`/messages/to/${userId}`);
     }
   };
 
@@ -271,7 +241,6 @@ export const UserProfilePage = () => {
   }
 
   return (
-    <>
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="bg-surface rounded-lg p-6 mb-8">
         <div className="flex items-center justify-between gap-6">
@@ -301,15 +270,7 @@ export const UserProfilePage = () => {
           </div>
           </div>
           <div className="shrink-0 flex items-center gap-2">
-            <div className="flex flex-col items-end gap-2">
-              <Button
-                variant="primary"
-                onClick={handleMessageClick}
-                disabled={messageAccessLoading}
-              >
-                {messageAccessLoading ? 'Перевірка...' : 'Написати повідомлення'}
-              </Button>
-            </div>
+            <Button variant="primary" onClick={() => navigate(`/messages/to/${userId}`)}>Написати повідомлення</Button>
             {authUser?.id !== userId && !isFriend && (
               <Button
                 variant="primary"
@@ -398,29 +359,5 @@ export const UserProfilePage = () => {
       )}
 
     </div>
-
-      <Modal
-        isOpen={showBlockedModal}
-        onClose={() => setShowBlockedModal(false)}
-        title="Не можна написати повідомлення"
-        size="sm"
-      >
-        <div className="space-y-4">
-          <p className="text-text-secondary">
-            {messageAccess?.blockedByUser
-              ? 'Цей користувач заблокував вас. Ви не можете написати йому повідомлення.'
-              : 'Ви заблокували цього користувача. Спочатку розблокуйте його, щоб написати повідомлення.'}
-          </p>
-          <div className="flex gap-3 justify-end">
-            <Button
-              variant="secondary"
-              onClick={() => setShowBlockedModal(false)}
-            >
-              Закрити
-            </Button>
-          </div>
-        </div>
-      </Modal>
-    </>
   );
 };

@@ -1,6 +1,5 @@
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
-import { Footer } from './Footer';
 import { useAppSelector } from '../../app/store/hooks';
 import { BannedAccessScreen } from './BannedAccessScreen';
 
@@ -20,12 +19,11 @@ export const MainLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       <Header />
-      <main className="flex-1">
+      <main>
         <Outlet />
       </main>
-      <Footer />
     </div>
   );
 };

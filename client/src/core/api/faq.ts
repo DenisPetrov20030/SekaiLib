@@ -8,10 +8,10 @@ export const faqApi = {
   getAll: () =>
     axiosInstance.get<FaqItem[]>('/faq/all'),
 
-  create: (data: { question: string; answer: string; categoryId?: string; order: number; isPublished: boolean }) =>
+  create: (data: { question: string; answer: string; order: number; isPublished: boolean }) =>
     axiosInstance.post<FaqItem>('/faq', data),
 
-  update: (id: string, data: { question: string; answer: string; categoryId?: string; order: number; isPublished: boolean }) =>
+  update: (id: string, data: { question: string; answer: string; order: number; isPublished: boolean }) =>
     axiosInstance.put<FaqItem>(`/faq/${id}`, data),
 
   delete: (id: string) =>

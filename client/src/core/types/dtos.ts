@@ -84,12 +84,6 @@ export interface BlockedUserDto {
   blockedAt: string;
 }
 
-export interface MessageAccessDto {
-  canMessage: boolean;
-  blockedByMe: boolean;
-  blockedByUser: boolean;
-}
-
 export interface PublisherDto {
   id: string;
   username: string;

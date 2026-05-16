@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { BlockedUserDto, MessageAccessDto } from '../types/dtos';
+import type { BlockedUserDto } from '../types/dtos';
 
 export const blocksApi = {
   block: (userId: string) =>
@@ -10,11 +10,6 @@ export const blocksApi = {
 
   isBlocked: (userId: string) =>
     apiClient.get<boolean>(`/blocks/${userId}/status`),
-
-  getMessageAccess: async (userId: string): Promise<MessageAccessDto> => {
-    const response = await apiClient.get<MessageAccessDto>(`/blocks/${userId}/message-access`);
-    return response.data;
-  },
 
   getBlockedUsers: () =>
     apiClient.get<string[]>('/blocks'),

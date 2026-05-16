@@ -192,7 +192,6 @@ export interface FaqItem {
   id: string;
   question: string;
   answer: string;
-  categoryId?: string;
   order: number;
   isPublished: boolean;
   createdAt: string;

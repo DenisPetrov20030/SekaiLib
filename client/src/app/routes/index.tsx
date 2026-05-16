@@ -15,14 +15,10 @@ import { NotificationsPage } from '../../features/notifications';
 import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage, AdminBansPage, AdminReportsPage, AdminNewsPage, AdminNewsEditPage, AdminFaqPage } from '../../features/admin';
 import { TeamsPage, TeamDetailsPage, CreateTeamPage } from '../../features/teams';
 import { NewsPage, NewsDetailsPage } from '../../features/news';
-import { FaqPage, FaqCategoryPage } from '../../features/faq'; // Виправлено імпорт
+import { FaqPage } from '../../features/faq';
 import { ROUTES } from '../../core/constants';
 import { HomePage } from '../../features/home/pages/HomePage.tsx';
 import { NotFoundPage } from '../../features/home/pages/NotFoundPage';
-import { AboutPage } from '../../features/home/pages/AboutPage';
-import { ContactPage } from '../../features/home/pages/ContactPage';
-import { TermsPage } from '../../features/home/pages/TermsPage';
-import { PrivacyPolicyPage } from '../../features/home/pages/PrivacyPolicyPage';
 
 export const router = createBrowserRouter([
   {
@@ -76,26 +72,6 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.FAQ,
         element: <FaqPage />,
-      },
-      {
-        path: '/faq/:categoryId', // Додано маршрут для категорій FAQ
-        element: <FaqCategoryPage />,
-      },
-      {
-        path: ROUTES.ABOUT,
-        element: <AboutPage />,
-      },
-      {
-        path: ROUTES.CONTACT,
-        element: <ContactPage />,
-      },
-      {
-        path: ROUTES.TERMS,
-        element: <TermsPage />,
-      },
-      {
-        path: ROUTES.PRIVACY,
-        element: <PrivacyPolicyPage />,
       },
       {
         path: ROUTES.USER_PROFILE,
