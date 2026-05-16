@@ -46,3 +46,8 @@ api/wwwroot/avatars/
 backups/
 !backups/.gitkeep
 
+# ASP.NET secrets — use appsettings.example.json as a template
+api/appsettings.json
+api/appsettings.*.json
+!api/appsettings.example.json
+

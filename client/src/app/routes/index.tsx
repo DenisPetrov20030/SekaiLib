@@ -12,7 +12,7 @@ import { UserCustomListsPage } from '../../features/userlists/pages/UserCustomLi
 import { FriendsPage, ProfilePage, ProfileSettingsPage, UserProfilePage } from '../../features/profile/pages';
 import { ChatPage } from '../../features/messages/pages/ChatPage';
 import { NotificationsPage } from '../../features/notifications';
-import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage, AdminBansPage, AdminReportsPage, AdminNewsPage, AdminNewsEditPage, AdminFaqPage } from '../../features/admin';
+import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage, AdminBansPage, AdminReportsPage, AdminNewsPage, AdminNewsEditPage, AdminFaqPage, AdminPaymentsPage } from '../../features/admin';
 import { ModeratorLayout, ModeratorDashboardPage, ModeratorQueuePage, ModeratorReportsPage, ModeratorUsersPage, ModeratorLogsPage, ModeratorBadWordsPage } from '../../features/moderator';
 import { TeamsPage, TeamDetailsPage, CreateTeamPage } from '../../features/teams';
 import { NewsPage, NewsDetailsPage } from '../../features/news';
@@ -246,6 +246,10 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.ADMIN_FAQ,
             element: <AdminFaqPage />,
+          },
+          {
+            path: ROUTES.ADMIN_PAYMENTS,
+            element: <AdminPaymentsPage />,
           },
         ],
       },
