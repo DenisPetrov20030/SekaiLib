@@ -101,7 +101,7 @@ export interface TitleDetailsDto {
   publisher: PublisherDto;
   genres: Array<{ id: string; name: string }>;
   translationTeams: Array<{ id: string; name: string }>;
-  chapters: Array<{ id: string; chapterNumber: number; name: string; publishedAt: string; isPremium: boolean }>;
+  chapters: Array<{ id: string; chapterNumber: number; name: string; publishedAt: string; isPremium: boolean; price?: number }>;
 }
 
 export interface CreateTitleRequest {
@@ -158,6 +158,9 @@ export interface ChapterContentDto {
   previousChapterNumber?: number;
   nextChapterNumber?: number;
   viewCount: number;
+  isPremium?: boolean;
+  isLocked?: boolean;
+  price?: number;
 }
 
 export interface CreateChapterRequest {
@@ -165,6 +168,7 @@ export interface CreateChapterRequest {
   name: string;
   content: string;
   isPremium: boolean;
+  price?: number;
   translationTeamId?: string | null;
 }
 
@@ -173,6 +177,7 @@ export interface UpdateChapterRequest {
   name: string;
   content: string;
   isPremium: boolean;
+  price?: number;
 }
 
 export interface SendMessageRequest {

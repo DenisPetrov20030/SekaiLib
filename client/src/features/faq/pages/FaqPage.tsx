@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { faqApi } from '../../../core/api/faq';
 import type { FaqItem } from '../../../core/types/entities';
 
-export const FAQ_CATEGORIES = [
+export const FAQ_CATEGORIES: { id: string; title: string }[] = [
   { id: 'general', title: 'Загальні питання' },
   { id: 'account', title: 'Обліковий запис' },
   { id: 'content', title: 'Контент і читання' },
   { id: 'community', title: 'Спільнота' },
-] as const;
+];
 
 export function FaqPage() {
   const [items, setItems] = useState<FaqItem[]>([]);

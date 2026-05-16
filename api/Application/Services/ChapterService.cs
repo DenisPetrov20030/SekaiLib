@@ -1,14 +1,15 @@
-﻿using SekaiLib.Application.DTOs.Chapters;
-using SekaiLib.Application.DTOs.Titles;
+﻿using System.Security.Cryptography;
+using System.Text;
+using Microsoft.EntityFrameworkCore;
+using SekaiLib.Application.DTOs.Chapters;
 using SekaiLib.Application.DTOs.Notifications;
-using SekaiLib.Application.Interfaces;
+using SekaiLib.Application.DTOs.Titles;
 using SekaiLib.Application.Exceptions;
-using SekaiLib.Domain.Interfaces;
+using SekaiLib.Application.Interfaces;
 using SekaiLib.Domain.Entities;
 using SekaiLib.Domain.Enums;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
+using SekaiLib.Domain.Interfaces;
+using SekaiLib.Domain.Interfaces.Repositories;
 
 namespace SekaiLib.Application.Services;
 
@@ -17,12 +18,14 @@ public class ChapterService : IChapterService
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notifications;
     private readonly IUserBlockService _userBlockService;
+    private readonly IViewTrackingService _viewTracking;
 
-    public ChapterService(IUnitOfWork unitOfWork, INotificationService notifications, IUserBlockService userBlockService)
+    public ChapterService(IUnitOfWork unitOfWork, INotificationService notifications, IUserBlockService userBlockService, IViewTrackingService viewTracking)
     {
         _unitOfWork = unitOfWork;
         _notifications = notifications;
         _userBlockService = userBlockService;
+        _viewTracking = viewTracking;
     }
 
     public async Task<IEnumerable<ChapterDto>> GetChaptersByTitleAsync(Guid titleId, Guid? teamId = null)
@@ -43,7 +46,7 @@ public class ChapterService : IChapterService
 
         return query
             .OrderBy(c => c.Number)
-            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.TranslationTeamId, c.TranslationTeam?.Name, c.TitleId, title.Name, title.CoverImageUrl, c.ViewCount));
+            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.Price, c.TranslationTeamId, c.TranslationTeam?.Name, c.TitleId, title.Name, title.CoverImageUrl, c.ViewCount));
     }
 
     public async Task<ChapterContentDto> GetChapterContentAsync(Guid chapterId)
@@ -55,16 +58,16 @@ public class ChapterService : IChapterService
         return await BuildChapterContentDto(chapter);
     }
 
-    public async Task<ChapterContentDto> GetChapterContentByNumberAsync(Guid titleId, int chapterNumber)
+    public async Task<ChapterContentDto> GetChapterContentByNumberAsync(Guid titleId, int chapterNumber, Guid? userId = null)
     {
         var chapter = await _unitOfWork.Chapters.GetByTitleAndNumberAsync(titleId, chapterNumber);
         if (chapter == null)
             throw new NotFoundException($"Chapter number {chapterNumber} for Title {titleId} was not found");
 
-        return await BuildChapterContentDto(chapter);
+        return await BuildChapterContentDto(chapter, userId);
     }
 
-    private async Task<ChapterContentDto> BuildChapterContentDto(Domain.Entities.Chapter chapter)
+    private async Task<ChapterContentDto> BuildChapterContentDto(Domain.Entities.Chapter chapter, Guid? userId = null)
     {
         var title = await _unitOfWork.Titles.GetByIdAsync(chapter.TitleId);
         if (title == null)
@@ -78,17 +81,38 @@ public class ChapterService : IChapterService
         int? previousChapterNumber = currentIndex > 0 ? allChapters[currentIndex - 1].Number : null;
         int? nextChapterNumber = currentIndex < allChapters.Count - 1 ? allChapters[currentIndex + 1].Number : null;
 
+        var isPremium = chapter.IsPremium && chapter.Price > 0;
+        var isLocked = false;
+
+        if (isPremium)
+        {
+            // Перевіряємо, чи є покупка
+            if (userId.HasValue)
+            {
+                var hasPurchase = await _unitOfWork.UserPurchases.Query()
+                    .AnyAsync(p => p.UserId == userId.Value && p.ChapterId == chapter.Id);
+                isLocked = !hasPurchase;
+            }
+            else
+            {
+                isLocked = true;
+            }
+        }
+
         return new ChapterContentDto(
             chapter.Id,
             chapter.Number,
             chapter.Name,
-            chapter.Content,
+            isLocked ? string.Empty : chapter.Content,
             chapter.PublishedAt,
             title.Id,
             title.Name,
             previousChapterNumber,
             nextChapterNumber,
-            chapter.ViewCount
+            chapter.ViewCount,
+            isPremium,
+            isLocked,
+            chapter.Price
         );
     }
 
@@ -131,6 +155,7 @@ public class ChapterService : IChapterService
             Name = request.Name,
             Content = PrepareTextForDb(request.Content),
             IsPremium = request.IsPremium,
+            Price = request.Price,
             TranslationTeamId = request.TranslationTeamId,
             PublishedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
@@ -327,8 +352,9 @@ public class ChapterService : IChapterService
 
         chapter.Number = request.ChapterNumber;
         chapter.Name = request.Name;
-        chapter.Content = PrepareTextForDb(request.Content); 
+        chapter.Content = PrepareTextForDb(request.Content);
         chapter.IsPremium = request.IsPremium;
+        chapter.Price = request.Price;
 
         await _unitOfWork.Chapters.UpdateAsync(chapter);
         await _unitOfWork.SaveChangesAsync();
@@ -663,29 +689,13 @@ public class ChapterService : IChapterService
         if (chapter == null)
             throw new NotFoundException("Chapter", chapterId);
 
-        var ipHash = HashIp(ipAddress);
-        var cooldown = DateTime.UtcNow.AddHours(-24);
-
-        bool alreadyViewed;
-        if (userId.HasValue)
-        {
-            alreadyViewed = await _unitOfWork.ChapterViews.Query()
-                .AnyAsync(v => v.ChapterId == chapterId
-                            && v.UserId == userId.Value
-                            && v.ViewedAt > cooldown);
-        }
-        else
-        {
-            alreadyViewed = await _unitOfWork.ChapterViews.Query()
-                .AnyAsync(v => v.ChapterId == chapterId
-                            && v.UserId == null
-                            && v.IpHash == ipHash
-                            && v.ViewedAt > cooldown);
-        }
-
-        if (alreadyViewed)
+        // Redis fast-path: skip DB entirely if already seen within 24h
+        var isNew = await _viewTracking.TryRecordViewAsync("chapter", chapterId, userId, ipAddress);
+        if (!isNew)
             return chapter.ViewCount;
 
+        // DB insert for analytics history
+        var ipHash = HashIp(ipAddress);
         await _unitOfWork.ChapterViews.AddAsync(new ChapterView
         {
             Id = Guid.NewGuid(),

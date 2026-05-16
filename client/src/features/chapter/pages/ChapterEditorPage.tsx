@@ -11,6 +11,7 @@ interface ChapterFormData {
   name: string;
   content: string;
   isPremium: boolean;
+  price: number;
   translationTeamId: string;
 }
 
@@ -25,6 +26,7 @@ export const ChapterEditorPage = () => {
     name: '',
     content: '',
     isPremium: false,
+    price: 0,
     translationTeamId: '',
   });
 
@@ -50,7 +52,8 @@ export const ChapterEditorPage = () => {
         chapterNumber: chapter.number ?? 1,
         name: chapter.name ?? '',
         content: chapter.content ?? '',
-        isPremium: false,
+        isPremium: chapter.isPremium ?? false,
+        price: chapter.price ?? 0,
         translationTeamId: '',
       });
     } catch (error) {
@@ -72,6 +75,7 @@ export const ChapterEditorPage = () => {
           name: formData.name,
           content: formData.content,
           isPremium: formData.isPremium,
+          price: formData.isPremium ? formData.price : 0,
         };
         await chaptersApi.update(chapterId, request);
       } else if (titleId) {
@@ -80,6 +84,7 @@ export const ChapterEditorPage = () => {
           name: formData.name,
           content: formData.content,
           isPremium: formData.isPremium,
+          price: formData.isPremium ? formData.price : 0,
           translationTeamId: formData.translationTeamId || null,
         };
         await chaptersApi.create(titleId, request);
@@ -183,6 +188,23 @@ export const ChapterEditorPage = () => {
             Преміум глава
           </label>
         </div>
+
+        {formData.isPremium && (
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">
+              Ціна (₴) <span className="text-text-muted text-xs">0 = безкоштовно</span>
+            </label>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: Math.max(0, parseFloat(e.target.value) || 0) })}
+              className="w-32 px-3 py-2 rounded-lg bg-surface-2 border border-border text-text-primary focus:outline-none focus:border-primary-500 text-sm"
+              placeholder="0"
+            />
+          </div>
+        )}
 
         <div className="flex gap-4">
           <Button type="submit" disabled={loading}>

@@ -9,6 +9,7 @@ import { chapterCommentsApi } from '../../../core/api/chapterComments';
 import type { ReviewComment } from '../../../core/types';
 import { ReactionType, ReportTargetType } from '../../../core/types/enums';
 import { IconButton, Button, ReportButton } from '../../../shared/components';
+import { PaymentGate } from '../components/PaymentGate';
 
 function formatRelativeTime(input: string | Date): string {
   const now = Date.now();
@@ -246,6 +247,27 @@ export const ReaderPage = () => {
         >
           Повернутися до твору
         </button>
+      </div>
+    );
+  }
+
+  // Показуємо платіжну заглушку якщо розділ заблоковано
+  if (currentChapter.isLocked) {
+    return (
+      <div className="min-h-screen bg-bg">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="mb-6">
+            <Link to={`/titles/${titleId}`} className="text-text-secondary hover:text-primary-400 text-sm transition-colors">
+              ← {currentChapter.titleName}
+            </Link>
+          </div>
+          <PaymentGate
+            chapterId={currentChapter.id}
+            chapterName={`Глава ${currentChapter.chapterNumber}: ${currentChapter.name}`}
+            titleName={currentChapter.titleName}
+            price={currentChapter.price ?? 0}
+          />
+        </div>
       </div>
     );
   }

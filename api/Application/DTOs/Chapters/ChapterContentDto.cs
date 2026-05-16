@@ -10,5 +10,8 @@ public record ChapterContentDto(
     string TitleName,
     int? PreviousChapterNumber,
     int? NextChapterNumber,
-    int ViewCount = 0
+    int ViewCount = 0,
+    bool IsPremium = false,
+    bool IsLocked = false,
+    decimal Price = 0m
 );

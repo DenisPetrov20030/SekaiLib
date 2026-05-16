@@ -4,6 +4,7 @@ import { useAppSelector, useAppDispatch } from '../../../app/store/hooks';
 import { fetchTitleDetails } from '../store';
 import { RatingButtons, ReviewList, AddToListButton, TitleCommentsList } from '../components';
 import { AuthDialog, Button } from '../../../shared/components';
+import { AddToCollectionButton } from '../../collections/components/AddToCollectionButton';
 import { ratingsApi } from '../../../core/api';
 import { teamsApi } from '../../../core/api/teams';
 import { UserRole } from '../../../core/types/enums';
@@ -237,8 +238,12 @@ export const TitleDetailsPage = () => {
             />
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap gap-3">
             <AddToListButton
+              titleId={currentTitle.id}
+              onLoginRequired={() => setShowLogin(true)}
+            />
+            <AddToCollectionButton
               titleId={currentTitle.id}
               onLoginRequired={() => setShowLogin(true)}
             />
@@ -426,7 +431,9 @@ export const TitleDetailsPage = () => {
                           )}
                         </div>
                         {chapter.isPremium && (
-                          <span className="text-xs text-yellow-500 font-medium">Premium</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 font-medium">
+                            {chapter.price && chapter.price > 0 ? `${chapter.price.toFixed(0)} ₴` : 'Premium'}
+                          </span>
                         )}
                       </div>
                     </Link>

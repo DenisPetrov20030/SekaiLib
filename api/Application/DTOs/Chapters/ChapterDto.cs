@@ -6,6 +6,7 @@ public record ChapterDto(
     string Name,
     DateTime PublishedAt,
     bool IsPremium,
+    decimal Price = 0m,
     Guid? TranslationTeamId = null,
     string? TranslationTeamName = null,
     Guid? TitleId = null,

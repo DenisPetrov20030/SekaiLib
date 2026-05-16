@@ -19,11 +19,6 @@ import { FaqPage } from '../../features/faq';
 import { ROUTES } from '../../core/constants';
 import { HomePage } from '../../features/home/pages/HomePage.tsx';
 import { NotFoundPage } from '../../features/home/pages/NotFoundPage';
-import { AboutPage } from '../../features/home/pages/AboutPage';
-import { ContactPage } from '../../features/home/pages/ContactPage';
-import { TermsPage } from '../../features/home/pages/TermsPage';
-import { PrivacyPolicyPage } from '../../features/home/pages/PrivacyPolicyPage';
-import { CollectionsPage, CollectionDetailsPage } from '../../features/collections';
 
 export const router = createBrowserRouter([
   {
@@ -49,22 +44,6 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.CATALOG,
         element: <CatalogPage />,
-      },
-      {
-        path: ROUTES.ABOUT,
-        element: <AboutPage />,
-      },
-      {
-        path: ROUTES.CONTACT,
-        element: <ContactPage />,
-      },
-      {
-        path: ROUTES.TERMS,
-        element: <TermsPage />,
-      },
-      {
-        path: ROUTES.PRIVACY,
-        element: <PrivacyPolicyPage />,
       },
       {
         path: ROUTES.TITLE_DETAILS,
@@ -93,14 +72,6 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.FAQ,
         element: <FaqPage />,
-      },
-      {
-        path: ROUTES.COLLECTIONS,
-        element: <CollectionsPage />,
-      },
-      {
-        path: ROUTES.COLLECTION_DETAILS,
-        element: <CollectionDetailsPage />,
       },
       {
         path: ROUTES.USER_PROFILE,

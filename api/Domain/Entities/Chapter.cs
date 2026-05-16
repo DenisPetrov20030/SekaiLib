@@ -9,6 +9,8 @@ public class Chapter
     public string Content { get; set; } = string.Empty;
     public DateTime PublishedAt { get; set; }
     public bool IsPremium { get; set; }
+    /// <summary>Ціна розділу в UAH. 0 = безкоштовно навіть якщо IsPremium = true.</summary>
+    public decimal Price { get; set; }
     public DateTime? EarlyAccessUntil { get; set; }
     public Guid? TranslationTeamId { get; set; }
     public Title Title { get; set; } = null!;

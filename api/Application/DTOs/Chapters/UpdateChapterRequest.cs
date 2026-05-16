@@ -4,5 +4,6 @@ public record UpdateChapterRequest(
     int ChapterNumber,
     string Name,
     string Content,
-    bool IsPremium
+    bool IsPremium,
+    decimal Price = 0m
 );

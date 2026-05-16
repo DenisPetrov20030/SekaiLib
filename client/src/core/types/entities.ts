@@ -39,6 +39,7 @@ export interface Chapter {
   chapterNumber: number;
   name: string;
   isPremium: boolean;
+  price?: number;
   publishedAt: string;
   translationTeamId?: string | null;
   translationTeamName?: string | null;
@@ -54,6 +55,9 @@ export interface ChapterContent {
   previousChapterNumber?: number;
   nextChapterNumber?: number;
   viewCount?: number;
+  isPremium?: boolean;
+  isLocked?: boolean;
+  price?: number;
 }
 
 export interface Genre {

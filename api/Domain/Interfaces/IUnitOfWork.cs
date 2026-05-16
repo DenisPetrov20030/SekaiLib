@@ -20,11 +20,6 @@ public interface IUnitOfWork
     IRepository<RefreshToken> RefreshTokens { get; }
     IRepository<UserExternalLogin> UserExternalLogins { get; }
     IUserListRepository UserLists { get; }
-    IRepository<Collection> Collections { get; }
-    IRepository<CollectionSection> CollectionSections { get; }
-    IRepository<CollectionItem> CollectionItems { get; }
-    IRepository<CollectionReaction> CollectionReactions { get; }
-    IRepository<CollectionComment> CollectionComments { get; }
     IRepository<UserReadingProgress> UserReadingProgresses { get; }
     IRepository<Conversation> Conversations { get; }
     IRepository<ConversationParticipant> ConversationParticipants { get; }
@@ -40,5 +35,12 @@ public interface IUnitOfWork
     IRepository<News> News { get; }
     IRepository<FaqItem> FaqItems { get; }
     IRepository<PasswordResetToken> PasswordResetTokens { get; }
+    IRepository<Collection> Collections { get; }
+    IRepository<CollectionSection> CollectionSections { get; }
+    IRepository<CollectionItem> CollectionItems { get; }
+    IRepository<CollectionReaction> CollectionReactions { get; }
+    IRepository<CollectionComment> CollectionComments { get; }
+    IRepository<Payment> Payments { get; }
+    IRepository<UserPurchase> UserPurchases { get; }
     Task<int> SaveChangesAsync();
 }

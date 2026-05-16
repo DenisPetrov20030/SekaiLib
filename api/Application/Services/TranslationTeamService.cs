@@ -270,6 +270,7 @@ public class TranslationTeamService : ITranslationTeamService
             c.Name,
             c.PublishedAt,
             c.IsPremium,
+            c.Price,
             c.TranslationTeamId,
             c.TranslationTeam?.Name,
             c.TitleId,

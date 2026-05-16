@@ -5,5 +5,6 @@ public record CreateChapterRequest(
     string Name,
     string Content,
     bool IsPremium,
+    decimal Price = 0m,
     Guid? TranslationTeamId = null
 );
