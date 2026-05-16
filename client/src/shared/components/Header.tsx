@@ -252,12 +252,20 @@ export const Header = () => {
                 >
                   Команди
                 </Link>
-                {isAdmin && (
+                {user?.role === UserRole.Moderator && (
+                  <Link
+                    to={ROUTES.MODERATOR}
+                    className="text-primary-400 hover:text-primary-300 px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Модерація
+                  </Link>
+                )}
+                {user?.role === UserRole.Administrator && (
                   <Link
                     to={ROUTES.ADMIN}
                     className="text-primary-400 hover:text-primary-300 px-3 py-2 rounded-md text-sm font-medium"
                   >
-                    Панель адміна
+                    Адмін
                   </Link>
                 )}
               </nav>

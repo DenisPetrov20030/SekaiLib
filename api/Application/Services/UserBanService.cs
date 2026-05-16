@@ -3,6 +3,7 @@ using SekaiLib.Application.DTOs.Bans;
 using SekaiLib.Application.Exceptions;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Domain.Entities;
+using SekaiLib.Domain.Enums;
 using SekaiLib.Domain.Interfaces;
 
 namespace SekaiLib.Application.Services;
@@ -10,10 +11,12 @@ namespace SekaiLib.Application.Services;
 public class UserBanService : IUserBanService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IModerationService _moderation;
 
-    public UserBanService(IUnitOfWork unitOfWork)
+    public UserBanService(IUnitOfWork unitOfWork, IModerationService moderation)
     {
         _unitOfWork = unitOfWork;
+        _moderation = moderation;
     }
 
     public async Task<UserBanDto> BanUserAsync(Guid adminId, Guid userId, BanUserRequest request)
@@ -33,6 +36,7 @@ public class UserBanService : IUserBanService
         };
 
         await _unitOfWork.UserBans.AddAsync(ban);
+        await _moderation.LogAsync(adminId, ModerationAction.BanUser, "User", userId, request.Reason);
         await _unitOfWork.SaveChangesAsync();
 
         var admin = await _unitOfWork.Users.GetByIdAsync(adminId);
@@ -59,6 +63,7 @@ public class UserBanService : IUserBanService
 
         ban.IsActive = false;
         await _unitOfWork.UserBans.UpdateAsync(ban);
+        await _moderation.LogAsync(adminId, ModerationAction.UnbanUser, "User", ban.UserId);
         await _unitOfWork.SaveChangesAsync();
     }
 

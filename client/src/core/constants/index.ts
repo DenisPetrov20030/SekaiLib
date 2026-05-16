@@ -51,6 +51,12 @@ export const ROUTES = {
   FORUM_CATEGORY: '/forum/categories/:categoryId',
   FORUM_THREAD: '/forum/threads/:threadId',
   NOT_FOUND: '/404',
+  MODERATOR: '/moderator',
+  MODERATOR_QUEUE: '/moderator/queue',
+  MODERATOR_REPORTS: '/moderator/reports',
+  MODERATOR_USERS: '/moderator/users',
+  MODERATOR_LOGS: '/moderator/logs',
+  MODERATOR_BAD_WORDS: '/moderator/bad-words',
 } as const;
 
 export const PAGINATION = {

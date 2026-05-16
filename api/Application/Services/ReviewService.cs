@@ -16,12 +16,17 @@ public class ReviewService : IReviewService
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notifications;
     private readonly IUserBlockService _userBlockService;
+    private readonly IAutoModerationService _autoMod;
+    private readonly IModerationService _moderation;
 
-    public ReviewService(IUnitOfWork unitOfWork, INotificationService notifications, IUserBlockService userBlockService)
+    public ReviewService(IUnitOfWork unitOfWork, INotificationService notifications,
+        IUserBlockService userBlockService, IAutoModerationService autoMod, IModerationService moderation)
     {
         _unitOfWork = unitOfWork;
         _notifications = notifications;
         _userBlockService = userBlockService;
+        _autoMod = autoMod;
+        _moderation = moderation;
     }
 
     public async Task<IEnumerable<ReviewResponse>> GetByTitleAsync(Guid titleId, Guid? currentUserId)
@@ -116,6 +121,9 @@ public class ReviewService : IReviewService
         if (title == null)
             throw new NotFoundException("Title", titleId);
 
+        var autoModResult = await _autoMod.CheckAsync(reviewTitle + "\n" + content);
+        var isHidden = autoModResult.IsFlagged;
+
         var review = new Review
         {
             Id = Guid.NewGuid(),
@@ -124,12 +132,18 @@ public class ReviewService : IReviewService
             ReviewTitle = reviewTitle,
             Content = content,
             Rating = Math.Clamp(request.Rating, 1, 10),
+            IsHidden = isHidden,
             ViewCount = 0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         await _unitOfWork.Reviews.AddAsync(review);
+
+        if (isHidden)
+            await _moderation.EnqueueAsync("Review", review.Id, reviewTitle + "\n" + content,
+                userId, autoModResult.Reason ?? "automod");
+
         await _unitOfWork.SaveChangesAsync();
 
         var createdReview = await _unitOfWork.Reviews.GetByUserAndTitleAsync(userId, titleId);

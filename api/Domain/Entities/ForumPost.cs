@@ -13,6 +13,8 @@ public class ForumPost
     public ForumPost? QuotedPost { get; set; }
     public bool IsEdited { get; set; }
     public bool IsDeleted { get; set; }
+    /// <summary>Set to true by auto-moderation; cleared when a moderator approves the post.</summary>
+    public bool IsHidden { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 

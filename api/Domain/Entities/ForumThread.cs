@@ -10,6 +10,8 @@ public class ForumThread
     public string Title { get; set; } = string.Empty;
     public bool IsPinned { get; set; }
     public bool IsLocked { get; set; }
+    /// <summary>Set to true by auto-moderation; cleared when a moderator approves the thread.</summary>
+    public bool IsHidden { get; set; }
     public int ViewCount { get; set; }
     public int ReplyCount { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

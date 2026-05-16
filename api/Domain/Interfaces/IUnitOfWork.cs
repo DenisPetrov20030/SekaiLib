@@ -46,5 +46,9 @@ public interface IUnitOfWork
     IRepository<ForumThread> ForumThreads { get; }
     IRepository<ForumPost> ForumPosts { get; }
     IRepository<ForumPostReaction> ForumPostReactions { get; }
+    IRepository<BadWord> BadWords { get; }
+    IRepository<ModerationQueueItem> ModerationQueueItems { get; }
+    IRepository<ModerationLog> ModerationLogs { get; }
+    IRepository<UserWarning> UserWarnings { get; }
     Task<int> SaveChangesAsync();
 }

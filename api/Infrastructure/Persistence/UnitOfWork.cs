@@ -160,6 +160,22 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<ForumPostReaction> ForumPostReactions =>
         _forumPostReactions ??= new Repository<ForumPostReaction>(_context);
 
+    private IRepository<BadWord>? _badWords;
+    public IRepository<BadWord> BadWords =>
+        _badWords ??= new Repository<BadWord>(_context);
+
+    private IRepository<ModerationQueueItem>? _moderationQueueItems;
+    public IRepository<ModerationQueueItem> ModerationQueueItems =>
+        _moderationQueueItems ??= new Repository<ModerationQueueItem>(_context);
+
+    private IRepository<ModerationLog>? _moderationLogs;
+    public IRepository<ModerationLog> ModerationLogs =>
+        _moderationLogs ??= new Repository<ModerationLog>(_context);
+
+    private IRepository<UserWarning>? _userWarnings;
+    public IRepository<UserWarning> UserWarnings =>
+        _userWarnings ??= new Repository<UserWarning>(_context);
+
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync();

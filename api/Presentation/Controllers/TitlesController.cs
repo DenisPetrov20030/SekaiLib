@@ -18,12 +18,14 @@ public class TitlesController : ControllerBase
     private readonly ITitleService _titleService;
     private readonly IChapterService _chapterService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IWebHostEnvironment _environment;
 
-    public TitlesController(ITitleService titleService, IChapterService chapterService, IUnitOfWork unitOfWork)
+    public TitlesController(ITitleService titleService, IChapterService chapterService, IUnitOfWork unitOfWork, IWebHostEnvironment environment)
     {
         _titleService = titleService;
         _chapterService = chapterService;
         _unitOfWork = unitOfWork;
+        _environment = environment;
     }
 
     [HttpGet]
@@ -73,7 +75,12 @@ public class TitlesController : ControllerBase
     [HttpGet("{titleId}/chapters/{chapterNumber:int}/content")]
     public async Task<ActionResult<ChapterContentDto>> GetChapterContent(Guid titleId, int chapterNumber)
     {
-        var chapter = await _chapterService.GetChapterContentByNumberAsync(titleId, chapterNumber);
+        Guid? userId = null;
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var parsedId))
+            userId = parsedId;
+
+        var chapter = await _chapterService.GetChapterContentByNumberAsync(titleId, chapterNumber, userId);
         return Ok(chapter);
     }
 
@@ -115,5 +122,32 @@ public class TitlesController : ControllerBase
     {
         var chapters = await _chapterService.GetLatestChaptersAsync(15);
         return Ok(chapters);
+    }
+
+    [HttpPost("upload-cover")]
+    [Authorize]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<object>> UploadCover(IFormFile cover)
+    {
+        if (cover == null || cover.Length == 0)
+            return BadRequest("Файл не вибрано.");
+
+        var allowed = new[] { ".png", ".jpg", ".jpeg", ".webp" };
+        var ext = Path.GetExtension(cover.FileName).ToLowerInvariant();
+        if (!allowed.Contains(ext))
+            return BadRequest("Підтримуються лише PNG/JPG/JPEG/WEBP.");
+
+        if (cover.Length > 5 * 1024 * 1024)
+            return BadRequest("Максимальний розмір файлу — 5 МБ.");
+
+        var uploadsRoot = Path.Combine(_environment.ContentRootPath, "uploads", "covers");
+        if (!Directory.Exists(uploadsRoot)) Directory.CreateDirectory(uploadsRoot);
+
+        var fileName = $"{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(uploadsRoot, fileName);
+        using var stream = System.IO.File.Create(filePath);
+        await cover.CopyToAsync(stream);
+
+        return Ok(new { url = $"/uploads/covers/{fileName}" });
     }
 }

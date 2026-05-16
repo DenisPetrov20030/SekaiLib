@@ -19,13 +19,16 @@ public class ChapterService : IChapterService
     private readonly INotificationService _notifications;
     private readonly IUserBlockService _userBlockService;
     private readonly IViewTrackingService _viewTracking;
+    private readonly IModerationService _moderation;
 
-    public ChapterService(IUnitOfWork unitOfWork, INotificationService notifications, IUserBlockService userBlockService, IViewTrackingService viewTracking)
+    public ChapterService(IUnitOfWork unitOfWork, INotificationService notifications,
+        IUserBlockService userBlockService, IViewTrackingService viewTracking, IModerationService moderation)
     {
         _unitOfWork = unitOfWork;
         _notifications = notifications;
         _userBlockService = userBlockService;
         _viewTracking = viewTracking;
+        _moderation = moderation;
     }
 
     public async Task<IEnumerable<ChapterDto>> GetChaptersByTitleAsync(Guid titleId, Guid? teamId = null)
@@ -147,6 +150,11 @@ public class ChapterService : IChapterService
                 { nameof(request.ChapterNumber), new[] { $"Глава з номером {request.ChapterNumber} вже існує" } }
             });
 
+        // Admin/publisher uploads are auto-approved; team member uploads go to moderation queue
+        var isTeamUpload = request.TranslationTeamId.HasValue
+            && title.PublisherId != userId
+            && user.Role < UserRole.Administrator;
+
         var chapter = new Chapter
         {
             Id = Guid.NewGuid(),
@@ -157,11 +165,16 @@ public class ChapterService : IChapterService
             IsPremium = request.IsPremium,
             Price = request.Price,
             TranslationTeamId = request.TranslationTeamId,
+            IsApproved = !isTeamUpload,
             PublishedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
         };
 
         await _unitOfWork.Chapters.AddAsync(chapter);
+
+        if (isTeamUpload)
+            await _moderation.EnqueueAsync("Chapter", chapter.Id, null, userId, "chapter_upload");
+
         await _unitOfWork.SaveChangesAsync();
 
         // ---------------------------------------------------------

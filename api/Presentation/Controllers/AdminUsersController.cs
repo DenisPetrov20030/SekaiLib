@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using SekaiLib.Application.DTOs.Bans;
+using SekaiLib.Application.DTOs.Moderation;
 using SekaiLib.Application.Interfaces;
 
 namespace SekaiLib.Presentation.Controllers;
@@ -12,10 +13,19 @@ namespace SekaiLib.Presentation.Controllers;
 public class AdminUsersController : ControllerBase
 {
     private readonly IUserBanService _banService;
+    private readonly IModerationService _moderation;
 
-    public AdminUsersController(IUserBanService banService)
+    public AdminUsersController(IUserBanService banService, IModerationService moderation)
     {
         _banService = banService;
+        _moderation = moderation;
+    }
+
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<UserSearchResultDto>>> SearchUsers([FromQuery] string q)
+    {
+        var result = await _moderation.SearchUsersAsync(q ?? string.Empty);
+        return Ok(result);
     }
 
     [HttpPost("{userId}/ban")]

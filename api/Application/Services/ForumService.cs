@@ -14,12 +14,17 @@ public class ForumService : IForumService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IViewTrackingService _viewTracking;
     private readonly IReadCacheService _readCache;
+    private readonly IAutoModerationService _autoMod;
+    private readonly IModerationService _moderation;
 
-    public ForumService(IUnitOfWork unitOfWork, IViewTrackingService viewTracking, IReadCacheService readCache)
+    public ForumService(IUnitOfWork unitOfWork, IViewTrackingService viewTracking, IReadCacheService readCache,
+        IAutoModerationService autoMod, IModerationService moderation)
     {
         _unitOfWork = unitOfWork;
         _viewTracking = viewTracking;
         _readCache = readCache;
+        _autoMod = autoMod;
+        _moderation = moderation;
     }
 
     // ------------------------------------------------------------------ Categories
@@ -181,6 +186,9 @@ public class ForumService : IForumService
 
         var now = DateTime.UtcNow;
 
+        var autoModResult = await _autoMod.CheckAsync(request.Title + "\n" + request.Content);
+        var isHidden = autoModResult.IsFlagged;
+
         var thread = new ForumThread
         {
             Id = Guid.NewGuid(),
@@ -189,6 +197,7 @@ public class ForumService : IForumService
             Title = request.Title.Trim(),
             IsPinned = false,
             IsLocked = false,
+            IsHidden = isHidden,
             ViewCount = 0,
             ReplyCount = 0,
             CreatedAt = now,
@@ -206,10 +215,16 @@ public class ForumService : IForumService
             ThreadId = thread.Id,
             AuthorId = userId,
             Content = request.Content.Trim(),
+            IsHidden = isHidden,
             CreatedAt = now
         };
 
         await _unitOfWork.ForumPosts.AddAsync(firstPost);
+
+        if (isHidden)
+            await _moderation.EnqueueAsync("ForumThread", thread.Id, request.Title + "\n" + request.Content,
+                userId, autoModResult.Reason ?? "automod");
+
         await _unitOfWork.SaveChangesAsync();
 
         // Reload with includes
@@ -240,6 +255,8 @@ public class ForumService : IForumService
 
         thread.IsPinned = pinned;
         await _unitOfWork.ForumThreads.UpdateAsync(thread);
+        await _moderation.LogAsync(adminId, pinned ? ModerationAction.PinThread : ModerationAction.PinThread,
+            "ForumThread", threadId, pinned ? "Pinned" : "Unpinned");
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -252,6 +269,8 @@ public class ForumService : IForumService
 
         thread.IsLocked = locked;
         await _unitOfWork.ForumThreads.UpdateAsync(thread);
+        await _moderation.LogAsync(adminId, locked ? ModerationAction.LockThread : ModerationAction.LockThread,
+            "ForumThread", threadId, locked ? "Locked" : "Unlocked");
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -306,12 +325,16 @@ public class ForumService : IForumService
 
         var now = DateTime.UtcNow;
 
+        var autoModResult = await _autoMod.CheckAsync(request.Content);
+        var isHidden = autoModResult.IsFlagged;
+
         var post = new ForumPost
         {
             Id = Guid.NewGuid(),
             ThreadId = threadId,
             AuthorId = userId,
             Content = request.Content.Trim(),
+            IsHidden = isHidden,
             QuotedPostId = quotedPost?.Id,
             CreatedAt = now
         };
@@ -324,6 +347,10 @@ public class ForumService : IForumService
         thread.LastPostUserId = userId;
         thread.UpdatedAt = now;
         await _unitOfWork.ForumThreads.UpdateAsync(thread);
+
+        if (isHidden)
+            await _moderation.EnqueueAsync("ForumPost", post.Id, request.Content, userId,
+                autoModResult.Reason ?? "automod");
 
         await _unitOfWork.SaveChangesAsync();
 
@@ -389,6 +416,7 @@ public class ForumService : IForumService
             await _unitOfWork.ForumThreads.UpdateAsync(thread);
         }
 
+        await _moderation.LogAsync(userId, ModerationAction.DeleteContent, "ForumPost", postId);
         await _unitOfWork.SaveChangesAsync();
     }
 

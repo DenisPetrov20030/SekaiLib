@@ -57,6 +57,10 @@ public class AppDbContext : DbContext
     public DbSet<ForumThread> ForumThreads { get; set; }
     public DbSet<ForumPost> ForumPosts { get; set; }
     public DbSet<ForumPostReaction> ForumPostReactions { get; set; }
+    public DbSet<BadWord> BadWords { get; set; }
+    public DbSet<ModerationQueueItem> ModerationQueueItems { get; set; }
+    public DbSet<ModerationLog> ModerationLogs { get; set; }
+    public DbSet<UserWarning> UserWarnings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
@@ -484,6 +488,50 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(r => r.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<BadWord>(entity =>
+    {
+        entity.HasIndex(w => w.Word).IsUnique();
+
+        entity.HasOne(w => w.AddedBy)
+            .WithMany()
+            .HasForeignKey(w => w.AddedById)
+            .OnDelete(DeleteBehavior.Restrict);
+    });
+
+    modelBuilder.Entity<ModerationQueueItem>(entity =>
+    {
+        entity.HasOne(q => q.Author)
+            .WithMany()
+            .HasForeignKey(q => q.AuthorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(q => q.ReviewedBy)
+            .WithMany()
+            .HasForeignKey(q => q.ReviewedById)
+            .OnDelete(DeleteBehavior.SetNull);
+    });
+
+    modelBuilder.Entity<ModerationLog>(entity =>
+    {
+        entity.HasOne(l => l.Moderator)
+            .WithMany()
+            .HasForeignKey(l => l.ModeratorId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<UserWarning>(entity =>
+    {
+        entity.HasOne(w => w.User)
+            .WithMany()
+            .HasForeignKey(w => w.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(w => w.IssuedBy)
+            .WithMany()
+            .HasForeignKey(w => w.IssuedById)
+            .OnDelete(DeleteBehavior.Restrict);
     });
 }
 

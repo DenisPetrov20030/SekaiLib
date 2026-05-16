@@ -60,14 +60,14 @@ export function AddToListButton({ titleId, onLoginRequired, alwaysVisible = fals
   }, [loadData]);
 
   const allOptions = [
-    { value: String(ReadingStatus.Reading), label: '📖 Читаю' },
-    { value: String(ReadingStatus.Planned), label: '⏳ Заплановано' },
-    { value: String(ReadingStatus.Completed), label: '✅ Завершено' },
-    { value: String(ReadingStatus.Dropped), label: '❌ Припинено' },
-    { value: String(ReadingStatus.Favorite), label: '⭐ Улюблені' },
+    { value: String(ReadingStatus.Reading), label: 'Читаю' },
+    { value: String(ReadingStatus.Planned), label: 'Заплановано' },
+    { value: String(ReadingStatus.Completed), label: 'Завершено' },
+    { value: String(ReadingStatus.Dropped), label: 'Припинено' },
+    { value: String(ReadingStatus.Favorite), label: 'Улюблені' },
     ...customLists.map(list => ({
       value: list.id,
-      label: `📃 ${list.name}`
+      label: list.name
     }))
   ];
 

@@ -6,6 +6,8 @@ import { TitleStatus } from '../../../core/types/enums';
 import type { CreateTitleRequest } from '../../../core/types';
 import type { Genre } from '../../../core/api/genres';
 
+type CoverTab = 'upload' | 'url';
+
 export const CreateTitlePage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -19,6 +21,10 @@ export const CreateTitlePage = () => {
     countryOfOrigin: '',
     genreIds: [] as string[],
   });
+
+  const [coverTab, setCoverTab] = useState<CoverTab>('upload');
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
   useEffect(() => {
     loadGenres();
@@ -57,6 +63,23 @@ export const CreateTitlePage = () => {
     }));
   };
 
+  const handleCoverFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCoverUploading(true);
+    try {
+      const url = await titlesApi.uploadCover(file);
+      setFormData((prev) => ({ ...prev, coverImageUrl: url }));
+      setCoverPreview(url);
+    } catch (error) {
+      console.error('Failed to upload cover:', error);
+      alert('Помилка при завантаженні обкладинки');
+    } finally {
+      setCoverUploading(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-text-primary mb-8">Опублікувати твір</h1>
@@ -87,12 +110,73 @@ export const CreateTitlePage = () => {
           placeholder="Опишіть сюжет твору"
         />
 
-        <Input
-          label="URL обкладинки"
-          value={formData.coverImageUrl}
-          onChange={(e) => setFormData({ ...formData, coverImageUrl: e.target.value })}
-          placeholder="https://example.com/cover.jpg"
-        />
+        <div>
+          <label className="block text-sm font-medium text-text-secondary mb-2">
+            Обкладинка
+          </label>
+
+          {coverPreview && (
+            <div className="mb-3">
+              <img
+                src={coverPreview}
+                alt="Попередній перегляд обкладинки"
+                className="h-24 w-16 object-cover rounded-md border border-surface-hover"
+              />
+            </div>
+          )}
+
+          <div className="flex gap-2 mb-3">
+            <button
+              type="button"
+              onClick={() => setCoverTab('upload')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                coverTab === 'upload'
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-surface text-text-secondary hover:bg-surface-hover'
+              }`}
+            >
+              Завантажити
+            </button>
+            <button
+              type="button"
+              onClick={() => setCoverTab('url')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                coverTab === 'url'
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-surface text-text-secondary hover:bg-surface-hover'
+              }`}
+            >
+              URL
+            </button>
+          </div>
+
+          {coverTab === 'upload' && (
+            <div className="space-y-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleCoverFileChange}
+                disabled={coverUploading}
+                className="block w-full text-sm text-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary-500 file:text-white hover:file:bg-primary-600 disabled:opacity-50"
+              />
+              {coverUploading && (
+                <p className="text-sm text-text-secondary">Завантаження...</p>
+              )}
+            </div>
+          )}
+
+          {coverTab === 'url' && (
+            <Input
+              label=""
+              value={formData.coverImageUrl}
+              onChange={(e) => {
+                setFormData({ ...formData, coverImageUrl: e.target.value });
+                setCoverPreview(e.target.value || null);
+              }}
+              placeholder="https://example.com/cover.jpg"
+            />
+          )}
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-1">

@@ -13,6 +13,7 @@ import { FriendsPage, ProfilePage, ProfileSettingsPage, UserProfilePage } from '
 import { ChatPage } from '../../features/messages/pages/ChatPage';
 import { NotificationsPage } from '../../features/notifications';
 import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, GenresManagementPage, AdminBansPage, AdminReportsPage, AdminNewsPage, AdminNewsEditPage, AdminFaqPage } from '../../features/admin';
+import { ModeratorLayout, ModeratorDashboardPage, ModeratorQueuePage, ModeratorReportsPage, ModeratorUsersPage, ModeratorLogsPage, ModeratorBadWordsPage } from '../../features/moderator';
 import { TeamsPage, TeamDetailsPage, CreateTeamPage } from '../../features/teams';
 import { NewsPage, NewsDetailsPage } from '../../features/news';
 import { FaqPage } from '../../features/faq';
@@ -188,6 +189,20 @@ export const router = createBrowserRouter([
       {
         element: <AdminRoute />,
         children: [
+          // ── Moderator panel ───────────────────────────────────────────────
+          {
+            path: ROUTES.MODERATOR,
+            element: <ModeratorLayout />,
+            children: [
+              { index: true, element: <ModeratorDashboardPage /> },
+              { path: 'queue', element: <ModeratorQueuePage /> },
+              { path: 'reports', element: <ModeratorReportsPage /> },
+              { path: 'users', element: <ModeratorUsersPage /> },
+              { path: 'logs', element: <ModeratorLogsPage /> },
+              { path: 'bad-words', element: <ModeratorBadWordsPage /> },
+            ],
+          },
+          // ── Admin panel ───────────────────────────────────────────────────
           {
             path: ROUTES.ADMIN,
             element: <AdminDashboard />,

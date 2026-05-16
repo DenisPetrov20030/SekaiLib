@@ -11,6 +11,8 @@ public class Chapter
     public bool IsPremium { get; set; }
     /// <summary>Ціна розділу в UAH. 0 = безкоштовно навіть якщо IsPremium = true.</summary>
     public decimal Price { get; set; }
+    /// <summary>True for admin-uploaded chapters. False for team uploads until a moderator approves.</summary>
+    public bool IsApproved { get; set; } = true;
     public DateTime? EarlyAccessUntil { get; set; }
     public Guid? TranslationTeamId { get; set; }
     public Title Title { get; set; } = null!;

@@ -20,3 +20,6 @@ export { paymentsApi } from './payments';
 export type { CreateChapterPaymentResponse, PaymentStatusDto, PurchaseDto } from './payments';
 export { forumApi } from './forum';
 export type { ForumCategoryDto, ForumThreadDto, ForumThreadDetailsDto, ForumPostDto } from './forum';
+export { moderationApi } from './moderation';
+export type { ModerationQueueItemDto, ModerationLogDto, ModerationStatsDto, UserWarningDto, BadWordDto, UserSearchResultDto } from './moderation';
+export { ModerationStatus, ModerationAction } from './moderation';

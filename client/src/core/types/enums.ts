@@ -71,6 +71,8 @@ export const ReportTargetType = {
   ChapterComment: 3,
   Title: 4,
   TitleComment: 5,
+  ForumPost: 6,
+  ForumThread: 7,
 } as const;
 
 export type ReportTargetType = typeof ReportTargetType[keyof typeof ReportTargetType];
