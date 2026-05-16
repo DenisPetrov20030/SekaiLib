@@ -15,16 +15,4 @@ export const titlesApi = {
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/titles/${id}`);
   },
-
-  uploadCover: async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('cover', file);
-    const response = await apiClient.post<{ coverImageUrl: string }>(`/titles/cover`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-
-    return response.data.coverImageUrl;
-  },
 };

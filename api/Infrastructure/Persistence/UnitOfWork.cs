@@ -128,13 +128,13 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<CollectionItem> CollectionItems =>
         _collectionItems ??= new Repository<CollectionItem>(_context);
 
-    private IRepository<CollectionReaction>? _collectionReactions;
-    public IRepository<CollectionReaction> CollectionReactions =>
-        _collectionReactions ??= new Repository<CollectionReaction>(_context);
-
     private IRepository<CollectionComment>? _collectionComments;
     public IRepository<CollectionComment> CollectionComments =>
         _collectionComments ??= new Repository<CollectionComment>(_context);
+
+    private IRepository<CollectionReaction>? _collectionReactions;
+    public IRepository<CollectionReaction> CollectionReactions =>
+        _collectionReactions ??= new Repository<CollectionReaction>(_context);
 
     private IRepository<Payment>? _payments;
     public IRepository<Payment> Payments =>
@@ -143,6 +143,22 @@ public class UnitOfWork : IUnitOfWork
     private IRepository<UserPurchase>? _userPurchases;
     public IRepository<UserPurchase> UserPurchases =>
         _userPurchases ??= new Repository<UserPurchase>(_context);
+
+    private IRepository<ForumCategory>? _forumCategories;
+    public IRepository<ForumCategory> ForumCategories =>
+        _forumCategories ??= new Repository<ForumCategory>(_context);
+
+    private IRepository<ForumThread>? _forumThreads;
+    public IRepository<ForumThread> ForumThreads =>
+        _forumThreads ??= new Repository<ForumThread>(_context);
+
+    private IRepository<ForumPost>? _forumPosts;
+    public IRepository<ForumPost> ForumPosts =>
+        _forumPosts ??= new Repository<ForumPost>(_context);
+
+    private IRepository<ForumPostReaction>? _forumPostReactions;
+    public IRepository<ForumPostReaction> ForumPostReactions =>
+        _forumPostReactions ??= new Repository<ForumPostReaction>(_context);
 
     public async Task<int> SaveChangesAsync()
     {

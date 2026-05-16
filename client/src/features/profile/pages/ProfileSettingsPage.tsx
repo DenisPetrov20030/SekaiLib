@@ -3,7 +3,8 @@ import { Link, NavLink, useParams } from 'react-router-dom';
 import { useAppDispatch } from '../../../app/store/hooks';
 import { getCurrentUser } from '../../auth/store/authSlice';
 import { fetchProfile } from '../store/profileSlice';
-import { usersApi, userListsApi, blocksApi, authApi, genresApi } from '../../../core/api';
+import { usersApi, userListsApi, blocksApi, authApi, genresApi, paymentsApi } from '../../../core/api';
+import type { PurchaseDto } from '../../../core/api';
 import type { UserProfile } from '../../../core/types';
 import { Gender } from '../../../core/types';
 import type { UserListDto } from '../../../core/api/userLists';
@@ -102,6 +103,10 @@ export const ProfileSettingsPage = () => {
   const [loadingLinked, setLoadingLinked] = useState(false);
   const [unlinkingProvider, setUnlinkingProvider] = useState<string | null>(null);
 
+  // Платежі
+  const [purchases, setPurchases] = useState<PurchaseDto[]>([]);
+  const [loadingPurchases, setLoadingPurchases] = useState(false);
+
   const currentSectionKey = section ?? 'profile';
   const currentSection = PROFILE_SETTINGS_SECTIONS.find((item) => item.key === currentSectionKey) ?? null;
 
@@ -196,6 +201,9 @@ export const ProfileSettingsPage = () => {
     }
     if (currentSectionKey === 'security-login') {
       loadLinkedAccounts();
+    }
+    if (currentSectionKey === 'payments') {
+      loadPurchases();
     }
   }, [currentSectionKey]);
 
@@ -408,6 +416,19 @@ export const ProfileSettingsPage = () => {
       setPasswordError(getErrorMessage(err, 'Не вдалося відв\'язати акаунт.'));
     } finally {
       setUnlinkingProvider(null);
+    }
+  };
+
+  const loadPurchases = async () => {
+    if (loadingPurchases) return;
+    try {
+      setLoadingPurchases(true);
+      const data = await paymentsApi.getMyPurchases();
+      setPurchases(data);
+    } catch (err) {
+      console.error('Не вдалося завантажити покупки:', err);
+    } finally {
+      setLoadingPurchases(false);
     }
   };
 
@@ -920,6 +941,42 @@ export const ProfileSettingsPage = () => {
                   </div>
                 )}
               </div>
+            </div>
+          ) : currentSectionKey === 'payments' ? (
+            <div className="space-y-6">
+              <div className="mb-2">
+                <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Вкладка профілю</p>
+                <h2 className="text-2xl font-bold text-text-primary mt-2">Платежі та покупки</h2>
+              </div>
+              {loadingPurchases ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
+                </div>
+              ) : purchases.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-divider bg-surface-hover/40 px-6 py-10 text-center">
+                  <svg className="w-10 h-10 text-text-muted mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                  <p className="text-text-secondary">У вас поки немає придбаних розділів.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {purchases.map((p) => (
+                    <div key={p.id} className="flex items-center justify-between rounded-lg border border-divider bg-surface-hover/40 px-4 py-3">
+                      <div>
+                        <p className="text-text-primary font-medium text-sm">
+                          {p.titleName ?? 'Невідомий твір'} — Глава {p.chapterNumber}
+                        </p>
+                        <p className="text-text-muted text-xs mt-0.5">
+                          {p.chapterName ?? ''} · {new Date(p.purchasedAt).toLocaleDateString('uk-UA')}
+                        </p>
+                      </div>
+                      <span className="text-primary-400 font-semibold text-sm">{p.amountPaid.toFixed(2)} ₴</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : currentSection ? (
             <>

@@ -17,11 +17,13 @@ export const Header = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [activeTab, setActiveTab] = useState<'all' | 'chapters' | 'replies' | 'personal' | 'other'>('all');
   const [currentTime, setCurrentTime] = useState(Date.now());
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   const connectionRef = useRef<signalR.HubConnection | null>(null);
 
   useEffect(() => {
@@ -165,6 +167,17 @@ export const Header = () => {
     return () => window.removeEventListener('mousedown', handler);
   }, [isNotificationsOpen]);
 
+  useEffect(() => {
+    if (!isProfileOpen) return;
+    const handler = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', handler);
+    return () => window.removeEventListener('mousedown', handler);
+  }, [isProfileOpen]);
+
   const handleMarkRead = async (notification: NotificationDto) => {
     try {
       await notificationsApi.markRead(notification.id);
@@ -222,10 +235,10 @@ export const Header = () => {
                   Каталог
                 </Link>
                 <Link
-                  to={ROUTES.TEAMS}
+                  to={ROUTES.FORUM}
                   className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
                 >
-                  Команди
+                  Форум
                 </Link>
                 <Link
                   to={ROUTES.NEWS}
@@ -234,21 +247,11 @@ export const Header = () => {
                   Новини
                 </Link>
                 <Link
-                  to={ROUTES.FAQ}
+                  to={ROUTES.TEAMS}
                   className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
                 >
-                  FAQ
+                  Команди
                 </Link>
-                {isAuthenticated && (
-                  <>
-                    <Link
-                      to={ROUTES.READING_LISTS}
-                      className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
-                    >
-                      Мої списки
-                    </Link>
-                  </>
-                )}
                 {isAdmin && (
                   <Link
                     to={ROUTES.ADMIN}
@@ -385,18 +388,44 @@ export const Header = () => {
                       </div>
                     )}
                   </div>
-                  <Link
-                    to={ROUTES.PROFILE}
-                    className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    {user?.username}
-                  </Link>
-                  <button
-                    onClick={logout}
-                    className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Вийти
-                  </button>
+                  {/* Profile dropdown */}
+                  <div className="relative" ref={profileDropdownRef}>
+                    <button
+                      onClick={() => setIsProfileOpen(prev => !prev)}
+                      className="flex items-center gap-1.5 text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      {user?.username}
+                      <svg className={`w-3.5 h-3.5 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {isProfileOpen && (
+                      <div className="absolute right-0 mt-2 w-44 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden py-1">
+                        {([
+                          { label: 'Профіль', route: ROUTES.PROFILE },
+                          { label: 'Мої списки', route: ROUTES.READING_LISTS },
+                          { label: 'Колекції', route: ROUTES.COLLECTIONS },
+                          { label: 'Налаштування', route: ROUTES.PROFILE_SETTINGS },
+                        ] as const).map(({ label, route }) => (
+                          <button
+                            key={route}
+                            onClick={() => { setIsProfileOpen(false); navigate(route); }}
+                            className="w-full text-left px-4 py-2.5 text-sm text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+                          >
+                            {label}
+                          </button>
+                        ))}
+                        <div className="my-1 border-t border-white/10" />
+                        <button
+                          onClick={() => { setIsProfileOpen(false); logout(); }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-white/60 hover:text-red-400 hover:bg-white/5 transition-colors"
+                        >
+                          Вийти
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>

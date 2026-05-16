@@ -16,6 +16,9 @@ import { AdminRoute, AdminDashboard, AdminTitlesPage, AdminTitleEditPage, Genres
 import { TeamsPage, TeamDetailsPage, CreateTeamPage } from '../../features/teams';
 import { NewsPage, NewsDetailsPage } from '../../features/news';
 import { FaqPage } from '../../features/faq';
+import { CollectionsPage, CollectionDetailsPage } from '../../features/collections';
+import { PaymentResultPage } from '../../features/payments/pages/PaymentResultPage';
+import { ForumPage, ForumCategoryPage, ForumThreadPage } from '../../features/forum';
 import { ROUTES } from '../../core/constants';
 import { HomePage } from '../../features/home/pages/HomePage.tsx';
 import { NotFoundPage } from '../../features/home/pages/NotFoundPage';
@@ -74,6 +77,18 @@ export const router = createBrowserRouter([
         element: <FaqPage />,
       },
       {
+        path: ROUTES.COLLECTIONS,
+        element: <CollectionsPage />,
+      },
+      {
+        path: ROUTES.COLLECTION_DETAILS,
+        element: <CollectionDetailsPage />,
+      },
+      {
+        path: ROUTES.USER_COLLECTIONS,
+        element: <CollectionsPage />,
+      },
+      {
         path: ROUTES.USER_PROFILE,
         element: <UserProfilePage />,
       },
@@ -92,6 +107,22 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.READER,
         element: <ReaderPage />,
+      },
+      {
+        path: ROUTES.PAYMENT_RESULT,
+        element: <PaymentResultPage />,
+      },
+      {
+        path: ROUTES.FORUM,
+        element: <ForumPage />,
+      },
+      {
+        path: ROUTES.FORUM_CATEGORY,
+        element: <ForumCategoryPage />,
+      },
+      {
+        path: ROUTES.FORUM_THREAD,
+        element: <ForumThreadPage />,
       },
       {
         path: ROUTES.NOT_FOUND,

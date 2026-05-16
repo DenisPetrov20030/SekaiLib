@@ -38,9 +38,13 @@ public interface IUnitOfWork
     IRepository<Collection> Collections { get; }
     IRepository<CollectionSection> CollectionSections { get; }
     IRepository<CollectionItem> CollectionItems { get; }
-    IRepository<CollectionReaction> CollectionReactions { get; }
     IRepository<CollectionComment> CollectionComments { get; }
+    IRepository<CollectionReaction> CollectionReactions { get; }
     IRepository<Payment> Payments { get; }
     IRepository<UserPurchase> UserPurchases { get; }
+    IRepository<ForumCategory> ForumCategories { get; }
+    IRepository<ForumThread> ForumThreads { get; }
+    IRepository<ForumPost> ForumPosts { get; }
+    IRepository<ForumPostReaction> ForumPostReactions { get; }
     Task<int> SaveChangesAsync();
 }

@@ -2,59 +2,22 @@ import { Link } from 'react-router-dom';
 import { ROUTES } from '../../core/constants';
 
 export const Footer = () => {
-  const currentYear = new Date().getFullYear();
-
-  const footerLinks = [
-    { label: 'Про нас', path: ROUTES.ABOUT },
-    { label: 'Контакти', path: ROUTES.CONTACT },
-    { label: 'Умови використання', path: ROUTES.TERMS },
-    { label: 'Політика конфіденційності', path: ROUTES.PRIVACY },
-  ];
-
   return (
-    <footer className="border-t border-white/10 bg-surface">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          {/* Brand Section */}
-          <div className="flex flex-col">
-            <Link to={ROUTES.HOME} className="text-2xl font-bold text-primary-500 w-fit">
-              SekaiLib
-            </Link>
-            <p className="text-text-secondary text-sm mt-2">
-              Платформа для читання та обговорення манги та ранобе
-            </p>
-          </div>
+    <footer className="border-t border-border mt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span className="text-lg font-bold text-primary-500">SekaiLib</span>
 
-          {/* Links Section */}
-          <div className="flex flex-col">
-            <h3 className="text-text-primary font-semibold mb-4">Посилання</h3>
-            <nav className="flex flex-col items-start space-y-2">
-              {footerLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className="text-text-secondary hover:text-primary-400 transition-colors text-sm"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
+          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-text-muted">
+            <Link to={ROUTES.CATALOG} className="hover:text-text-secondary transition-colors">Каталог</Link>
+            <Link to={ROUTES.COLLECTIONS} className="hover:text-text-secondary transition-colors">Колекції</Link>
+            <Link to={ROUTES.TEAMS} className="hover:text-text-secondary transition-colors">Команди</Link>
+            <Link to={ROUTES.NEWS} className="hover:text-text-secondary transition-colors">Новини</Link>
+            <Link to={ROUTES.FAQ} className="hover:text-text-secondary transition-colors">FAQ</Link>
+          </nav>
 
-          {/* Info Section */}
-          <div className="flex flex-col">
-            <h3 className="text-text-primary font-semibold mb-4">Інформація</h3>
-            <div className="space-y-2 text-sm text-text-secondary">
-              <p>Email: support@sekailib.com</p>
-              <p>© {currentYear} SekaiLib. Всі права захищені.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Line */}
-        <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center text-text-secondary text-xs">
-          <p className="mt-4 md:mt-0">
-            SekaiLib © {currentYear}
+          <p className="text-xs text-text-muted">
+            © {new Date().getFullYear()} SekaiLib
           </p>
         </div>
       </div>

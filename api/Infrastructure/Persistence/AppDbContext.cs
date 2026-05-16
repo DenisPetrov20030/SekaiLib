@@ -46,6 +46,17 @@ public class AppDbContext : DbContext
     public DbSet<News> News { get; set; }
     public DbSet<FaqItem> FaqItems { get; set; }
     public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+    public DbSet<Collection> Collections { get; set; }
+    public DbSet<CollectionSection> CollectionSections { get; set; }
+    public DbSet<CollectionItem> CollectionItems { get; set; }
+    public DbSet<CollectionComment> CollectionComments { get; set; }
+    public DbSet<CollectionReaction> CollectionReactions { get; set; }
+    public DbSet<Payment> Payments { get; set; }
+    public DbSet<UserPurchase> UserPurchases { get; set; }
+    public DbSet<ForumCategory> ForumCategories { get; set; }
+    public DbSet<ForumThread> ForumThreads { get; set; }
+    public DbSet<ForumPost> ForumPosts { get; set; }
+    public DbSet<ForumPostReaction> ForumPostReactions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
@@ -318,6 +329,161 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         entity.HasIndex(t => t.Token).IsUnique();
+    });
+
+    modelBuilder.Entity<Collection>(entity =>
+    {
+        entity.HasOne(c => c.Author)
+            .WithMany()
+            .HasForeignKey(c => c.AuthorId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<CollectionSection>(entity =>
+    {
+        entity.HasOne(s => s.Collection)
+            .WithMany(c => c.Sections)
+            .HasForeignKey(s => s.CollectionId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<CollectionItem>(entity =>
+    {
+        entity.HasOne(i => i.Collection)
+            .WithMany(c => c.Items)
+            .HasForeignKey(i => i.CollectionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(i => i.Section)
+            .WithMany(s => s.Items)
+            .HasForeignKey(i => i.SectionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        entity.HasOne(i => i.Title)
+            .WithMany()
+            .HasForeignKey(i => i.TitleId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<CollectionComment>(entity =>
+    {
+        entity.HasOne(c => c.Collection)
+            .WithMany(col => col.Comments)
+            .HasForeignKey(c => c.CollectionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(c => c.Author)
+            .WithMany()
+            .HasForeignKey(c => c.AuthorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(c => c.ParentComment)
+            .WithMany(p => p.Replies)
+            .HasForeignKey(c => c.ParentCommentId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<CollectionReaction>(entity =>
+    {
+        entity.HasKey(r => new { r.CollectionId, r.UserId });
+
+        entity.HasOne(r => r.Collection)
+            .WithMany(c => c.Reactions)
+            .HasForeignKey(r => r.CollectionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(r => r.User)
+            .WithMany()
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<Payment>(entity =>
+    {
+        entity.HasIndex(p => p.OrderId).IsUnique();
+
+        entity.Property(p => p.Amount).HasColumnType("decimal(18,2)");
+
+        entity.HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(p => p.Chapter)
+            .WithMany()
+            .HasForeignKey(p => p.ChapterId)
+            .OnDelete(DeleteBehavior.SetNull);
+    });
+
+    modelBuilder.Entity<UserPurchase>(entity =>
+    {
+        entity.HasIndex(p => new { p.UserId, p.ChapterId }).IsUnique();
+
+        entity.HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(p => p.Chapter)
+            .WithMany()
+            .HasForeignKey(p => p.ChapterId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        entity.HasOne(p => p.Payment)
+            .WithMany()
+            .HasForeignKey(p => p.PaymentId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<ForumThread>(entity =>
+    {
+        entity.HasOne(t => t.Category)
+            .WithMany(c => c.Threads)
+            .HasForeignKey(t => t.CategoryId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(t => t.Author)
+            .WithMany()
+            .HasForeignKey(t => t.AuthorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(t => t.LastPostUser)
+            .WithMany()
+            .HasForeignKey(t => t.LastPostUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+    });
+
+    modelBuilder.Entity<ForumPost>(entity =>
+    {
+        entity.HasOne(p => p.Thread)
+            .WithMany(t => t.Posts)
+            .HasForeignKey(p => p.ThreadId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(p => p.Author)
+            .WithMany()
+            .HasForeignKey(p => p.AuthorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(p => p.QuotedPost)
+            .WithMany()
+            .HasForeignKey(p => p.QuotedPostId)
+            .OnDelete(DeleteBehavior.SetNull);
+    });
+
+    modelBuilder.Entity<ForumPostReaction>(entity =>
+    {
+        entity.HasKey(r => new { r.PostId, r.UserId });
+
+        entity.HasOne(r => r.Post)
+            .WithMany(p => p.Reactions)
+            .HasForeignKey(r => r.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        entity.HasOne(r => r.User)
+            .WithMany()
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     });
 }
 

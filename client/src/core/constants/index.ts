@@ -28,8 +28,6 @@ export const ROUTES = {
   NEWS: '/news',
   NEWS_DETAILS: '/news/:id',
   FAQ: '/faq',
-  COLLECTIONS: '/collections',
-  COLLECTION_DETAILS: '/collections/:id',
   ADMIN: '/admin',
   ADMIN_BANS: '/admin/bans',
   ADMIN_REPORTS: '/admin/reports',
@@ -45,11 +43,14 @@ export const ROUTES = {
   TEAM_DETAILS: '/teams/:teamId',
   TEAM_CREATE: '/teams/create',
   REVIEW_DETAILS: '/titles/:titleId/reviews/:reviewId',
+  COLLECTIONS: '/collections',
+  COLLECTION_DETAILS: '/collections/:id',
+  USER_COLLECTIONS: '/users/:userId/collections',
+  PAYMENT_RESULT: '/payment/result',
+  FORUM: '/forum',
+  FORUM_CATEGORY: '/forum/categories/:categoryId',
+  FORUM_THREAD: '/forum/threads/:threadId',
   NOT_FOUND: '/404',
-  ABOUT: '/about',
-  CONTACT: '/contact',
-  TERMS: '/terms',
-  PRIVACY: '/privacy',
 } as const;
 
 export const PAGINATION = {
