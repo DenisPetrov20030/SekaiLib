@@ -117,13 +117,11 @@ export const ForumCategoryPage = () => {
 
       {/* Threads list */}
       {loading ? (
-        <div className="space-y-2">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-surface-1 border border-border rounded-xl p-4 animate-pulse">
-              <div className="h-4 bg-surface-2 rounded w-3/4 mb-2" />
-              <div className="h-3 bg-surface-2 rounded w-1/2" />
-            </div>
-          ))}
+        <div className="text-center py-12 text-text-secondary">
+          <div className="inline-block">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+          </div>
+          <p className="mt-3">Завантаження тредів...</p>
         </div>
       ) : threads.length === 0 ? (
         <div className="text-center py-16 text-text-secondary">

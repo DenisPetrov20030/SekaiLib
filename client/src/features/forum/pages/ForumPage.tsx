@@ -79,13 +79,11 @@ export const ForumPage = () => {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="bg-surface-1 border border-border rounded-xl p-5 animate-pulse">
-              <div className="h-5 bg-surface-2 rounded w-40 mb-2" />
-              <div className="h-4 bg-surface-2 rounded w-64" />
-            </div>
-          ))}
+        <div className="text-center py-8 text-text-secondary">
+          <div className="inline-block">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+          </div>
+          <p className="mt-3">Завантаження форуму...</p>
         </div>
       ) : categories.length === 0 ? (
         <div className="text-center py-16 text-text-secondary">

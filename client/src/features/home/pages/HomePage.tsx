@@ -372,19 +372,19 @@ export const HomePage = () => {
                         <Link
                             key={title.id}
                             to={ROUTES.TITLE_DETAILS.replace(':id', title.id)}
-                            className="group text-left block"
+                            className="group text-left block focus:outline-none focus:ring-0 flex flex-col"
                         >
-                            <div className="overflow-hidden rounded-lg mb-2 shadow-lg h-60 flex items-center justify-center bg-gray-900">
+                            <div className="overflow-hidden rounded-lg mb-2 shadow-lg h-60 bg-transparent w-full">
                                 <img
                                     src={title.coverImageUrl}
                                     alt={title.name}
-                                    className="max-w-full max-h-full object-contain group-hover:brightness-75 transition duration-300"
+                                    className="w-full h-full object-contain object-left p-2 group-hover:brightness-90 transition duration-300"
                                 />
                             </div>
-                            <h3 className="text-sm font-bold truncate group-hover:text-orange-500 transition text-white">
+                            <h3 className="text-sm font-bold truncate group-hover:text-orange-500 transition text-white w-full">
                                 {title.name}
                             </h3>
-                            <p className="text-xs text-gray-500">{title.author}</p>
+                            <p className="text-xs text-gray-500 line-clamp-1">{title.author}</p>
                             <p className="text-xs text-gray-400">
                                 {getCountryLabel(title.countryOfOrigin)}
                             </p>

@@ -389,12 +389,17 @@ export const TeamDetailsPage = () => {
         <div className="mb-6">
           <div className="relative mb-4 h-36 md:h-44 w-full overflow-hidden rounded-xl border border-border shadow-sm">
             <img
-              src={coverImageSrc}
+              src={DEFAULT_TEAM_COVER}
               alt={`${team.name} cover`}
               className="h-full w-full object-cover"
-              onError={(e) => {
-                if (e.currentTarget.src.endsWith(DEFAULT_TEAM_COVER)) return;
-                e.currentTarget.src = DEFAULT_TEAM_COVER;
+              onLoad={(e) => {
+                if (coverImageSrc && !coverImageSrc.endsWith(DEFAULT_TEAM_COVER)) {
+                  const img = new Image();
+                  img.src = coverImageSrc;
+                  img.onload = () => {
+                    e.currentTarget.src = coverImageSrc;
+                  };
+                }
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
@@ -402,12 +407,17 @@ export const TeamDetailsPage = () => {
 
           <div className="flex items-start gap-6">
             <img
-              src={team.avatarUrl || DEFAULT_TEAM_AVATAR}
+              src={DEFAULT_TEAM_AVATAR}
               alt={team.name}
               className="w-28 h-40 md:w-32 md:h-44 rounded-xl object-cover flex-shrink-0 border border-border shadow-sm"
-              onError={(e) => {
-                if (e.currentTarget.src.endsWith(DEFAULT_TEAM_AVATAR)) return;
-                e.currentTarget.src = DEFAULT_TEAM_AVATAR;
+              onLoad={(e) => {
+                if (team.avatarUrl) {
+                  const img = new Image();
+                  img.src = team.avatarUrl;
+                  img.onload = () => {
+                    e.currentTarget.src = team.avatarUrl!;
+                  };
+                }
               }}
             />
             <div className="flex-1 min-w-0">

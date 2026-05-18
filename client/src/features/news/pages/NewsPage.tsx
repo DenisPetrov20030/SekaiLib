@@ -119,118 +119,119 @@ export function NewsPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="rounded-2xl border border-surface-700/80 bg-gradient-to-b from-surface-900 via-surface-850 to-surface-900 p-4 sm:p-6 lg:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-        <h1 className="text-3xl font-bold text-text-primary mb-8">Новини</h1>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-text-primary mb-2">Новини</h1>
+        <p className="text-text-secondary">Найові оновлення та важливі оголошення</p>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6">
-          <div>
-            {pageItems.length === 0 ? (
-              <p className="text-text-muted text-center py-12">За обраними фільтрами новин немає</p>
-            ) : (
-              <div className="space-y-4">
-                {pageItems.map((item) => {
-                  const type = detectNewsType(item);
-                  return (
-                    <Link
-                      key={item.id}
-                      to={ROUTES.NEWS_DETAILS.replace(':id', item.id)}
-                      className="block bg-surface-800/80 border border-surface-700/80 rounded-lg p-5 hover:bg-surface-700/90 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-primary-400 mb-1">{type}</p>
-                          <h2 className="text-xl font-semibold text-text-primary mb-2 hover:text-primary-400 transition-colors">
-                            {item.title}
-                          </h2>
-                          <p className="text-text-muted text-sm line-clamp-3">
-                            {item.content.replace(/<[^>]*>/g, '').slice(0, 220)}...
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 mt-4 text-sm text-text-muted">
-                        <span>{item.authorUsername}</span>
-                        <span>·</span>
-                        <span>{new Date(item.createdAt).toLocaleDateString('uk-UA')}</span>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Main content */}
+        <div className="flex-1">
+          {pageItems.length === 0 ? (
+            <p className="text-text-muted text-center py-12">За обраними фільтрами новин немає</p>
+          ) : (
+            <div className="space-y-4">
+              {pageItems.map((item) => {
+                const type = detectNewsType(item);
+                return (
+                  <Link
+                    key={item.id}
+                    to={ROUTES.NEWS_DETAILS.replace(':id', item.id)}
+                    className="block bg-surface rounded-xl p-5 hover:bg-surface-hover transition-colors border border-surface-hover/50"
+                  >
+                    <div>
+                      <p className="text-xs font-semibold text-primary-400 uppercase tracking-wide mb-1">{type}</p>
+                      <h2 className="text-lg font-bold text-text-primary mb-2 hover:text-primary-400 transition-colors line-clamp-2">
+                        {item.title}
+                      </h2>
+                      <p className="text-text-secondary text-sm line-clamp-2">
+                        {item.content.replace(/<[^>]*>/g, '').slice(0, 220)}...
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 mt-3 text-xs text-text-muted">
+                      <span>{item.authorUsername}</span>
+                      <span>·</span>
+                      <span>{new Date(item.createdAt).toLocaleDateString('uk-UA')}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
 
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={safePage === 1}
-                  className="px-3 py-2 rounded-lg bg-surface-800 text-text-primary disabled:opacity-40 hover:bg-surface-700 transition-colors"
-                >
-                  ←
-                </button>
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={safePage === 1}
+                className="px-3 py-2 rounded-lg bg-surface-hover text-text-primary disabled:opacity-40 hover:bg-surface-hover transition-colors"
+              >
+                ←
+              </button>
 
-                {pageButtons.map((btn, index) =>
-                  btn === '...' ? (
-                    <span key={`dots-${index}`} className="px-2 text-text-muted">...</span>
-                  ) : (
-                    <button
-                      key={btn}
-                      onClick={() => setPage(btn)}
-                      className={`min-w-9 px-3 py-2 rounded-lg transition-colors ${
-                        safePage === btn
-                          ? 'bg-primary-600 text-white'
-                          : 'bg-surface-800 text-text-primary hover:bg-surface-700'
-                      }`}
-                    >
-                      {btn}
-                    </button>
-                  )
-                )}
+              {pageButtons.map((btn, index) =>
+                btn === '...' ? (
+                  <span key={`dots-${index}`} className="px-2 text-text-muted">...</span>
+                ) : (
+                  <button
+                    key={btn}
+                    onClick={() => setPage(btn)}
+                    className={`min-w-9 px-3 py-2 rounded-lg transition-colors ${
+                      safePage === btn
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-surface-hover text-text-primary hover:bg-surface-hover'
+                    }`}
+                  >
+                    {btn}
+                  </button>
+                )
+              )}
 
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={safePage === totalPages}
-                  className="px-3 py-2 rounded-lg bg-surface-800 text-text-primary disabled:opacity-40 hover:bg-surface-700 transition-colors"
-                >
-                  →
-                </button>
-              </div>
-            )}
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safePage === totalPages}
+                className="px-3 py-2 rounded-lg bg-surface-hover text-text-primary disabled:opacity-40 hover:bg-surface-hover transition-colors"
+              >
+                →
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar filters */}
+        <aside className="w-full lg:w-64 h-fit bg-surface rounded-xl p-4 border border-surface-hover/50">
+          <h3 className="text-sm font-bold text-text-primary mb-3">Фільтри</h3>
+          <p className="text-xs uppercase tracking-wide text-text-muted mb-3">Тип</p>
+          <div className="space-y-2 mb-4">
+            {NEWS_TYPES.map((type) => (
+              <label key={type} className="flex items-center gap-2 text-sm text-text-primary cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedTypes.includes(type)}
+                  onChange={() => toggleType(type)}
+                  className="w-4 h-4 accent-primary-500"
+                />
+                <span>{type}</span>
+              </label>
+            ))}
           </div>
 
-          <aside className="h-fit bg-surface-800/90 rounded-lg p-4 border border-surface-700">
-            <h3 className="text-sm font-semibold text-text-primary mb-3">Фільтри</h3>
-            <p className="text-xs uppercase tracking-wide text-text-muted mb-2">Тип</p>
-            <div className="space-y-2">
-              {NEWS_TYPES.map((type) => (
-                <label key={type} className="flex items-center gap-2 text-sm text-text-primary cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedTypes.includes(type)}
-                    onChange={() => toggleType(type)}
-                    className="w-4 h-4 accent-primary-500"
-                  />
-                  <span>{type}</span>
-                </label>
-              ))}
-            </div>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedTypes([]);
+              setPage(1);
+            }}
+            className="w-full text-sm px-3 py-2 rounded-lg bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 transition-colors"
+          >
+            Скинути фільтри
+          </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedTypes([]);
-                setPage(1);
-              }}
-              className="mt-4 w-full text-sm px-3 py-2 rounded-lg bg-surface-700 hover:bg-surface-600 text-text-primary transition-colors"
-            >
-              Скинути фільтри
-            </button>
-
-            <p className="mt-3 text-xs text-text-muted">
-              Знайдено: {filteredItems.length}
-            </p>
-          </aside>
-        </div>
+          <p className="mt-4 text-xs text-text-muted">
+            Знайдено: <span className="text-text-primary font-semibold">{filteredItems.length}</span>
+          </p>
+        </aside>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useMatch } from 'react-router-dom';
 import { axiosInstance, titlesApi } from '../../../core/api';
 import { Button, Input, Textarea, Select } from '../../../shared/components';
 import { TitleStatus } from '../../../core/types/enums';
@@ -33,9 +33,10 @@ const countryOptions = [
 ];
 
 export function AdminTitleEditPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
-  const isCreate = id === 'create';
+  const matchCreate = useMatch(ROUTES.ADMIN_TITLE_CREATE);
+  const isCreate = Boolean(matchCreate);
 
   const [genres, setGenres] = useState<Genre[]>([]);
   const [loading, setLoading] = useState(false);

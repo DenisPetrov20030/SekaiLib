@@ -10,31 +10,15 @@ namespace SekaiLib.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
-                name: "NotifyFriendRequests",
-                table: "Users",
-                type: "boolean",
-                nullable: false,
-                defaultValue: false);
-
-            migrationBuilder.AddColumn<bool>(
-                name: "NotifyTitleCompleted",
-                table: "Users",
-                type: "boolean",
-                nullable: false,
-                defaultValue: false);
+            migrationBuilder.Sql("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"NotifyFriendRequests\" boolean NOT NULL DEFAULT FALSE;");
+            migrationBuilder.Sql("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"NotifyTitleCompleted\" boolean NOT NULL DEFAULT FALSE;");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "NotifyFriendRequests",
-                table: "Users");
-
-            migrationBuilder.DropColumn(
-                name: "NotifyTitleCompleted",
-                table: "Users");
+            migrationBuilder.Sql("ALTER TABLE \"Users\" DROP COLUMN IF EXISTS \"NotifyFriendRequests\";");
+            migrationBuilder.Sql("ALTER TABLE \"Users\" DROP COLUMN IF EXISTS \"NotifyTitleCompleted\";");
         }
     }
 }
