@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using SekaiLib.Application.Common;
 using SekaiLib.Application.DTOs.Collections;
+using SekaiLib.Application.DTOs.Notifications;
+using SekaiLib.Domain.Enums;
 using SekaiLib.Application.Exceptions;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Domain.Entities;
@@ -41,14 +43,14 @@ public class CollectionService : ICollectionService
 
         return new PagedResult<CollectionDto>
         {
-            Data = collections.Select(MapToDto).ToList(),
+            Data = collections.Select(c => MapToDto(c)).ToList(),
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize
         };
     }
 
-    public async Task<IEnumerable<CollectionDto>> GetByUserAsync(Guid userId)
+    public async Task<IEnumerable<CollectionDto>> GetByUserAsync(Guid userId, Guid? titleId = null)
     {
         var collections = await _unitOfWork.Collections.Query()
             .Include(c => c.Author)
@@ -59,7 +61,7 @@ public class CollectionService : ICollectionService
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
 
-        return collections.Select(MapToDto);
+        return collections.Select(c => MapToDto(c, titleId));
     }
 
     public async Task<CollectionDetailsDto> GetByIdAsync(Guid id, Guid? viewerUserId, string? ipAddress = null)
@@ -280,6 +282,35 @@ public class CollectionService : ICollectionService
         return new CollectionItemDto(item.Id, item.TitleId, title?.Name ?? "", title?.CoverImageUrl, item.SortOrder);
     }
 
+    public async Task UpdateItemSectionAsync(Guid userId, Guid collectionId, Guid itemId, Guid? sectionId)
+    {
+        var collection = await _unitOfWork.Collections.GetByIdAsync(collectionId)
+            ?? throw new NotFoundException("Collection", collectionId);
+
+        if (collection.AuthorId != userId)
+            throw new ForbiddenException("Ви не є автором цієї колекції.");
+
+        var item = await _unitOfWork.CollectionItems.Query()
+            .FirstOrDefaultAsync(i => i.Id == itemId && i.CollectionId == collectionId)
+            ?? throw new NotFoundException("CollectionItem", itemId);
+
+        if (sectionId.HasValue)
+        {
+            var section = await _unitOfWork.CollectionSections.Query()
+                .FirstOrDefaultAsync(s => s.Id == sectionId.Value && s.CollectionId == collectionId)
+                ?? throw new ValidationException("SectionId", "Вказаний розділ не належить цій колекції.");
+
+            item.SectionId = section.Id;
+        }
+        else
+        {
+            item.SectionId = null;
+        }
+
+        await _unitOfWork.CollectionItems.UpdateAsync(item);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     public async Task RemoveItemAsync(Guid userId, Guid collectionId, Guid itemId)
     {
         var collection = await _unitOfWork.Collections.GetByIdAsync(collectionId)
@@ -334,7 +365,7 @@ public class CollectionService : ICollectionService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    private static CollectionDto MapToDto(Collection c) => new(
+    private static CollectionDto MapToDto(Collection c, Guid? titleId = null) => new(
         c.Id,
         c.Title,
         c.Description,
@@ -348,7 +379,8 @@ public class CollectionService : ICollectionService
         c.Reactions.Count(r => r.IsLike),
         c.Reactions.Count(r => !r.IsLike),
         c.Items.Take(4).Select(i => i.Title?.CoverImageUrl).Where(u => u != null).ToArray()!,
-        c.CreatedAt
+        c.CreatedAt,
+        titleId.HasValue && c.Items.Any(i => i.TitleId == titleId.Value)
     );
 
     private static CollectionItemDto MapItemToDto(CollectionItem i) => new(
@@ -360,10 +392,12 @@ public class CollectionService : ICollectionService
 public class CollectionCommentService : ICollectionCommentService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationService _notifications;
 
-    public CollectionCommentService(IUnitOfWork unitOfWork)
+    public CollectionCommentService(IUnitOfWork unitOfWork, INotificationService notifications)
     {
         _unitOfWork = unitOfWork;
+        _notifications = notifications;
     }
 
     public async Task<IEnumerable<CollectionCommentDto>> GetByCollectionAsync(Guid collectionId)
@@ -411,8 +445,32 @@ public class CollectionCommentService : ICollectionCommentService
 
         await _unitOfWork.CollectionComments.AddAsync(comment);
         await _unitOfWork.SaveChangesAsync();
-
         var author = await _unitOfWork.Users.GetByIdAsync(authorId);
+
+        // If this is a reply, create a notification for the parent comment's author
+        if (comment.ParentCommentId.HasValue)
+        {
+            var parent = await _unitOfWork.CollectionComments.GetByIdAsync(comment.ParentCommentId.Value);
+            if (parent != null && parent.AuthorId != authorId)
+            {
+                try
+                {
+                    var collection = await _unitOfWork.Collections.GetByIdAsync(collectionId);
+                    await _notifications.CreateAsync(new CreateNotificationRequest(
+                        parent.AuthorId,
+                        SekaiLib.Domain.Enums.NotificationType.CommentReply,
+                        "Відповідь на коментар",
+                        $"{author?.Username} відповів(ла) на ваш коментар до \"{collection?.Title}\"",
+                        $"/collections/{collectionId}#comment-{comment.Id}",
+                        authorId,
+                        null,
+                        null
+                    ));
+                }
+                catch { }
+            }
+        }
+
         return new CollectionCommentDto(
             comment.Id, comment.AuthorId,
             author?.Username ?? "", author?.AvatarUrl,

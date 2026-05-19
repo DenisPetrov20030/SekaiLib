@@ -30,6 +30,7 @@ export interface CollectionDto {
   dislikeCount: number;
   coverImages: string[];
   createdAt: string;
+  containsTitle?: boolean;
 }
 
 export interface CollectionDetailsDto extends CollectionDto {
@@ -68,8 +69,10 @@ export const collectionsApi = {
     return response.data;
   },
 
-  getByUser: async (userId: string): Promise<CollectionDto[]> => {
-    const response = await apiClient.get<CollectionDto[]>(`/collections/by-user/${userId}`);
+  getByUser: async (userId: string, titleId?: string): Promise<CollectionDto[]> => {
+    const response = await apiClient.get<CollectionDto[]>(`/collections/by-user/${userId}`, {
+      params: titleId ? { titleId } : undefined,
+    });
     return response.data;
   },
 
@@ -109,6 +112,10 @@ export const collectionsApi = {
 
   removeItem: async (collectionId: string, itemId: string): Promise<void> => {
     await apiClient.delete(`/collections/${collectionId}/items/${itemId}`);
+  },
+
+  updateItemSection: async (collectionId: string, itemId: string, sectionId?: string): Promise<void> => {
+    await apiClient.put(`/collections/${collectionId}/items/${itemId}/section`, { sectionId: sectionId ?? null });
   },
 
   // Reactions

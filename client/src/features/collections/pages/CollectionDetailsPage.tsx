@@ -20,17 +20,21 @@ const formatTime = (iso: string) => {
 
 // ─── Title Card ───────────────────────────────────────────────────────────────
 
-const TitleCard = ({ item, canEdit, onRemove }: {
+const TitleCard = ({ item, canEdit, onRemove, sections, currentSectionId, moving, onMove }: {
   item: CollectionItemDto;
   canEdit: boolean;
   onRemove?: (itemId: string) => void;
+  sections?: Array<{ id: string; name: string }>;
+  currentSectionId?: string | null;
+  moving?: boolean;
+  onMove?: (itemId: string, targetSectionId: string | null, currentSectionId: string | null) => void;
 }) => (
-  <div className="relative group">
+  <div className="relative group flex flex-col h-full">
     <Link
       to={ROUTES.TITLE_DETAILS.replace(':id', item.titleId)}
-      className="block rounded-lg overflow-hidden border border-divider hover:border-white/20 transition-all"
+      className="block rounded-lg overflow-hidden border border-divider hover:border-white/20 transition-all flex-1 flex flex-col"
     >
-      <div className="aspect-[2/3] bg-surface-hover overflow-hidden">
+      <div className="flex-none aspect-[2/3] bg-surface-hover overflow-hidden">
         {item.coverImageUrl ? (
           <img
             src={item.coverImageUrl}
@@ -45,7 +49,7 @@ const TitleCard = ({ item, canEdit, onRemove }: {
           </div>
         )}
       </div>
-      <div className="p-2">
+      <div className="p-2 flex-none">
         <p className="text-xs font-medium text-text-primary line-clamp-2 leading-tight">
           {item.titleName}
         </p>
@@ -60,17 +64,33 @@ const TitleCard = ({ item, canEdit, onRemove }: {
         ✕
       </button>
     )}
+    {canEdit && onMove && sections && sections.length > 0 && (
+      <div className="mt-auto w-full">
+        <select
+          disabled={moving}
+          value={currentSectionId ?? ''}
+          onChange={(e) => onMove(item.id, e.target.value || null, currentSectionId ?? null)}
+          className="w-full rounded-md border border-divider bg-surface px-2 py-1 text-xs text-text-secondary outline-none focus:border-primary-500"
+        >
+          <option value="">Інші тайтли</option>
+          {sections.map((section) => (
+            <option key={section.id} value={section.id}>{section.name}</option>
+          ))}
+        </select>
+      </div>
+    )}
   </div>
 );
 
 // ─── Comment ─────────────────────────────────────────────────────────────────
 
-const CommentItem = ({ comment, currentUserId, collectionId, onDeleted, onReply }: {
+const CommentItem = ({ comment, currentUserId, collectionId, onDeleted, onReply, onAnyCommentDeleted }: {
   comment: CollectionCommentDto;
   currentUserId?: string;
   collectionId: string;
   onDeleted: (id: string) => void;
   onReply: (commentId: string, username: string) => void;
+  onAnyCommentDeleted?: () => void;
 }) => {
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState<CollectionCommentDto[]>([]);
@@ -93,6 +113,7 @@ const CommentItem = ({ comment, currentUserId, collectionId, onDeleted, onReply 
     try {
       await collectionsApi.deleteComment(collectionId, comment.id);
       onDeleted(comment.id);
+      try { onAnyCommentDeleted?.(); } catch {}
     } catch { }
   };
 
@@ -112,12 +133,9 @@ const CommentItem = ({ comment, currentUserId, collectionId, onDeleted, onReply 
         <p className="text-sm text-text-secondary mt-1 whitespace-pre-wrap break-words">{comment.content}</p>
         <div className="flex items-center gap-3 mt-2">
           {currentUserId && (
-            <button
-              onClick={() => onReply(comment.id, comment.authorUsername)}
-              className="text-xs text-text-muted hover:text-text-primary transition-colors"
-            >
+            <Button size="sm" variant="primary" className="rounded-full" onClick={() => onReply(comment.id, comment.authorUsername)}>
               відповісти
-            </button>
+            </Button>
           )}
           {comment.replyCount > 0 && (
             <button
@@ -128,12 +146,12 @@ const CommentItem = ({ comment, currentUserId, collectionId, onDeleted, onReply 
             </button>
           )}
           {comment.authorId === currentUserId && (
-            <button onClick={handleDelete} className="text-xs text-red-400 hover:text-red-300 transition-colors ml-auto">
+            <Button size="sm" variant="ghost" className="ml-auto text-red-400 hover:text-red-300" onClick={handleDelete}>
               видалити
-            </button>
+            </Button>
           )}
         </div>
-        {showReplies && replies.length > 0 && (
+            {showReplies && replies.length > 0 && (
           <div className="mt-3 space-y-3 pl-3 border-l border-divider">
             {replies.map((r) => (
               <CommentItem
@@ -141,8 +159,9 @@ const CommentItem = ({ comment, currentUserId, collectionId, onDeleted, onReply 
                 comment={r}
                 currentUserId={currentUserId}
                 collectionId={collectionId}
-                onDeleted={(rid) => setReplies((prev) => prev.filter((x) => x.id !== rid))}
-                onReply={onReply}
+                    onDeleted={(rid) => setReplies((prev) => prev.filter((x) => x.id !== rid))}
+                    onReply={onReply}
+                    onAnyCommentDeleted={onAnyCommentDeleted}
               />
             ))}
           </div>
@@ -173,6 +192,7 @@ export const CollectionDetailsPage = () => {
   // Add section
   const [newSectionName, setNewSectionName] = useState('');
   const [addingSect, setAddingSect] = useState(false);
+  const [movingItemId, setMovingItemId] = useState<string | null>(null);
 
   // Comments
   const [comments, setComments] = useState<CollectionCommentDto[]>([]);
@@ -186,20 +206,33 @@ export const CollectionDetailsPage = () => {
 
   const isOwner = currentUser?.id === collection?.authorId;
 
+  const loadCollection = async (collectionId: string) => {
+    const [col, cmts] = await Promise.all([
+      collectionsApi.getById(collectionId),
+      collectionsApi.getComments(collectionId),
+    ]);
+
+    setCollection(col);
+    setComments(cmts);
+    setEditTitle(col.title);
+    setEditDescription(col.description ?? '');
+    setEditIsPublic(col.isPublic);
+  };
+
+  const reloadComments = async () => {
+    if (!id) return;
+    try {
+      const data = await collectionsApi.getComments(id);
+      setComments(data);
+    } catch {}
+  };
+
   useEffect(() => {
     if (!id) return;
     const load = async () => {
       try {
         setLoading(true);
-        const [col, cmts] = await Promise.all([
-          collectionsApi.getById(id),
-          collectionsApi.getComments(id),
-        ]);
-        setCollection(col);
-        setComments(cmts);
-        setEditTitle(col.title);
-        setEditDescription(col.description ?? '');
-        setEditIsPublic(col.isPublic);
+        await loadCollection(id);
       } catch {
         setError('Колекцію не знайдено або доступ заборонено.');
       } finally {
@@ -251,11 +284,26 @@ export const CollectionDetailsPage = () => {
 
   const handleDeleteSection = async (sectionId: string) => {
     if (!id || !confirm('Видалити розділ? Тайтли перейдуть до загального списку.')) return;
-    await collectionsApi.deleteSection(id, sectionId);
-    setCollection((prev) => prev ? {
-      ...prev,
-      sections: prev.sections.filter((s) => s.id !== sectionId),
-    } : prev);
+    try {
+      setLoading(true);
+      await collectionsApi.deleteSection(id, sectionId);
+
+      setCollection((prev) => {
+        if (!prev) return prev;
+        const removed = prev.sections.find((s) => s.id === sectionId);
+        const removedItems = removed ? removed.items : [];
+        return {
+          ...prev,
+          sections: prev.sections.filter((s) => s.id !== sectionId),
+          uncategorizedItems: [...prev.uncategorizedItems, ...removedItems],
+        };
+      });
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.message ?? 'Помилка видалення розділу.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRemoveItem = async (itemId: string) => {
@@ -269,6 +317,65 @@ export const CollectionDetailsPage = () => {
         uncategorizedItems: prev.uncategorizedItems.filter((i) => i.id !== itemId),
       };
     });
+  };
+
+  const handleMoveItem = async (itemId: string, targetSectionId: string | null, currentSectionId: string | null) => {
+    if (!id || targetSectionId === currentSectionId) return;
+
+    try {
+      setMovingItemId(itemId);
+      await collectionsApi.updateItemSection(id, itemId, targetSectionId ?? undefined);
+
+      setCollection((prev) => {
+        if (!prev) return prev;
+
+        let movingItem: CollectionItemDto | null = null;
+
+        const nextSections = prev.sections.map((section) => {
+          const idx = section.items.findIndex((item) => item.id === itemId);
+          if (idx === -1) return section;
+
+          movingItem = section.items[idx];
+          return {
+            ...section,
+            items: section.items.filter((item) => item.id !== itemId),
+          };
+        });
+
+        let nextUncategorized = prev.uncategorizedItems;
+        if (!movingItem) {
+          const idx = prev.uncategorizedItems.findIndex((item) => item.id === itemId);
+          if (idx !== -1) {
+            movingItem = prev.uncategorizedItems[idx];
+            nextUncategorized = prev.uncategorizedItems.filter((item) => item.id !== itemId);
+          }
+        } else {
+          nextUncategorized = prev.uncategorizedItems.filter((item) => item.id !== itemId);
+        }
+
+        if (!movingItem) return prev;
+
+        if (targetSectionId) {
+          return {
+            ...prev,
+            sections: nextSections.map((section) =>
+              section.id === targetSectionId
+                ? { ...section, items: [...section.items, movingItem as CollectionItemDto] }
+                : section
+            ),
+            uncategorizedItems: nextUncategorized,
+          };
+        }
+
+        return {
+          ...prev,
+          sections: nextSections,
+          uncategorizedItems: [...nextUncategorized, movingItem],
+        };
+      });
+    } finally {
+      setMovingItemId(null);
+    }
   };
 
   const handleReact = async (isLike: boolean) => {
@@ -492,9 +599,18 @@ export const CollectionDetailsPage = () => {
           {section.items.length === 0 ? (
             <p className="text-sm text-text-muted italic">Розділ порожній</p>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 auto-rows-fr">
               {section.items.map((item) => (
-                <TitleCard key={item.id} item={item} canEdit={isOwner} onRemove={handleRemoveItem} />
+                <TitleCard
+                  key={item.id}
+                  item={item}
+                  canEdit={isOwner}
+                  onRemove={handleRemoveItem}
+                  sections={collection.sections.map((s) => ({ id: s.id, name: s.name }))}
+                  currentSectionId={section.id}
+                  moving={movingItemId === item.id}
+                  onMove={handleMoveItem}
+                />
               ))}
             </div>
           )}
@@ -507,9 +623,18 @@ export const CollectionDetailsPage = () => {
           {collection.sections.length > 0 && (
             <h2 className="text-xl font-semibold text-text-primary mb-4">Інші тайтли</h2>
           )}
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 auto-rows-fr">
             {collection.uncategorizedItems.map((item) => (
-              <TitleCard key={item.id} item={item} canEdit={isOwner} onRemove={handleRemoveItem} />
+              <TitleCard
+                key={item.id}
+                item={item}
+                canEdit={isOwner}
+                onRemove={handleRemoveItem}
+                sections={collection.sections.map((s) => ({ id: s.id, name: s.name }))}
+                currentSectionId={null}
+                moving={movingItemId === item.id}
+                onMove={handleMoveItem}
+              />
             ))}
           </div>
         </div>
@@ -595,6 +720,7 @@ export const CollectionDetailsPage = () => {
               collectionId={collection.id}
               onDeleted={(cid) => setComments((prev) => prev.filter((c) => c.id !== cid))}
               onReply={handleSetReply}
+              onAnyCommentDeleted={reloadComments}
             />
           ))}
           {comments.length === 0 && (

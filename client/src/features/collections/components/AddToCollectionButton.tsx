@@ -33,8 +33,9 @@ export const AddToCollectionButton = ({ titleId, onLoginRequired }: Props) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await collectionsApi.getByUser(currentUser.id);
+      const data = await collectionsApi.getByUser(currentUser.id, titleId);
       setCollections(data);
+      setAdded(new Set(data.filter((c) => c.containsTitle).map((c) => c.id)));
       setOpen(true);
     } catch {
       setError('Не вдалося завантажити колекції.');
@@ -50,8 +51,27 @@ export const AddToCollectionButton = ({ titleId, onLoginRequired }: Props) => {
       setError(null);
       await collectionsApi.addItem(collectionId, { titleId });
       setAdded((prev) => new Set([...prev, collectionId]));
+      setCollections((prev) => prev.map((collection) => (
+        collection.id === collectionId
+          ? { ...collection, titleCount: (collection.titleCount ?? 0) + 1, containsTitle: true }
+          : collection
+      )));
     } catch (err: any) {
-      setError(err?.message ?? 'Помилка додавання.');
+      const errors = err?.errors as Record<string, string[]> | undefined;
+      const titleErrors = errors?.TitleId ?? errors?.titleId;
+      const duplicateError = Array.isArray(titleErrors)
+        ? titleErrors.find((message) => typeof message === 'string' && message.toLowerCase().includes('вже є в колекції'))
+        : undefined;
+
+      if (duplicateError) {
+        setAdded((prev) => new Set([...prev, collectionId]));
+        setError(null);
+      } else {
+        const firstValidationError = errors
+          ? Object.values(errors).flat().find((message) => typeof message === 'string' && message.trim().length > 0)
+          : null;
+        setError(firstValidationError ?? err?.message ?? 'Помилка додавання.');
+      }
     } finally {
       setAdding(null);
     }

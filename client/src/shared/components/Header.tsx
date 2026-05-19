@@ -154,6 +154,22 @@ export const Header = () => {
     return () => { connection.stop().catch(() => {}); };
   }, [isAuthenticated, user?.id]);
 
+  // Local fallback for immediate notification updates (dispatched from other UI parts)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const handler = (e: Event) => {
+      try {
+        const custom = e as CustomEvent<NotificationDto>;
+        const notification = custom.detail;
+        if (!notification) return;
+        setNotifications((prev) => (prev.some((item) => item.id === notification.id) ? prev : [notification, ...prev]));
+        setUnreadCount((prev) => prev + 1);
+      } catch {}
+    };
+    window.addEventListener('LocalNotification', handler as EventListener);
+    return () => window.removeEventListener('LocalNotification', handler as EventListener);
+  }, [isAuthenticated]);
+
   useEffect(() => {
     if (!isNotificationsOpen) return;
     const handler = (event: MouseEvent) => {

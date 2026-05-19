@@ -48,9 +48,9 @@ public class CollectionsController : ControllerBase
     }
 
     [HttpGet("by-user/{userId}")]
-    public async Task<ActionResult<IEnumerable<CollectionDto>>> GetByUser(Guid userId)
+    public async Task<ActionResult<IEnumerable<CollectionDto>>> GetByUser(Guid userId, [FromQuery] Guid? titleId = null)
     {
-        var result = await _collectionService.GetByUserAsync(userId);
+        var result = await _collectionService.GetByUserAsync(userId, titleId);
         return Ok(result);
     }
 
@@ -127,6 +127,15 @@ public class CollectionsController : ControllerBase
     {
         var userId = GetRequiredUserId();
         await _collectionService.RemoveItemAsync(userId, id, itemId);
+        return NoContent();
+    }
+
+    [HttpPut("{id}/items/{itemId}/section")]
+    [Authorize]
+    public async Task<IActionResult> UpdateItemSection(Guid id, Guid itemId, [FromBody] UpdateCollectionItemSectionRequest request)
+    {
+        var userId = GetRequiredUserId();
+        await _collectionService.UpdateItemSectionAsync(userId, id, itemId, request.SectionId);
         return NoContent();
     }
 

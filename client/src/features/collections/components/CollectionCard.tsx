@@ -20,15 +20,15 @@ const formatDate = (iso: string) => {
 
 export const CollectionCard = ({ collection }: Props) => {
   const to = ROUTES.COLLECTION_DETAILS.replace(':id', collection.id);
-  const covers = collection.coverImages.slice(0, 4);
+  const covers = collection.coverImages.slice(0, 3);
 
   return (
     <Link
       to={to}
       className="group flex flex-col rounded-xl border border-divider bg-surface hover:border-white/20 transition-all duration-200 overflow-hidden"
     >
-      {/* Cover mosaic */}
-      <div className="relative h-48 bg-surface-hover overflow-hidden">
+      {/* Cover preview */}
+      <div className="relative h-40 bg-surface-hover overflow-hidden">
         {covers.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <svg className="w-14 h-14 text-text-muted/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -42,19 +42,25 @@ export const CollectionCard = ({ collection }: Props) => {
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-0.5">
-            {[0, 1, 2, 3].map((i) =>
-              covers[i] ? (
+          <div className="absolute inset-0 flex items-end justify-center gap-0.5 bg-neutral-900/20 px-2 py-1">
+            {covers.map((cover, index) => (
+              <div
+                key={cover + index}
+                className={`relative h-full w-1/3 overflow-hidden rounded-md border border-white/10 shadow-lg bg-black/20 ${
+                  index === 0
+                    ? 'rotate-[-4deg] translate-y-1'
+                    : index === 1
+                      ? 'z-10 scale-105'
+                      : 'rotate-[4deg] translate-y-1'
+                }`}
+              >
                 <img
-                  key={i}
-                  src={covers[i]}
+                  src={cover}
                   alt=""
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="h-full w-full object-cover"
                 />
-              ) : (
-                <div key={i} className="bg-surface-hover" />
-              )
-            )}
+              </div>
+            ))}
           </div>
         )}
 

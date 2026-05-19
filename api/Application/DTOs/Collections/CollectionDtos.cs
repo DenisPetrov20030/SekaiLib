@@ -29,7 +29,8 @@ public record CollectionDto(
     int LikeCount,
     int DislikeCount,
     string[] CoverImages,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    bool ContainsTitle = false
 );
 
 public record CollectionDetailsDto(
@@ -65,4 +66,5 @@ public record CreateCollectionRequest(string Title, string? Description, bool Is
 public record UpdateCollectionRequest(string Title, string? Description, bool IsPublic);
 public record AddSectionRequest(string Name);
 public record AddCollectionItemRequest(Guid TitleId, Guid? SectionId);
+public record UpdateCollectionItemSectionRequest(Guid? SectionId);
 public record CreateCollectionCommentRequest(string Content, Guid? ParentCommentId);
