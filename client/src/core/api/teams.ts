@@ -7,6 +7,7 @@ import type {
   AddMemberRequest,
   TeamChaptersResponse,
   SubscribedTeamChapterDto,
+  TeamUserSearchDto,
 } from '../types/dtos';
 import { TeamMemberRole } from '../types/dtos';
 
@@ -70,6 +71,13 @@ export const teamsApi = {
 
   getMembers: async (teamId: string): Promise<TeamMemberDto[]> => {
     const response = await apiClient.get<TeamMemberDto[]>(`/teams/${teamId}/members`);
+    return response.data;
+  },
+
+  searchUsersForTeam: async (teamId: string, q: string): Promise<TeamUserSearchDto[]> => {
+    const response = await apiClient.get<TeamUserSearchDto[]>(`/teams/${teamId}/members/search-users`, {
+      params: { q },
+    });
     return response.data;
   },
 

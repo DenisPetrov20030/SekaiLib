@@ -276,7 +276,7 @@ export const TitleDetailsPage = () => {
               {availableTeams.length > 1 ? (
                 <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-surface to-surface-hover p-4 sm:p-5 shadow-lg shadow-black/20">
                   <div className="mb-4">
-                    <p className="text-sm font-semibold text-text-primary">Команди перекладачів</p>
+                    <p className="text-sm font-semibold text-text-primary">Доступні команди</p>
                     <p className="text-xs text-text-muted">Оберіть команду, щоб отримувати сповіщення про нові розділи саме від неї.</p>
                   </div>
 

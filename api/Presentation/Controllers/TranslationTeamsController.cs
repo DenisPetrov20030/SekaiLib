@@ -165,6 +165,39 @@ public class TranslationTeamsController : ControllerBase
         return Ok(members);
     }
 
+    [HttpGet("{teamId:guid}/members/search-users")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<TeamUserSearchDto>>> SearchUsersForTeam(Guid teamId, [FromQuery] string q)
+    {
+        var requesterId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var requesterMember = await _unitOfWork.TranslationTeamMembers.Query()
+            .FirstOrDefaultAsync(m => m.TeamId == teamId && m.UserId == requesterId);
+
+        if (requesterMember == null || (requesterMember.Role != TeamMemberRole.Owner && requesterMember.Role != TeamMemberRole.Admin))
+            return Forbid();
+
+        var term = (q ?? string.Empty).Trim();
+        if (term.Length < 2)
+            return Ok(Array.Empty<TeamUserSearchDto>());
+
+        var memberIds = await _unitOfWork.TranslationTeamMembers.Query()
+            .Where(m => m.TeamId == teamId)
+            .Select(m => m.UserId)
+            .ToListAsync();
+
+        var termLower = term.ToLower();
+
+        var users = await _unitOfWork.Users.Query()
+            .Where(u => u.Username.ToLower().Contains(termLower) && !memberIds.Contains(u.Id))
+            .OrderBy(u => u.Username)
+            .Take(10)
+            .Select(u => new TeamUserSearchDto(u.Id, u.Username, u.AvatarUrl))
+            .ToListAsync();
+
+        return Ok(users);
+    }
+
     [HttpPost("{teamId:guid}/members")]
     [Authorize]
     public async Task<ActionResult<TeamMemberDto>> AddMember(Guid teamId, [FromBody] AddMemberRequest request)
@@ -248,3 +281,5 @@ public class TranslationTeamsController : ControllerBase
         });
     }
 }
+
+public record TeamUserSearchDto(Guid Id, string Username, string? AvatarUrl);

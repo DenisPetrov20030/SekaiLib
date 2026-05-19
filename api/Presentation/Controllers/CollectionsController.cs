@@ -34,7 +34,8 @@ public class CollectionsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        var result = await _collectionService.GetAllAsync(search, page, pageSize);
+        var viewerUserId = GetCurrentUserId();
+        var result = await _collectionService.GetAllAsync(search, viewerUserId, page, pageSize);
         return Ok(result);
     }
 
@@ -50,7 +51,8 @@ public class CollectionsController : ControllerBase
     [HttpGet("by-user/{userId}")]
     public async Task<ActionResult<IEnumerable<CollectionDto>>> GetByUser(Guid userId, [FromQuery] Guid? titleId = null)
     {
-        var result = await _collectionService.GetByUserAsync(userId, titleId);
+        var viewerUserId = GetCurrentUserId();
+        var result = await _collectionService.GetByUserAsync(userId, titleId, viewerUserId);
         return Ok(result);
     }
 

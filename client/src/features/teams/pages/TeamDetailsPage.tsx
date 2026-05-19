@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { teamsApi } from '../../../core/api/teams';
-import type { TranslationTeamDto, TeamMemberDto, TeamChapterDto } from '../../../core/types/dtos';
+import type { TranslationTeamDto, TeamMemberDto, TeamChapterDto, TeamUserSearchDto } from '../../../core/types/dtos';
 import { TeamMemberRole } from '../../../core/types/dtos';
 import { useAppSelector } from '../../../app/store/hooks';
 import { Button } from '../../../shared/components';
@@ -49,6 +49,10 @@ export const TeamDetailsPage = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [addUserId, setAddUserId] = useState('');
+  const [addUserQuery, setAddUserQuery] = useState('');
+  const [userSuggestions, setUserSuggestions] = useState<TeamUserSearchDto[]>([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
+  const [showUserSuggestions, setShowUserSuggestions] = useState(false);
   const [addRole, setAddRole] = useState<TeamMemberRole>(TeamMemberRole.Member);
 
   const currentMember = members.find((m) => m.userId === user?.id);
@@ -188,9 +192,43 @@ export const TeamDetailsPage = () => {
       setMembers((prev) => [...prev, newMember]);
       setTeam((t) => t ? { ...t, memberCount: t.memberCount + 1 } : t);
       setAddUserId('');
+      setAddUserQuery('');
+      setUserSuggestions([]);
+      setShowUserSuggestions(false);
     } catch {
       alert('Не вдалося додати учасника');
     }
+  };
+
+  useEffect(() => {
+    if (!teamId || !canManage) return;
+
+    const term = addUserQuery.trim();
+    if (term.length < 2) {
+      setUserSuggestions([]);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      setSearchingUsers(true);
+      try {
+        const users = await teamsApi.searchUsersForTeam(teamId, term);
+        setUserSuggestions(users);
+        setShowUserSuggestions(true);
+      } catch {
+        setUserSuggestions([]);
+      } finally {
+        setSearchingUsers(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timeout);
+  }, [teamId, canManage, addUserQuery]);
+
+  const handleSelectUser = (userOption: TeamUserSearchDto) => {
+    setAddUserId(userOption.id);
+    setAddUserQuery(userOption.username);
+    setShowUserSuggestions(false);
   };
 
   const handleChangePage = (p: number) => {
@@ -614,13 +652,54 @@ export const TeamDetailsPage = () => {
             <form onSubmit={handleAddMember} className="bg-surface rounded-lg p-4">
               <h3 className="text-sm font-semibold text-text-secondary mb-3">Додати учасника</h3>
               <div className="flex gap-2 flex-wrap">
-                <input
-                  type="text"
-                  placeholder="ID користувача"
-                  value={addUserId}
-                  onChange={(e) => setAddUserId(e.target.value)}
-                  className="flex-1 min-w-0 px-3 py-1.5 text-sm bg-background border border-border rounded-md text-text-primary focus:outline-none focus:ring-1 focus:ring-primary-500"
-                />
+                <div className="relative flex-1 min-w-0">
+                  <input
+                    type="text"
+                    placeholder="Нікнейм користувача"
+                    value={addUserQuery}
+                    onFocus={() => {
+                      if (userSuggestions.length > 0) setShowUserSuggestions(true);
+                    }}
+                    onBlur={() => {
+                      setTimeout(() => setShowUserSuggestions(false), 120);
+                    }}
+                    onChange={(e) => {
+                      setAddUserQuery(e.target.value);
+                      setAddUserId('');
+                    }}
+                    className="w-full px-3 py-1.5 text-sm bg-background border border-border rounded-md text-text-primary focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  />
+
+                  {showUserSuggestions && (searchingUsers || userSuggestions.length > 0 || addUserQuery.trim().length >= 2) && (
+                    <div className="absolute z-20 mt-1 w-full rounded-md border border-border bg-surface shadow-lg overflow-hidden">
+                      {searchingUsers ? (
+                        <div className="px-3 py-2 text-sm text-text-muted">Пошук...</div>
+                      ) : userSuggestions.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-text-muted">Користувачів не знайдено</div>
+                      ) : (
+                        <div className="max-h-56 overflow-y-auto">
+                          {userSuggestions.map((u) => (
+                            <button
+                              key={u.id}
+                              type="button"
+                              onClick={() => handleSelectUser(u)}
+                              className="w-full px-3 py-2 text-left hover:bg-background/60 transition-colors flex items-center gap-2"
+                            >
+                              {u.avatarUrl ? (
+                                <img src={u.avatarUrl} alt={u.username} className="w-6 h-6 rounded-full object-cover" />
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-surface-hover flex items-center justify-center text-[11px] text-text-muted font-medium">
+                                  {u.username.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <span className="text-sm text-text-primary truncate">{u.username}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <select
                   value={addRole}
                   onChange={(e) => setAddRole(Number(e.target.value) as TeamMemberRole)}
@@ -635,6 +714,9 @@ export const TeamDetailsPage = () => {
                   Додати
                 </Button>
               </div>
+              {!addUserId && addUserQuery.trim().length > 0 && (
+                <p className="text-xs text-text-muted mt-2">Оберіть користувача зі списку підказок</p>
+              )}
             </form>
           )}
         </div>

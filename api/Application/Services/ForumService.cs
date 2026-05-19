@@ -16,15 +16,17 @@ public class ForumService : IForumService
     private readonly IReadCacheService _readCache;
     private readonly IAutoModerationService _autoMod;
     private readonly IModerationService _moderation;
+    private readonly IUserBlockService _userBlockService;
 
     public ForumService(IUnitOfWork unitOfWork, IViewTrackingService viewTracking, IReadCacheService readCache,
-        IAutoModerationService autoMod, IModerationService moderation)
+        IAutoModerationService autoMod, IModerationService moderation, IUserBlockService userBlockService)
     {
         _unitOfWork = unitOfWork;
         _viewTracking = viewTracking;
         _readCache = readCache;
         _autoMod = autoMod;
         _moderation = moderation;
+        _userBlockService = userBlockService;
     }
 
     // ------------------------------------------------------------------ Categories
@@ -101,13 +103,20 @@ public class ForumService : IForumService
 
     // ------------------------------------------------------------------ Threads
 
-    public async Task<PagedResult<ForumThreadDto>> GetThreadsAsync(Guid categoryId, int page, int pageSize)
+    public async Task<PagedResult<ForumThreadDto>> GetThreadsAsync(Guid categoryId, Guid? viewerUserId, int page, int pageSize)
     {
         var query = _unitOfWork.ForumThreads.Query()
             .Include(t => t.Author)
             .Include(t => t.LastPostUser)
             .Include(t => t.Category)
             .Where(t => t.CategoryId == categoryId);
+
+        if (viewerUserId.HasValue)
+        {
+            var blockedIds = (await _userBlockService.GetBlockedUserIdsAsync(viewerUserId.Value)).ToHashSet();
+            if (blockedIds.Count > 0)
+                query = query.Where(t => !blockedIds.Contains(t.AuthorId));
+        }
 
         var total = await query.CountAsync();
 
@@ -127,13 +136,20 @@ public class ForumService : IForumService
         };
     }
 
-    public async Task<PagedResult<ForumThreadDto>> SearchThreadsAsync(string query, int page, int pageSize)
+    public async Task<PagedResult<ForumThreadDto>> SearchThreadsAsync(string query, Guid? viewerUserId, int page, int pageSize)
     {
         var q = _unitOfWork.ForumThreads.Query()
             .Include(t => t.Author)
             .Include(t => t.LastPostUser)
             .Include(t => t.Category)
             .Where(t => t.Title.Contains(query));
+
+        if (viewerUserId.HasValue)
+        {
+            var blockedIds = (await _userBlockService.GetBlockedUserIdsAsync(viewerUserId.Value)).ToHashSet();
+            if (blockedIds.Count > 0)
+                q = q.Where(t => !blockedIds.Contains(t.AuthorId));
+        }
 
         var total = await q.CountAsync();
 
@@ -226,9 +242,40 @@ public class ForumService : IForumService
                 userId, autoModResult.Reason ?? "automod");
 
         await _unitOfWork.SaveChangesAsync();
+        await _readCache.RemoveAsync("forum:categories");
 
         // Reload with includes
         return await GetThreadAsync(thread.Id, userId);
+    }
+
+    public async Task<ForumThreadDetailsDto> UpdateThreadAsync(Guid userId, Guid threadId, UpdateThreadRequest request)
+    {
+        var thread = await _unitOfWork.ForumThreads.GetByIdAsync(threadId)
+            ?? throw new NotFoundException("ForumThread", threadId);
+
+        var user = await _unitOfWork.Users.GetByIdAsync(userId)
+            ?? throw new UnauthorizedException();
+
+        if (thread.AuthorId != userId && user.Role < UserRole.Moderator)
+            throw new ForbiddenException();
+
+        if (string.IsNullOrWhiteSpace(request.Title))
+            throw new ValidationException("Title", "Заголовок не може бути порожнім.");
+
+        thread.Title = request.Title.Trim();
+        thread.UpdatedAt = DateTime.UtcNow;
+
+        await _unitOfWork.ForumThreads.UpdateAsync(thread);
+        await _unitOfWork.SaveChangesAsync();
+        await _readCache.RemoveAsync("forum:categories");
+
+        var updated = await _unitOfWork.ForumThreads.Query()
+            .Include(t => t.Author)
+            .Include(t => t.Category)
+            .FirstOrDefaultAsync(t => t.Id == threadId)
+            ?? throw new NotFoundException("ForumThread", threadId);
+
+        return MapThreadDetails(updated);
     }
 
     public async Task DeleteThreadAsync(Guid userId, Guid threadId)
@@ -244,6 +291,7 @@ public class ForumService : IForumService
 
         await _unitOfWork.ForumThreads.DeleteAsync(thread);
         await _unitOfWork.SaveChangesAsync();
+        await _readCache.RemoveAsync("forum:categories");
     }
 
     public async Task PinThreadAsync(Guid adminId, Guid threadId, bool pinned)
@@ -353,6 +401,7 @@ public class ForumService : IForumService
                 autoModResult.Reason ?? "automod");
 
         await _unitOfWork.SaveChangesAsync();
+        await _readCache.RemoveAsync("forum:categories");
 
         // Reload with author
         var saved = await _unitOfWork.ForumPosts.Query()
@@ -418,6 +467,7 @@ public class ForumService : IForumService
 
         await _moderation.LogAsync(userId, ModerationAction.DeleteContent, "ForumPost", postId);
         await _unitOfWork.SaveChangesAsync();
+        await _readCache.RemoveAsync("forum:categories");
     }
 
     public async Task<ForumPostDto> ReactAsync(Guid userId, Guid postId, bool isLike)

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SekaiLib.Application.Interfaces;
 using SekaiLib.Application.Options;
@@ -13,11 +14,13 @@ public class LiqPayService : ILiqPayService
     private const string ApiUrl = "https://www.liqpay.ua/api/request";
     private readonly LiqPayOptions _options;
     private readonly HttpClient _http;
+    private readonly ILogger<LiqPayService> _logger;
 
-    public LiqPayService(IOptions<LiqPayOptions> options, HttpClient http)
+    public LiqPayService(IOptions<LiqPayOptions> options, HttpClient http, ILogger<LiqPayService> logger)
     {
         _options = options.Value;
         _http = http;
+        _logger = logger;
     }
 
     public LiqPayCheckoutParams CreateCheckout(string orderId, decimal amount, string description)
@@ -68,40 +71,66 @@ public class LiqPayService : ILiqPayService
 
     public async Task<LiqPayCallbackData?> FetchStatusAsync(string orderId)
     {
-        var payload = new Dictionary<string, object>
+        try
         {
-            ["version"] = 3,
-            ["public_key"] = _options.PublicKey,
-            ["action"] = "status",
-            ["order_id"] = orderId,
-        };
+            // Захист: якщо ключі не налаштовані в appsettings або використовуються шаблони від Git,
+            // повертаємо емуляцію пісочниці, щоб API не падало під час локальних тестів.
+            if (string.IsNullOrEmpty(_options.PublicKey) || _options.PublicKey.Contains("YOUR_"))
+            {
+                _logger.LogWarning("LiqPay keys are not configured properly. Falling back to sandbox emulation.");
+                return new LiqPayCallbackData(orderId, "sandbox", null, 0m, "UAH");
+            }
 
-        var json = JsonSerializer.Serialize(payload);
-        var data = Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
-        var signature = BuildSignature(data);
+            var payload = new Dictionary<string, object>
+            {
+                ["version"] = 3,
+                ["public_key"] = _options.PublicKey,
+                ["action"] = "status",
+                ["order_id"] = orderId,
+            };
 
-        var form = new FormUrlEncodedContent([
-            new KeyValuePair<string, string>("data", data),
-            new KeyValuePair<string, string>("signature", signature),
-        ]);
+            var json = JsonSerializer.Serialize(payload);
+            var data = Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
+            var signature = BuildSignature(data);
 
-        var response = await _http.PostAsync(ApiUrl, form);
-        if (!response.IsSuccessStatusCode) return null;
+            var form = new FormUrlEncodedContent([
+                new KeyValuePair<string, string>("data", data),
+                new KeyValuePair<string, string>("signature", signature),
+            ]);
 
-        var body = await response.Content.ReadAsStringAsync();
-        try { return ParseCallback(Convert.ToBase64String(Encoding.UTF8.GetBytes(body))); }
-        catch
-        {
-            // LiqPay returns raw JSON here, not base64
+            var response = await _http.PostAsync(ApiUrl, form);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError($"LiqPay API request failed with status code: {response.StatusCode}");
+                return null;
+            }
+
+            var body = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation($"LiqPay raw response for order {orderId}: {body}");
+
+            // Безпечний розбір сирого JSON від сервера LiqPay
             using var doc = JsonDocument.Parse(body);
             var root = doc.RootElement;
+
+            // Якщо LiqPay повернув статус помилки (наприклад, неправильний підпис/запит), логуємо опис причини
+            if (root.TryGetProperty("status", out var st) && (st.GetString() == "error" || st.GetString() == "failure"))
+            {
+                var errDesc = root.TryGetProperty("err_description", out var desc) ? desc.GetString() : "Unknown LiqPay error";
+                _logger.LogError($"LiqPay returned error status for order {orderId}: {errDesc}");
+            }
+
             return new LiqPayCallbackData(
                 OrderId: root.TryGetProperty("order_id", out var oid) ? oid.GetString()! : orderId,
-                Status: root.TryGetProperty("status", out var st) ? st.GetString()! : "error",
+                Status: root.TryGetProperty("status", out var statusProp) ? statusProp.GetString()! : "error",
                 PaymentId: root.TryGetProperty("payment_id", out var pid) ? pid.GetRawText() : null,
                 Amount: root.TryGetProperty("amount", out var amt) ? amt.GetDecimal() : 0m,
                 Currency: root.TryGetProperty("currency", out var cur) ? cur.GetString()! : "UAH"
             );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Critical exception during FetchStatusAsync for order {orderId}");
+            return new LiqPayCallbackData(orderId, "error", null, 0m, "UAH");
         }
     }
 

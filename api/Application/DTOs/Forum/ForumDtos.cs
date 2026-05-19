@@ -87,6 +87,8 @@ public record CreateThreadRequest(
     string Content
 );
 
+public record UpdateThreadRequest(string Title);
+
 public record CreatePostRequest(
     string Content,
     Guid? QuotedPostId = null

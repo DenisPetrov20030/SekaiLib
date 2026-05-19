@@ -8,7 +8,6 @@ import { ROUTES } from '../../../core/constants';
 import { CollectionCard } from '../components/CollectionCard';
 import { CreateCollectionModal } from '../components/CreateCollectionModal';
 
-
 export const CollectionsPage = () => {
   const navigate = useNavigate();
   const isAuth = useAppSelector((s) => !!s.auth.user);
@@ -99,6 +98,7 @@ export const CollectionsPage = () => {
         </div>
       ) : (
         <>
+          {/* Чистий адаптивний грид. Картки займають свою фіксовану частину і не розтягуються */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {collections.map((col) => (
               <CollectionCard key={col.id} collection={col} />

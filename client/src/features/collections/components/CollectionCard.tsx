@@ -28,7 +28,7 @@ export const CollectionCard = ({ collection }: Props) => {
       className="group flex flex-col rounded-xl border border-divider bg-surface hover:border-white/20 transition-all duration-200 overflow-hidden"
     >
       {/* Cover preview */}
-      <div className="relative h-40 bg-surface-hover overflow-hidden">
+      <div className="relative h-40 bg-surface-hover overflow-hidden isolate">
         {covers.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <svg className="w-14 h-14 text-text-muted/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -36,12 +36,27 @@ export const CollectionCard = ({ collection }: Props) => {
             </svg>
           </div>
         ) : covers.length === 1 ? (
-          <img
-            src={covers[0]}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+          /* ПРАВИЛЬНИЙ ФІКС ДЛЯ ОДНОГО ТАЙТЛУ: картинка центрується та не обрізається */
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+            {/* Задній великий розмитий фон з обкладинки */}
+            <img
+              src={covers[0]}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-25 pointer-events-none"
+            />
+            {/* Оригінальна обкладинка з правильним співвідношенням сторін книги (aspect-[2/3]) */}
+            <div className="relative h-[90%] aspect-[2/3] rounded-md overflow-hidden shadow-md border border-white/10">
+              <img
+                src={covers[0]}
+                alt=""
+                loading="eager"
+                decoding="sync"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+          </div>
         ) : (
+          /* ДЛЯ КІЛЬКОХ ТАЙТЛІВ: залишаємо твій фірмовий стек зі зсувом */
           <div className="absolute inset-0 flex items-end justify-center gap-0.5 bg-neutral-900/20 px-2 py-1">
             {covers.map((cover, index) => (
               <div
@@ -57,6 +72,8 @@ export const CollectionCard = ({ collection }: Props) => {
                 <img
                   src={cover}
                   alt=""
+                  loading="eager"
+                  decoding="sync"
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -65,7 +82,7 @@ export const CollectionCard = ({ collection }: Props) => {
         )}
 
         {/* Stats overlay */}
-        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 flex items-center gap-3 text-xs text-white/80">
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-2 flex items-center gap-3 text-xs text-white/90 z-20">
           <span title="Перегляди" className="flex items-center gap-1">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
             {collection.viewCount}

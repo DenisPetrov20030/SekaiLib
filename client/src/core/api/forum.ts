@@ -108,6 +108,10 @@ export const forumApi = {
     const res = await apiClient.post<ForumThreadDetailsDto>('/forum/threads', data);
     return res.data;
   },
+  updateThread: async (threadId: string, data: { title: string }): Promise<ForumThreadDetailsDto> => {
+    const res = await apiClient.put<ForumThreadDetailsDto>(`/forum/threads/${threadId}`, data);
+    return res.data;
+  },
   deleteThread: async (threadId: string): Promise<void> => {
     await apiClient.delete(`/forum/threads/${threadId}`);
   },

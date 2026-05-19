@@ -12,10 +12,11 @@ public interface IForumService
     Task DeleteCategoryAsync(Guid adminId, Guid categoryId);
 
     // Threads
-    Task<PagedResult<ForumThreadDto>> GetThreadsAsync(Guid categoryId, int page, int pageSize);
-    Task<PagedResult<ForumThreadDto>> SearchThreadsAsync(string query, int page, int pageSize);
+    Task<PagedResult<ForumThreadDto>> GetThreadsAsync(Guid categoryId, Guid? viewerUserId, int page, int pageSize);
+    Task<PagedResult<ForumThreadDto>> SearchThreadsAsync(string query, Guid? viewerUserId, int page, int pageSize);
     Task<ForumThreadDetailsDto> GetThreadAsync(Guid threadId, Guid? userId, string? ipAddress = null);
     Task<ForumThreadDetailsDto> CreateThreadAsync(Guid userId, CreateThreadRequest request);
+    Task<ForumThreadDetailsDto> UpdateThreadAsync(Guid userId, Guid threadId, UpdateThreadRequest request);
     Task DeleteThreadAsync(Guid userId, Guid threadId);
     Task PinThreadAsync(Guid adminId, Guid threadId, bool pinned);
     Task LockThreadAsync(Guid adminId, Guid threadId, bool locked);

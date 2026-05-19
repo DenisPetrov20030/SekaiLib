@@ -22,6 +22,7 @@ export const ROUTES = {
   USER_LIST: '/user-lists/:id',
   USER_PROFILE: '/users/:userId',
   USER_FRIENDS: '/users/:userId/friends',
+  USER_ALL_LISTS: '/users/:userId/all-lists',
   MESSAGES: '/messages',
   DIRECT_MESSAGE: '/messages/to/:userId',
   NOTIFICATIONS: '/notifications',

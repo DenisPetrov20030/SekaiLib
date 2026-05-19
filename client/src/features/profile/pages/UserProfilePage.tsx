@@ -9,7 +9,6 @@ import { ROUTES } from '../../../core/constants';
 import type { UserProfile } from '../../../core/types';
 import type { TitleDto } from '../../../core/types/dtos';
 import type { PagedResponse } from '../../../core/types';
-import type { UserList } from '../../../core/types';
 
 export const UserProfilePage = () => {
   const { user: authUser } = useAppSelector((state) => state.auth);
@@ -21,9 +20,6 @@ export const UserProfilePage = () => {
   const [titles, setTitles] = useState<PagedResponse<TitleDto> | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [lists, setLists] = useState<UserList[]>([]);
-  const [listsLoading, setListsLoading] = useState(true);
-const [listsError, setListsError] = useState<string | null>(null);
   const [isFriend, setIsFriend] = useState(false);
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
   const [friendActionLoading, setFriendActionLoading] = useState(false);
@@ -33,7 +29,6 @@ const [listsError, setListsError] = useState<string | null>(null);
     if (userId) {
       loadProfile();
       loadTitles(1);
-      loadCustomLists();
       loadFriendshipStatus();
       loadPendingRequestStatus();
       loadFriendsCount();
@@ -52,21 +47,6 @@ const [listsError, setListsError] = useState<string | null>(null);
       console.error('Failed to load profile:', error);
     } finally {
       setProfileLoading(false);
-    }
-  };
-
-  const loadCustomLists = async () => {
-    try {
-      setListsLoading(true);
-      setListsError(null);
-      const data = await usersApi.getUserCustomLists(userId!);
-      setLists(data);
-    } catch (e) {
-      console.error('Не вдалося завантажити списки користувача:', e);
-      setListsError('Не вдалося завантажити списки користувача');
-      setLists([]);
-    } finally {
-      setListsLoading(false);
     }
   };
 
@@ -284,7 +264,7 @@ const [listsError, setListsError] = useState<string | null>(null);
             {authUser?.id !== userId && (
               <BlockButton userId={userId!} />
             )}
-            <Link to={`/users/${userId}/reading-lists`}>
+            <Link to={ROUTES.USER_ALL_LISTS.replace(':userId', userId!)}>
               <Button>Перейти до списків</Button>
             </Link>
           </div>
@@ -292,32 +272,9 @@ const [listsError, setListsError] = useState<string | null>(null);
       </div>
 
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-text-primary mb-4">Списки користувача</h2>
-        {listsLoading ? (
-          <div className="text-text-muted">Завантаження...</div>
-        ) : listsError ? (
-          <div className="text-red-500">{listsError}</div>
-        ) : lists.length === 0 ? (
-          <div className="text-text-muted">Списків поки немає</div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {lists.map((list) => (
-              <Link
-                key={list.id}
-                to={`/user-lists/${list.id}`}
-                className="p-4 bg-surface-800 rounded-lg border border-surface-700 hover:border-primary-500 transition-colors group"
-              >
-                <div className="flex justify-between items-start">
-                  <h3 className="font-semibold text-text-primary group-hover:text-primary-500">{list.name}</h3>
-                  <span className="text-xs bg-surface-700 px-2 py-0.5 rounded">{list.titlesCount ?? 0} творів</span>
-                </div>
-                {list.description && (
-                  <p className="text-text-muted text-sm mt-2 line-clamp-1">{list.description}</p>
-                )}
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h2 className="text-2xl font-bold text-text-primary">Списки користувача</h2>
+        </div>
       </div>
 
       <div className="mb-6">

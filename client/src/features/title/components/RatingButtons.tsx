@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppSelector } from '../../../app/store/hooks';
 import { ReactionType } from '../../../core/types/enums';
 import { ratingsApi } from '../../../core/api';
@@ -15,6 +15,10 @@ export function RatingButtons({ titleId, initialRating, onLoginRequired }: Ratin
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const [rating, setRating] = useState<TitleRating | undefined>(initialRating);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setRating(initialRating);
+  }, [initialRating]);
 
   const handleRate = async (type: ReactionType) => {
     if (!isAuthenticated) {

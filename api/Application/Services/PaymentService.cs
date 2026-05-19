@@ -117,24 +117,27 @@ public class PaymentService : IPaymentService
         {
             payment.Status = cb.Status == "sandbox" ? PaymentStatus.Sandbox : PaymentStatus.Success;
 
-            // Видаємо доступ
-            var purchase = new UserPurchase
+            // Надаємо доступ до контенту
+            if (payment.ChapterId.HasValue)
             {
-                Id = Guid.NewGuid(),
-                UserId = payment.UserId,
-                ChapterId = payment.ChapterId,
-                PaymentId = payment.Id,
-                PurchasedAt = DateTime.UtcNow
-            };
+                var purchase = new UserPurchase
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = payment.UserId,
+                    ChapterId = payment.ChapterId.Value,
+                    PaymentId = payment.Id,
+                    PurchasedAt = DateTime.UtcNow
+                };
 
-            await _unitOfWork.UserPurchases.AddAsync(purchase);
-            _logger.LogInformation(
-                "Користувач {UserId} успішно придбав розділ {ChapterId}", payment.UserId, payment.ChapterId);
+                await _unitOfWork.UserPurchases.AddAsync(purchase);
+                _logger.LogInformation(
+                    "Користувач {UserId} успішно придбав розділ {ChapterId}", payment.UserId, payment.ChapterId);
+            }
         }
         else if (cb.Status == "reversed")
         {
             payment.Status = PaymentStatus.Reversed;
-            // Відкликаємо доступ
+            // Відкликаємо доступ у разі повернення коштів
             var purchase = await _unitOfWork.UserPurchases.Query()
                 .FirstOrDefaultAsync(p => p.PaymentId == payment.Id);
             if (purchase != null)
@@ -192,7 +195,7 @@ public class PaymentService : IPaymentService
 
         if (payment == null) return null;
 
-        // Already in a terminal state — nothing to refresh
+        // Термінальні статуси — відразу повертаємо актуальний стейт без повторного запиту
         if (payment.Status == PaymentStatus.Success || payment.Status == PaymentStatus.Sandbox
             || payment.Status == PaymentStatus.Failure || payment.Status == PaymentStatus.Reversed)
         {
@@ -210,15 +213,14 @@ public class PaymentService : IPaymentService
 
         _logger.LogInformation("RefreshFromLiqPay: {OrderId} → {Status}", orderId, cb.Status);
 
-        // Reuse the same callback handler logic
         payment.LiqPayStatus = cb.Status;
         payment.LiqPayPaymentId = cb.PaymentId;
+        payment.CompletedAt = DateTime.UtcNow;
 
         var isSuccess = cb.Status is "success" or "sandbox";
         if (isSuccess)
         {
             payment.Status = cb.Status == "sandbox" ? PaymentStatus.Sandbox : PaymentStatus.Success;
-            payment.CompletedAt = DateTime.UtcNow;
 
             var alreadyPurchased = await _unitOfWork.UserPurchases.Query()
                 .AnyAsync(p => p.PaymentId == payment.Id);
@@ -229,23 +231,27 @@ public class PaymentService : IPaymentService
                 {
                     Id = Guid.NewGuid(),
                     UserId = payment.UserId,
-                    ChapterId = payment.ChapterId,
+                    ChapterId = payment.ChapterId.Value,
                     PaymentId = payment.Id,
                     PurchasedAt = DateTime.UtcNow
                 });
+                _logger.LogInformation("RefreshFromLiqPay: Надано доступ до розділу {ChapterId} для користувача {UserId}", payment.ChapterId, payment.UserId);
             }
+        }
+        // Якщо повернулася помилка або платіж відхилено шлюзом
+        else if (cb.Status is "error" or "failure" || cb.Status.Contains("err_"))
+        {
+            payment.Status = PaymentStatus.Failure;
         }
         else if (cb.Status == "reversed")
         {
             payment.Status = PaymentStatus.Reversed;
-            payment.CompletedAt = DateTime.UtcNow;
+            var purchase = await _unitOfWork.UserPurchases.Query()
+                .FirstOrDefaultAsync(p => p.PaymentId == payment.Id);
+            if (purchase != null)
+                await _unitOfWork.UserPurchases.DeleteAsync(purchase);
         }
-        else if (cb.Status is "error" or "failure")
-        {
-            payment.Status = PaymentStatus.Failure;
-            payment.CompletedAt = DateTime.UtcNow;
-        }
-        // "processing", "prepared", etc. → still pending, don't update status
+        // Інші статуси на кшталт "processing" або "prepared" залишають транзакцію в Pending
 
         await _unitOfWork.Payments.UpdateAsync(payment);
         await _unitOfWork.SaveChangesAsync();
@@ -272,21 +278,24 @@ public class PaymentService : IPaymentService
         payment.LiqPayStatus = "sandbox";
         payment.CompletedAt = DateTime.UtcNow;
 
-        var purchase = new UserPurchase
+        if (payment.ChapterId.HasValue)
         {
-            Id = Guid.NewGuid(),
-            UserId = payment.UserId,
-            ChapterId = payment.ChapterId,
-            PaymentId = payment.Id,
-            PurchasedAt = DateTime.UtcNow
-        };
+            var purchase = new UserPurchase
+            {
+                Id = Guid.NewGuid(),
+                UserId = payment.UserId,
+                ChapterId = payment.ChapterId.Value,
+                PaymentId = payment.Id,
+                PurchasedAt = DateTime.UtcNow
+            };
 
-        await _unitOfWork.UserPurchases.AddAsync(purchase);
+            await _unitOfWork.UserPurchases.AddAsync(purchase);
+            _logger.LogInformation(
+                "SimulateSuccess: користувач {UserId} отримав доступ до розділу {ChapterId}",
+                payment.UserId, payment.ChapterId);
+        }
+
         await _unitOfWork.Payments.UpdateAsync(payment);
         await _unitOfWork.SaveChangesAsync();
-
-        _logger.LogInformation(
-            "SimulateSuccess: користувач {UserId} отримав доступ до розділу {ChapterId}",
-            payment.UserId, payment.ChapterId);
     }
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { blocksApi } from '../../core/api/blocks';
 import { useAppSelector } from '../../app/store/hooks';
+import { Button } from './Button';
 
 interface BlockButtonProps {
   userId: string;
@@ -43,19 +44,14 @@ export function BlockButton({ userId, className }: BlockButtonProps) {
   if (loading) return null;
 
   return (
-    <button
+    <Button
       onClick={toggle}
       disabled={toggling}
-      className={
-        className ??
-        `text-sm px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 ${
-          blocked
-            ? 'bg-surface-700 hover:bg-surface-600 text-text-muted'
-            : 'bg-red-600/20 hover:bg-red-600/40 text-red-400'
-        }`
-      }
+      variant={blocked ? 'secondary' : 'primary'}
+      size="md"
+      className={className}
     >
       {toggling ? '...' : blocked ? 'Розблокувати' : 'Заблокувати'}
-    </button>
+    </Button>
   );
 }

@@ -531,7 +531,8 @@ public async Task<IActionResult> SendFriendRequest(Guid id)
     await _unitOfWork.SaveChangesAsync();
 
     var sender = await _unitOfWork.Users.GetByIdAsync(me);
-    if (sender != null)
+    var recipient = await _unitOfWork.Users.GetByIdAsync(id);
+    if (sender != null && recipient?.NotifyFriendRequests == true)
     {
         await _notifications.CreateAsync(new CreateNotificationRequest(
             id,

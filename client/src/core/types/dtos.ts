@@ -249,6 +249,12 @@ export interface TeamMemberDto {
   joinedAt: string;
 }
 
+export interface TeamUserSearchDto {
+  id: string;
+  username: string;
+  avatarUrl?: string | null;
+}
+
 export interface CreateTeamRequest {
   name: string;
   description: string;

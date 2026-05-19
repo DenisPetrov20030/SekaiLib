@@ -5,8 +5,8 @@ namespace SekaiLib.Application.Interfaces;
 
 public interface ICollectionService
 {
-    Task<PagedResult<CollectionDto>> GetAllAsync(string? search, int page, int pageSize);
-    Task<IEnumerable<CollectionDto>> GetByUserAsync(Guid userId, Guid? titleId = null);
+    Task<PagedResult<CollectionDto>> GetAllAsync(string? search, Guid? viewerUserId, int page, int pageSize);
+    Task<IEnumerable<CollectionDto>> GetByUserAsync(Guid userId, Guid? titleId = null, Guid? viewerUserId = null);
     Task<CollectionDetailsDto> GetByIdAsync(Guid id, Guid? viewerUserId, string? ipAddress = null);
     Task<CollectionDetailsDto> CreateAsync(Guid authorId, CreateCollectionRequest request);
     Task<CollectionDetailsDto> UpdateAsync(Guid userId, Guid id, UpdateCollectionRequest request);

@@ -40,6 +40,9 @@ export const ForumThreadPage = () => {
   // Edit
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [editingThreadTitle, setEditingThreadTitle] = useState(false);
+  const [threadTitleDraft, setThreadTitleDraft] = useState('');
+  const [savingThreadTitle, setSavingThreadTitle] = useState(false);
 
   useEffect(() => {
     if (!threadId) return;
@@ -98,6 +101,31 @@ export const ForumThreadPage = () => {
       await forumApi.deleteThread(thread.id);
       navigate(ROUTES.FORUM_CATEGORY.replace(':categoryId', thread.categoryId));
     } catch (e) { console.error(e); }
+  };
+
+  const startEditThreadTitle = () => {
+    if (!thread) return;
+    setThreadTitleDraft(thread.title);
+    setEditingThreadTitle(true);
+  };
+
+  const cancelEditThreadTitle = () => {
+    setEditingThreadTitle(false);
+    setThreadTitleDraft('');
+  };
+
+  const handleSaveThreadTitle = async () => {
+    if (!thread || !threadTitleDraft.trim()) return;
+    setSavingThreadTitle(true);
+    try {
+      const updated = await forumApi.updateThread(thread.id, { title: threadTitleDraft.trim() });
+      setThread(updated);
+      setEditingThreadTitle(false);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSavingThreadTitle(false);
+    }
   };
 
   const startEdit = (post: ForumPostDto) => {
@@ -176,6 +204,8 @@ export const ForumThreadPage = () => {
     );
   }
 
+  const canManageThread = !!user && (user.id === thread.authorId || user.role >= UserRole.Moderator);
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Breadcrumb */}
@@ -208,6 +238,32 @@ export const ForumThreadPage = () => {
               )}
               <h1 className="text-2xl font-bold text-text-primary">{thread.title}</h1>
             </div>
+            {editingThreadTitle && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  value={threadTitleDraft}
+                  onChange={e => setThreadTitleDraft(e.target.value)}
+                  maxLength={200}
+                  className="w-full sm:w-auto sm:min-w-[360px] flex-1 px-3 py-2 rounded-lg bg-surface-2 border border-border text-text-primary focus:outline-none focus:border-primary-500"
+                  placeholder="Нова назва треду"
+                />
+                <button
+                  onClick={handleSaveThreadTitle}
+                  disabled={savingThreadTitle || !threadTitleDraft.trim()}
+                  className="px-4 py-2 bg-primary-500 hover:bg-primary-600 disabled:opacity-50 text-white rounded-lg text-sm transition-colors"
+                >
+                  {savingThreadTitle ? 'Збереження...' : 'Зберегти'}
+                </button>
+                <button
+                  onClick={cancelEditThreadTitle}
+                  disabled={savingThreadTitle}
+                  className="px-4 py-2 text-text-secondary hover:text-text-primary text-sm transition-colors"
+                >
+                  Скасувати
+                </button>
+              </div>
+            )}
             <p className="text-text-muted text-sm mt-2">
               <span className="text-primary-400">@{thread.authorUsername}</span>
               {' · '}{formatDate(thread.createdAt)}
@@ -215,22 +271,35 @@ export const ForumThreadPage = () => {
             </p>
           </div>
 
-          {/* Moderator controls */}
-          {isModerator && (
+          {/* Thread controls */}
+          {canManageThread && (
             <div className="flex gap-2 flex-shrink-0">
+              {isModerator && (
+                <>
+                  <button
+                    onClick={handlePin}
+                    title={thread.isPinned ? 'Відкріпити' : 'Закріпити'}
+                    className="p-2 rounded-lg bg-surface-2 hover:bg-surface-3 text-text-secondary hover:text-text-primary transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                  </button>
+                  <button
+                    onClick={handleLock}
+                    title={thread.isLocked ? 'Розблокувати' : 'Заблокувати'}
+                    className="p-2 rounded-lg bg-surface-2 hover:bg-surface-3 text-text-secondary hover:text-text-primary transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  </button>
+                </>
+              )}
               <button
-                onClick={handlePin}
-                title={thread.isPinned ? 'Відкріпити' : 'Закріпити'}
+                onClick={editingThreadTitle ? cancelEditThreadTitle : startEditThreadTitle}
                 className="p-2 rounded-lg bg-surface-2 hover:bg-surface-3 text-text-secondary hover:text-text-primary transition-colors"
+                title="Редагувати назву"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
-              </button>
-              <button
-                onClick={handleLock}
-                title={thread.isLocked ? 'Розблокувати' : 'Заблокувати'}
-                className="p-2 rounded-lg bg-surface-2 hover:bg-surface-3 text-text-secondary hover:text-text-primary transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
               </button>
               <button
                 onClick={handleDeleteThread}

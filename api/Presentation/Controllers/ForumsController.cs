@@ -69,7 +69,7 @@ public class ForumsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        var result = await _forumService.GetThreadsAsync(categoryId, page, pageSize);
+        var result = await _forumService.GetThreadsAsync(categoryId, OptionalUserId, page, pageSize);
         return Ok(result);
     }
 
@@ -79,7 +79,7 @@ public class ForumsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        var result = await _forumService.SearchThreadsAsync(q, page, pageSize);
+        var result = await _forumService.SearchThreadsAsync(q, OptionalUserId, page, pageSize);
         return Ok(result);
     }
 
@@ -96,6 +96,14 @@ public class ForumsController : ControllerBase
     public async Task<ActionResult<ForumThreadDetailsDto>> CreateThread([FromBody] CreateThreadRequest request)
     {
         var result = await _forumService.CreateThreadAsync(UserId, request);
+        return Ok(result);
+    }
+
+    [HttpPut("threads/{threadId}")]
+    [Authorize]
+    public async Task<ActionResult<ForumThreadDetailsDto>> UpdateThread(Guid threadId, [FromBody] UpdateThreadRequest request)
+    {
+        var result = await _forumService.UpdateThreadAsync(UserId, threadId, request);
         return Ok(result);
     }
 

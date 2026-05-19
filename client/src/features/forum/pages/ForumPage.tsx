@@ -57,6 +57,19 @@ export const ForumPage = () => {
     }
   };
 
+  const handleDeleteCategory = async (id: string, name: string) => {
+    if (!confirm(`Видалити категорію "${name}"? Це видалить всі треди у цій категорії.`)) {
+      return;
+    }
+    try {
+      await forumApi.deleteCategory(id);
+      setCategories(prev => prev.filter(c => c.id !== id));
+    } catch (e) {
+      console.error('Delete category error:', e);
+      alert('Не вдалося видалити категорію');
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
@@ -96,60 +109,86 @@ export const ForumPage = () => {
       ) : (
         <div className="space-y-3">
           {categories.map(cat => (
-            <Link
+            <div
               key={cat.id}
-              to={ROUTES.FORUM_CATEGORY.replace(':categoryId', cat.id)}
-              className="block bg-surface-1 border border-border rounded-xl p-5 hover:border-primary-500/50 transition-colors group"
+              // Додано flex items-center та relative для ідеального позиціонування елементів всередині рядка
+              className="relative flex items-center bg-surface-1 border border-border rounded-xl hover:border-primary-500/50 transition-all duration-200 group overflow-hidden"
             >
-              <div className="flex items-start gap-4">
-                {/* Icon */}
-                <div className="w-12 h-12 rounded-xl bg-primary-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-500/20 transition-colors">
-                  {cat.iconEmoji ? (
-                    <span className="text-2xl">{cat.iconEmoji}</span>
-                  ) : (
-                    <svg className="w-6 h-6 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  )}
-                </div>
-
-                {/* Main info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold text-text-primary group-hover:text-primary-400 transition-colors">
-                      {cat.name}
-                    </h2>
-                  </div>
-                  {cat.description && (
-                    <p className="text-text-secondary text-sm mt-0.5 line-clamp-1">{cat.description}</p>
-                  )}
-
-                  {/* Last post */}
-                  {cat.lastPostAt && (
-                    <p className="text-text-muted text-xs mt-2">
-                      Остання активність:{' '}
-                      <span className="text-text-secondary">{cat.lastPostThreadTitle}</span>
-                      {cat.lastPostUsername && (
-                        <> · <span className="text-primary-400">@{cat.lastPostUsername}</span></>
+              <Link
+                to={ROUTES.FORUM_CATEGORY.replace(':categoryId', cat.id)}
+                // pr-16 резервує місце для смітника праворуч, щоб текст не залазив під нього при ховері
+                className={`block flex-1 p-5 ${isModerator ? 'pr-16' : ''}`}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-start gap-4 min-w-0 flex-1">
+                    {/* Icon */}
+                    <div className="w-12 h-12 rounded-xl bg-primary-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-500/20 transition-colors">
+                      {cat.iconEmoji ? (
+                        <span className="text-2xl">{cat.iconEmoji}</span>
+                      ) : (
+                        <svg className="w-6 h-6 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
                       )}
-                      {' · '}{formatRelativeDate(cat.lastPostAt)}
-                    </p>
-                  )}
-                </div>
+                    </div>
 
-                {/* Stats */}
-                <div className="flex gap-6 flex-shrink-0 text-right">
-                  <div>
-                    <p className="text-lg font-bold text-text-primary">{cat.threadCount}</p>
-                    <p className="text-xs text-text-muted">тредів</p>
+                    {/* Main info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h2 className={`text-lg font-semibold text-text-primary group-hover:text-primary-400 transition-colors truncate ${cat.description ? '' : 'mt-2'}`}>
+                          {cat.name}
+                        </h2>
+                      </div>
+                      {cat.description && (
+                        <p className="text-text-secondary text-sm mt-0.5 line-clamp-1">{cat.description}</p>
+                      )}
+
+                      {/* Last post */}
+                      {cat.lastPostAt && (
+                        <p className="text-text-muted text-xs mt-2 truncate">
+                          Остання активність:{' '}
+                          <span className="text-text-secondary">{cat.lastPostThreadTitle}</span>
+                          {cat.lastPostUsername && (
+                            <> · <span className="text-primary-400">@{cat.lastPostUsername}</span></>
+                          )}
+                          {' · '}{formatRelativeDate(cat.lastPostAt)}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-lg font-bold text-text-primary">{cat.postCount}</p>
-                    <p className="text-xs text-text-muted">дописів</p>
+
+                  {/* Stats */}
+                  <div className="flex gap-4 flex-shrink-0 text-center mr-2">
+                    <div className="w-14">
+                      <p className="text-lg font-bold text-text-primary">{cat.threadCount}</p>
+                      <p className="text-xs text-text-muted">тредів</p>
+                    </div>
+                    <div className="w-14">
+                      <p className="text-lg font-bold text-text-primary">{cat.postCount}</p>
+                      <p className="text-xs text-text-muted">дописів</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+
+              {/* Кнопка видалення винесена за межі Link та вирівняна абсолютно по центру правої частини */}
+              {isModerator && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // Захист від переходу по лінці картки
+                    handleDeleteCategory(cat.id, cat.name);
+                  }}
+                  // Встановлено absolute, right-4 та top-1/2 -translate-y-1/2 для залізобетонного центрування
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-lg text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 opacity-0 group-hover:opacity-100 flex items-center justify-center"
+                  title="Видалити категорію"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}

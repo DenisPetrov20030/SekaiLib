@@ -14,14 +14,16 @@ public class CollectionService : ICollectionService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IViewTrackingService _viewTracking;
+    private readonly IUserBlockService _userBlockService;
 
-    public CollectionService(IUnitOfWork unitOfWork, IViewTrackingService viewTracking)
+    public CollectionService(IUnitOfWork unitOfWork, IViewTrackingService viewTracking, IUserBlockService userBlockService)
     {
         _unitOfWork = unitOfWork;
         _viewTracking = viewTracking;
+        _userBlockService = userBlockService;
     }
 
-    public async Task<PagedResult<CollectionDto>> GetAllAsync(string? search, int page, int pageSize)
+    public async Task<PagedResult<CollectionDto>> GetAllAsync(string? search, Guid? viewerUserId, int page, int pageSize)
     {
         var query = _unitOfWork.Collections.Query()
             .Include(c => c.Author)
@@ -32,6 +34,13 @@ public class CollectionService : ICollectionService
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(c => c.Title.Contains(search));
+
+        if (viewerUserId.HasValue)
+        {
+            var blockedIds = (await _userBlockService.GetBlockedUserIdsAsync(viewerUserId.Value)).ToHashSet();
+            if (blockedIds.Count > 0)
+                query = query.Where(c => !blockedIds.Contains(c.AuthorId));
+        }
 
         var totalCount = await query.CountAsync();
 
@@ -50,7 +59,7 @@ public class CollectionService : ICollectionService
         };
     }
 
-    public async Task<IEnumerable<CollectionDto>> GetByUserAsync(Guid userId, Guid? titleId = null)
+    public async Task<IEnumerable<CollectionDto>> GetByUserAsync(Guid userId, Guid? titleId = null, Guid? viewerUserId = null)
     {
         var collections = await _unitOfWork.Collections.Query()
             .Include(c => c.Author)
@@ -60,6 +69,14 @@ public class CollectionService : ICollectionService
             .Where(c => c.AuthorId == userId)
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
+
+        // If viewer has blocked the author, return empty
+        if (viewerUserId.HasValue)
+        {
+            var blockedIds = (await _userBlockService.GetBlockedUserIdsAsync(viewerUserId.Value)).ToHashSet();
+            if (blockedIds.Contains(userId))
+                return Enumerable.Empty<CollectionDto>();
+        }
 
         return collections.Select(c => MapToDto(c, titleId));
     }
