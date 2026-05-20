@@ -266,16 +266,10 @@ export const UserProfilePage = () => {
             {authUser?.id !== userId && (
               <BlockButton userId={userId!} />
             )}
-            <Link to={ROUTES.USER_ALL_LISTS.replace(':userId', userId!)}>
+            <Link to={`/users/${userId}/reading-lists`} state={{ username: profile.username }}>
               <Button>Перейти до списків</Button>
             </Link>
           </div>
-        </div>
-      </div>
-
-      <div className="mb-8">
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <h2 className="text-2xl font-bold text-text-primary">Списки користувача</h2>
         </div>
       </div>
 

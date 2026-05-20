@@ -4,6 +4,7 @@ import { collectionsApi } from '../../../core/api/collections';
 import type { CollectionDetailsDto, CollectionCommentDto, CollectionItemDto } from '../../../core/api/collections';
 import { useAppSelector } from '../../../app/store/hooks';
 import { Button } from '../../../shared/components';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import { ROUTES } from '../../../core/constants';
 
 const formatTime = (iso: string) => {
@@ -72,7 +73,7 @@ const TitleCard = ({ item, canEdit, onRemove, sections, currentSectionId, moving
           onChange={(e) => onMove(item.id, e.target.value || null, currentSectionId ?? null)}
           className="w-full rounded-md border border-divider bg-surface px-2 py-1 text-xs text-text-secondary outline-none focus:border-primary-500"
         >
-          <option value="">Інші тайтли</option>
+          <option value="">Інші твори</option>
           {sections.map((section) => (
             <option key={section.id} value={section.id}>{section.name}</option>
           ))}
@@ -92,6 +93,7 @@ const CommentItem = ({ comment, currentUserId, collectionId, onDeleted, onReply,
   onReply: (commentId: string, username: string) => void;
   onAnyCommentDeleted?: () => void;
 }) => {
+  const { confirm } = useDialog();
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState<CollectionCommentDto[]>([]);
   const [loadingReplies, setLoadingReplies] = useState(false);
@@ -109,7 +111,8 @@ const CommentItem = ({ comment, currentUserId, collectionId, onDeleted, onReply,
   };
 
   const handleDelete = async () => {
-    if (!confirm('Видалити коментар?')) return;
+    const ok = await confirm({ title: 'Видалити коментар?', confirmLabel: 'Видалити', variant: 'danger' });
+    if (!ok) return;
     try {
       await collectionsApi.deleteComment(collectionId, comment.id);
       onDeleted(comment.id);
@@ -177,6 +180,7 @@ export const CollectionDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const currentUser = useAppSelector((s) => s.auth.user);
+  const { confirm, alert } = useDialog();
 
   const [collection, setCollection] = useState<CollectionDetailsDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -254,19 +258,26 @@ export const CollectionDetailsPage = () => {
       setCollection(updated);
       setIsEditing(false);
     } catch (err: any) {
-      alert(err?.message ?? 'Помилка збереження.');
+      await alert({ title: 'Помилка', message: err?.message ?? 'Не вдалося зберегти' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!id || !confirm('Видалити колекцію? Цю дію не можна скасувати.')) return;
+    if (!id) return;
+    const ok = await confirm({
+      title: 'Видалити колекцію?',
+      message: 'Цю дію не можна скасувати.',
+      confirmLabel: 'Видалити',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       await collectionsApi.delete(id);
       navigate(ROUTES.COLLECTIONS);
     } catch (err: any) {
-      alert(err?.message ?? 'Помилка видалення.');
+      await alert({ title: 'Помилка', message: err?.message ?? 'Не вдалося видалити' });
     }
   };
 
@@ -283,7 +294,14 @@ export const CollectionDetailsPage = () => {
   };
 
   const handleDeleteSection = async (sectionId: string) => {
-    if (!id || !confirm('Видалити розділ? Тайтли перейдуть до загального списку.')) return;
+    if (!id) return;
+    const ok = await confirm({
+      title: 'Видалити секцію?',
+      message: 'Твори перейдуть до загального списку.',
+      confirmLabel: 'Видалити',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       setLoading(true);
       await collectionsApi.deleteSection(id, sectionId);
@@ -300,7 +318,7 @@ export const CollectionDetailsPage = () => {
       });
     } catch (err: any) {
       console.error(err);
-      alert(err?.message ?? 'Помилка видалення розділу.');
+      await alert({ title: 'Помилка', message: err?.message ?? 'Не вдалося видалити секцію' });
     } finally {
       setLoading(false);
     }
@@ -621,7 +639,7 @@ export const CollectionDetailsPage = () => {
       {collection.uncategorizedItems.length > 0 && (
         <div className="mb-8">
           {collection.sections.length > 0 && (
-            <h2 className="text-xl font-semibold text-text-primary mb-4">Інші тайтли</h2>
+            <h2 className="text-xl font-semibold text-text-primary mb-4">Інші твори</h2>
           )}
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 auto-rows-fr">
             {collection.uncategorizedItems.map((item) => (
@@ -643,7 +661,7 @@ export const CollectionDetailsPage = () => {
       {allItems.length === 0 && (
         <div className="rounded-xl border border-dashed border-divider px-6 py-12 text-center mb-8">
           <p className="text-text-muted">Колекція порожня</p>
-          {isOwner && <p className="text-text-muted text-sm mt-1">Додавайте тайтли зі сторінок тайтлів</p>}
+          {isOwner && <p className="text-text-muted text-sm mt-1">Додавайте твори зі сторінок творів</p>}
         </div>
       )}
 

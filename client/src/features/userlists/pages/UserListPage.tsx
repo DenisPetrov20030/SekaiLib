@@ -55,7 +55,7 @@ export const UserListPage = () => {
         </div>
       ) : (
         <div className="text-center py-12">
-          <p className="text-text-muted">У списку немає тайтлів</p>
+          <p className="text-text-muted">У списку немає творів</p>
         </div>
       )}
     </div>

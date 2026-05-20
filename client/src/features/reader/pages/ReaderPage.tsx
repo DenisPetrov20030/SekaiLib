@@ -218,7 +218,7 @@ export const ReaderPage = () => {
 
   useEffect(() => {
     if (currentChapter) {
-      document.title = `${currentChapter.titleName} - Глава ${currentChapter.chapterNumber} | SekaiLib`;
+      document.title = `${currentChapter.titleName} - Розділ ${currentChapter.chapterNumber} | SekaiLib`;
     }
   }, [currentChapter]);
 
@@ -239,7 +239,7 @@ export const ReaderPage = () => {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen">
         <div className="text-center text-red-600 mb-4 text-xl font-medium">
-          {error || 'Главу не знайдено'}
+          {error || 'Розділ не знайдено'}
         </div>
         <button 
           onClick={() => navigate(`/titles/${titleId}`)}
@@ -263,7 +263,7 @@ export const ReaderPage = () => {
           </div>
           <PaymentGate
             chapterId={currentChapter.id}
-            chapterName={`Глава ${currentChapter.chapterNumber}: ${currentChapter.name}`}
+            chapterName={`Розділ ${currentChapter.chapterNumber}: ${currentChapter.name}`}
             titleName={currentChapter.titleName}
             price={currentChapter.price ?? 0}
           />
@@ -302,8 +302,8 @@ export const ReaderPage = () => {
         {showGoToStart && (
           <button
             onClick={handleGoToStart}
-            title="До початку глави"
-            aria-label="До початку глави"
+            title="До початку розділу"
+            aria-label="До початку розділу"
             className="fixed bottom-8 right-8 z-40 w-16 h-16 rounded-full bg-orange-600 text-white shadow-lg hover:bg-orange-700 transition flex items-center justify-center ring-2 ring-white/20"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -354,7 +354,7 @@ export const ReaderPage = () => {
           <h1 className="text-4xl font-bold mb-4">{currentChapter.titleName}</h1>
           <div className="h-1 w-20 bg-orange-600 mx-auto mb-4"></div>
           <h2 className="text-2xl opacity-80 font-medium italic">
-            Глава {currentChapter.chapterNumber}{currentChapter.name && `: ${currentChapter.name}`}
+            Розділ {currentChapter.chapterNumber}{currentChapter.name && `: ${currentChapter.name}`}
           </h2>
           {viewCount !== null && (
             <p className="mt-3 text-sm opacity-40 flex items-center justify-center gap-1">
@@ -436,7 +436,7 @@ export const ReaderPage = () => {
           ) : <div className="w-32"></div>}
 
           <div className="text-base font-medium opacity-60">
-            Глава {currentChapter.chapterNumber}
+            Розділ {currentChapter.chapterNumber}
           </div>
 
           {currentChapter.nextChapterNumber ? (

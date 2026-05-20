@@ -11,7 +11,7 @@ const FLAG_LABELS: Record<string, string> = {
   profanity: 'Нецензурна лексика',
   spam: 'Спам',
   caps_abuse: 'Зловживання капслоком',
-  chapter_upload: 'Завантаження глави',
+  chapter_upload: 'Завантаження розділу',
   automod: 'Авто-модерація',
 };
 

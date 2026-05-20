@@ -127,7 +127,7 @@ export const HomePage = () => {
             const res = await apiClient.get('/users/reading-progress');
             setReadingProgress(Array.isArray(res.data) ? res.data : []);
         } catch (e) {
-            console.error('Не вдалося видалити тайтл з продовження', e);
+            console.error('Не вдалося видалити твір з продовження', e);
         }
     };
 
@@ -225,7 +225,7 @@ export const HomePage = () => {
                                 />
                                 <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black via-black/70 to-transparent text-left">
                                     <span className="inline-block bg-orange-600 text-white text-[10px] font-bold px-2 py-0.5 rounded mb-1">
-                                        Глава {chapter.number}
+                                        Розділ {chapter.number}
                                     </span>
                                     <p className="text-white text-sm font-semibold truncate">
                                         {chapter.title?.name}
@@ -289,7 +289,7 @@ export const HomePage = () => {
                                     )}
                                     <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black via-black/70 to-transparent text-left">
                                         <span className="inline-block bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded mb-1">
-                                            Глава {ch.chapterNumber}
+                                            Розділ {ch.chapterNumber}
                                         </span>
                                         <p className="text-white text-sm font-semibold truncate">
                                             {ch.titleName}
@@ -336,7 +336,7 @@ export const HomePage = () => {
                                             {item.titleName}
                                         </h3>
                                         <p className="text-gray-400 text-sm mt-1">
-                                            Глава {item.chapterNumber} —  {item.totalPages > 0 ? Math.round((Math.min((item.currentPage ?? 0) + 1, item.totalPages) / item.totalPages) * 100) : 0}%
+                                            Розділ {item.chapterNumber} —  {item.totalPages > 0 ? Math.round((Math.min((item.currentPage ?? 0) + 1, item.totalPages) / item.totalPages) * 100) : 0}%
                                         </p>
                                         <div className="w-full bg-gray-700 h-1.5 rounded-full mt-3 overflow-hidden">
                                             <div
@@ -365,7 +365,7 @@ export const HomePage = () => {
             <section>
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-white">
                     <span className="w-1 h-8 bg-blue-500 rounded-full"></span>
-                    Останні додані тайтли
+                    Останні додані твори
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
                     {latestTitles.slice(0, 10).map((title: any) => (

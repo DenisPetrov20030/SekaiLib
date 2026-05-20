@@ -53,7 +53,7 @@ export const CollectionsPage = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Колекції</h1>
-          <p className="text-text-muted mt-1 text-sm">Добірки тайтлів від спільноти</p>
+          <p className="text-text-muted mt-1 text-sm">Добірки творів від спільноти</p>
         </div>
 
         {isAuth && (
@@ -98,7 +98,6 @@ export const CollectionsPage = () => {
         </div>
       ) : (
         <>
-          {/* Чистий адаптивний грид. Картки займають свою фіксовану частину і не розтягуються */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {collections.map((col) => (
               <CollectionCard key={col.id} collection={col} />

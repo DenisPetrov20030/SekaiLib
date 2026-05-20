@@ -16,7 +16,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
   { id: 'general', title: 'Загальні питання', description: 'Про платформу, її роботу та основні можливості', icon: '❓' },
   { id: 'reading', title: 'Читання та інтерфейс', description: 'Налаштування читалки, шрифти, теми та функціонал', icon: '📖' },
   { id: 'account', title: 'Акаунт та профіль', description: 'Керування профілем, списками читання, безпека акаунту', icon: '👤' },
-  { id: 'translations', title: 'Команди та переклади', description: 'Додавання тайтлів, розділів та робота перекладацьких команд', icon: '👥' }
+  { id: 'translations', title: 'Команди та переклади', description: 'Додавання творів, розділів та робота перекладацьких команд', icon: '👥' }
 ];
 
 export function FaqCategoryPage() {

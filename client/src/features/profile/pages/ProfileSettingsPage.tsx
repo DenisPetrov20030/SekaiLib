@@ -570,7 +570,7 @@ export const ProfileSettingsPage = () => {
                           setProfile({ ...profile, notifyTitleCompleted: e.target.checked } as any);
                         }}
                       />
-                      <span className="text-sm text-text-secondary">Сповіщати про «Завершення» тайтла з моїх списків</span>
+                      <span className="text-sm text-text-secondary">Сповіщати про «Завершення» твору з моїх списків</span>
                     </label>
 
                     <label className="flex items-start gap-3 cursor-pointer">
@@ -660,7 +660,7 @@ export const ProfileSettingsPage = () => {
                                 {list.name}
                               </span>
                               <span className="text-xs text-text-muted block">
-                                {list.titlesCount} тайтлів
+                                {list.titlesCount} творів
                               </span>
                             </div>
                           </label>
@@ -789,7 +789,7 @@ export const ProfileSettingsPage = () => {
                   <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Вкладка профілю</p>
                   <h2 className="text-2xl font-bold text-text-primary mt-2">Фільтр контенту</h2>
                   <p className="text-sm text-text-secondary mt-1">
-                    Тайтли з обраними жанрами не відображатимуться у каталозі.
+                    Твори з обраними жанрами не відображатимуться у каталозі.
                   </p>
                 </div>
                 <Button onClick={handleSaveGenreFilter} disabled={savingGenres}>
@@ -966,7 +966,7 @@ export const ProfileSettingsPage = () => {
                     <div key={p.id} className="flex items-center justify-between rounded-lg border border-divider bg-surface-hover/40 px-4 py-3">
                       <div>
                         <p className="text-text-primary font-medium text-sm">
-                          {p.titleName ?? 'Невідомий твір'} — Глава {p.chapterNumber}
+                          {p.titleName ?? 'Невідомий твір'} — Розділ {p.chapterNumber}
                         </p>
                         <p className="text-text-muted text-xs mt-0.5">
                           {p.chapterName ?? ''} · {new Date(p.purchasedAt).toLocaleDateString('uk-UA')}
