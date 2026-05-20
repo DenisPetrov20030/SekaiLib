@@ -5,6 +5,7 @@ import type { Review, ReviewComment } from '../../../core/types';
 import { ReactionType } from '../../../core/types/enums';
 import { reviewsApi } from '../../../core/api';
 import { IconButton, Button, ReportButton } from '../../../shared/components';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import { ReportTargetType } from '../../../core/types/enums';
 import { ReviewForm } from './ReviewForm';
 
@@ -72,6 +73,7 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState('');
 
+  const { confirm } = useDialog();
   const isOwner = user?.id === currentReview.userId;
   const displayTitle = currentReview.title?.trim() || currentReview.content.slice(0, 120).trim() || 'Рецензія';
   const commentsCount = currentReview.commentsCount ?? countTopLevelComments(currentReview.comments);
@@ -95,10 +97,15 @@ export function ReviewCard({ review, titleId, onUpdate, onDelete, onLoginRequire
   };
 
   const handleDelete = async () => {
-    if (confirm('Ви впевнені, що хочете видалити цю рецензію?')) {
-      await reviewsApi.delete(titleId, currentReview.id);
-      onDelete(currentReview.id);
-    }
+    const ok = await confirm({
+      title: 'Видалити рецензію?',
+      message: 'Цю дію не можна скасувати.',
+      confirmLabel: 'Видалити',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    await reviewsApi.delete(titleId, currentReview.id);
+    onDelete(currentReview.id);
   };
 
   async function submitReply() {

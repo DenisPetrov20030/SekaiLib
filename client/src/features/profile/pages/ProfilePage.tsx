@@ -5,6 +5,7 @@ import { usersApi, messagesApi } from '../../../core/api';
 import { TitleCard } from '../../catalog/components/TitleCard';
 import { Pagination } from '../../catalog/components/Pagination';
 import { Button } from '../../../shared/components';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import { ROUTES } from '../../../core/constants';
 import type { TitleDto } from '../../../core/types/dtos';
 import type { PagedResponse, UserProfile } from '../../../core/types';
@@ -15,6 +16,7 @@ import { getCurrentUser } from '../../auth/store/authSlice';
 export const ProfilePage = () => {
   const { user: authUser } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
+  const { alert } = useDialog();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -207,7 +209,7 @@ export const ProfilePage = () => {
                           dispatch(fetchProfile());
                           dispatch(getCurrentUser());
                         } catch (err) {
-                          alert('Не вдалося завантажити аватар. Спробуйте інший файл.');
+                          await alert({ title: 'Помилка', message: 'Не вдалося завантажити аватар. Спробуйте інший файл.' });
                           console.error(err);
                         } finally {
                           setAvatarUploading(false);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { genresApi } from '../../../core/api';
 import { Button, Input, Modal } from '../../../shared/components';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import type { Genre } from '../../../core/api/genres';
 
 export const GenresManagementPage = () => {
@@ -9,6 +10,7 @@ export const GenresManagementPage = () => {
   const [editingGenre, setEditingGenre] = useState<Genre | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [genreName, setGenreName] = useState('');
+  const { confirm, alert } = useDialog();
 
   useEffect(() => {
     loadGenres();
@@ -36,7 +38,7 @@ export const GenresManagementPage = () => {
       loadGenres();
     } catch (error) {
       console.error('Failed to create genre:', error);
-      alert('Помилка при створенні жанру');
+      await alert({ title: 'Помилка', message: 'Не вдалося створити жанр' });
     }
   };
 
@@ -51,19 +53,20 @@ export const GenresManagementPage = () => {
       loadGenres();
     } catch (error) {
       console.error('Failed to update genre:', error);
-      alert('Помилка при оновленні жанру');
+      await alert({ title: 'Помилка', message: 'Не вдалося оновити жанр' });
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Ви впевнені, що хочете видалити цей жанр?')) return;
+    const ok = await confirm({ title: 'Видалити жанр?', confirmLabel: 'Видалити', variant: 'danger' });
+    if (!ok) return;
 
     try {
       await genresApi.delete(id);
       loadGenres();
     } catch (error) {
       console.error('Failed to delete genre:', error);
-      alert('Помилка при видаленні жанру');
+      await alert({ title: 'Помилка', message: 'Не вдалося видалити жанр' });
     }
   };
 

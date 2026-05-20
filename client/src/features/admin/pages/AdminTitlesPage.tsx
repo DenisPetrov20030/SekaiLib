@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { axiosInstance } from '../../../core/api';
 import { Button } from '../../../shared/components';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import { ROUTES } from '../../../core/constants';
 import type { Title } from '../../../core/types';
 
@@ -16,6 +17,7 @@ interface PagedResponse {
 export function AdminTitlesPage() {
   const [titles, setTitles] = useState<Title[]>([]);
   const [loading, setLoading] = useState(true);
+  const { confirm, alert } = useDialog();
 
   useEffect(() => {
     loadTitles();
@@ -34,13 +36,14 @@ export function AdminTitlesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Ви впевнені, що хочете видалити цей твір?')) return;
+    const ok = await confirm({ title: 'Видалити твір?', confirmLabel: 'Видалити', variant: 'danger' });
+    if (!ok) return;
 
     try {
       await axiosInstance.delete(`/admin/titles/${id}`);
       setTitles(titles.filter((t) => t.id !== id));
     } catch {
-      alert('Не вдалося видалити твір');
+      await alert({ title: 'Помилка', message: 'Не вдалося видалити твір' });
     }
   };
 

@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { newsApi } from '../../../core/api/news';
 import { ROUTES } from '../../../core/constants';
+import { useDialog } from '../../../shared/hooks/useDialog';
 
 export function AdminNewsEditPage() {
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const { alert } = useDialog();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -37,7 +39,7 @@ export function AdminNewsEditPage() {
       }
       navigate(ROUTES.ADMIN_NEWS);
     } catch {
-      alert('Помилка при збереженні');
+      await alert({ title: 'Помилка', message: 'Не вдалося зберегти' });
     } finally {
       setSubmitting(false);
     }

@@ -161,6 +161,7 @@ export interface ChapterContentDto {
   isPremium?: boolean;
   isLocked?: boolean;
   price?: number;
+  earlyAccessUntil?: string | null;
 }
 
 export interface CreateChapterRequest {
@@ -170,6 +171,7 @@ export interface CreateChapterRequest {
   isPremium: boolean;
   price?: number;
   translationTeamId?: string | null;
+  earlyAccessUntil?: string | null;
 }
 
 export interface UpdateChapterRequest {

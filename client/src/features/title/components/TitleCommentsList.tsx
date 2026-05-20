@@ -5,6 +5,7 @@ import type { ReviewComment } from '../../../core/types';
 import { ReactionType, ReportTargetType } from '../../../core/types/enums';
 import { useAppSelector } from '../../../app/store/hooks';
 import { Button, IconButton, ReportButton } from '../../../shared/components';
+import { useDialog } from '../../../shared/hooks/useDialog';
 
 interface TitleCommentsListProps {
   titleId: string;
@@ -173,6 +174,7 @@ function CommentItem({
   onLoginRequired: () => void;
 }) {
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { confirm } = useDialog();
   const isOwner = user?.id === comment.userId;
   const [menuOpen, setMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -249,7 +251,12 @@ function CommentItem({
   };
 
   const handleDelete = async () => {
-    if (!confirm('Ви впевнені, що хочете видалити цей коментар?')) return;
+    const ok = await confirm({
+      title: 'Видалити коментар?',
+      confirmLabel: 'Видалити',
+      variant: 'danger',
+    });
+    if (!ok) return;
     await onDeleteComment(comment.id);
     setMenuOpen(false);
   };

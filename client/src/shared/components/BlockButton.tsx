@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { blocksApi } from '../../core/api/blocks';
 import { useAppSelector } from '../../app/store/hooks';
 import { Button } from './Button';
+import { useDialog } from '../hooks/useDialog';
 
 interface BlockButtonProps {
   userId: string;
@@ -13,6 +14,7 @@ export function BlockButton({ userId, className }: BlockButtonProps) {
   const [blocked, setBlocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+  const { confirm, alert } = useDialog();
 
   useEffect(() => {
     if (!currentUser || currentUser.id === userId) return;
@@ -30,12 +32,18 @@ export function BlockButton({ userId, className }: BlockButtonProps) {
         await blocksApi.unblock(userId);
         setBlocked(false);
       } else {
-        if (!confirm('Заблокувати цього користувача? Ви більше не бачитимете його контент.')) return;
+        const ok = await confirm({
+          title: 'Заблокувати користувача?',
+          message: 'Ви більше не бачитимете його контент.',
+          confirmLabel: 'Заблокувати',
+          variant: 'danger',
+        });
+        if (!ok) { setToggling(false); return; }
         await blocksApi.block(userId);
         setBlocked(true);
       }
     } catch {
-      alert('Помилка');
+      await alert({ title: 'Помилка', message: 'Не вдалося виконати дію' });
     } finally {
       setToggling(false);
     }

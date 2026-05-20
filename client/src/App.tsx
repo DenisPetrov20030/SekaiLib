@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router-dom';
 import { store } from './app/store';
 import { router } from './app/routes';
 import { initializeAuth } from './features/auth/store/authSlice';
+import { DialogProvider } from './shared/hooks/useDialog';
 
 function App() {
   useEffect(() => {
@@ -12,7 +13,9 @@ function App() {
 
   return (
     <Provider store={store}>
-      <RouterProvider router={router} />
+      <DialogProvider>
+        <RouterProvider router={router} />
+      </DialogProvider>
     </Provider>
   );
 }

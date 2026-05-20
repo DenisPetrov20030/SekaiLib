@@ -4,6 +4,7 @@ import { axiosInstance, titlesApi } from '../../../core/api';
 import { Button, Input, Textarea, Select } from '../../../shared/components';
 import { TitleStatus } from '../../../core/types/enums';
 import { ROUTES } from '../../../core/constants';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import type { Genre } from '../../../core/types';
 
 interface TitleFormData {
@@ -38,6 +39,7 @@ export function AdminTitleEditPage() {
   const matchCreate = useMatch(ROUTES.ADMIN_TITLE_CREATE);
   const isCreate = Boolean(matchCreate);
 
+  const { alert } = useDialog();
   const [genres, setGenres] = useState<Genre[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<TitleFormData>({
@@ -112,7 +114,7 @@ export function AdminTitleEditPage() {
       }
       navigate(ROUTES.ADMIN_TITLES);
     } catch {
-      alert('Не вдалося зберегти твір');
+      await alert({ title: 'Помилка', message: 'Не вдалося зберегти твір' });
     } finally {
       setLoading(false);
     }
@@ -138,7 +140,7 @@ export function AdminTitleEditPage() {
       setCoverPreview(url);
     } catch (error) {
       console.error('Failed to upload cover:', error);
-      alert('Помилка при завантаженні обкладинки');
+      await alert({ title: 'Помилка', message: 'Помилка при завантаженні обкладинки' });
     } finally {
       setCoverUploading(false);
     }

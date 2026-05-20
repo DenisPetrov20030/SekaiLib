@@ -4,6 +4,7 @@ import { chaptersApi } from '../../../core/api';
 import { teamsApi } from '../../../core/api/teams';
 import { Button, Input, Textarea } from '../../../shared/components';
 import { useAppSelector } from '../../../app/store/hooks';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import type { CreateChapterRequest, UpdateChapterRequest, TranslationTeamDto } from '../../../core/types/dtos';
 
 interface ChapterFormData {
@@ -13,6 +14,7 @@ interface ChapterFormData {
   isPremium: boolean;
   price: number;
   translationTeamId: string;
+  earlyAccessUntil: string;
 }
 
 export const ChapterEditorPage = () => {
@@ -28,8 +30,10 @@ export const ChapterEditorPage = () => {
     isPremium: false,
     price: 0,
     translationTeamId: '',
+    earlyAccessUntil: '',
   });
 
+  const { confirm, alert } = useDialog();
   const isEditMode = !!chapterId;
 
   useEffect(() => {
@@ -55,10 +59,13 @@ export const ChapterEditorPage = () => {
         isPremium: chapter.isPremium ?? false,
         price: chapter.price ?? 0,
         translationTeamId: '',
+        earlyAccessUntil: chapter.earlyAccessUntil
+          ? new Date(chapter.earlyAccessUntil).toISOString().slice(0, 16)
+          : '',
       });
     } catch (error) {
       console.error('Failed to load chapter:', error);
-      alert('Помилка завантаження глави');
+      await alert({ title: 'Помилка', message: 'Не вдалося завантажити розділ' });
     } finally {
       setLoading(false);
     }
@@ -86,20 +93,30 @@ export const ChapterEditorPage = () => {
           isPremium: formData.isPremium,
           price: formData.isPremium ? formData.price : 0,
           translationTeamId: formData.translationTeamId || null,
+          earlyAccessUntil: formData.isPremium && formData.earlyAccessUntil
+            ? new Date(formData.earlyAccessUntil).toISOString()
+            : null,
         };
         await chaptersApi.create(titleId, request);
       }
       navigate(`/titles/${titleId}`);
     } catch (error) {
       console.error('Failed to save chapter:', error);
-      alert('Помилка при збереженні глави');
+      await alert({ title: 'Помилка', message: 'Не вдалося зберегти розділ' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!chapterId || !confirm('Ви впевнені, що хочете видалити цю главу?')) return;
+    if (!chapterId) return;
+    const ok = await confirm({
+      title: 'Видалити розділ?',
+      message: 'Цю дію не можна скасувати.',
+      confirmLabel: 'Видалити',
+      variant: 'danger',
+    });
+    if (!ok) return;
 
     try {
       setLoading(true);
@@ -107,7 +124,7 @@ export const ChapterEditorPage = () => {
       navigate(`/titles/${titleId}`);
     } catch (error) {
       console.error('Failed to delete chapter:', error);
-      alert('Помилка при видаленні глави');
+      await alert({ title: 'Помилка', message: 'Не вдалося видалити розділ' });
     } finally {
       setLoading(false);
     }
@@ -124,13 +141,13 @@ export const ChapterEditorPage = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-text-primary mb-8">
-        {isEditMode ? 'Редагувати главу' : 'Додати главу'}
+        {isEditMode ? 'Редагувати розділ' : 'Додати розділ'}
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input
-            label="Номер глави"
+            label="Номер розділу"
             type="number"
             value={formData.chapterNumber}
             onChange={(e) => setFormData({ ...formData, chapterNumber: Number(e.target.value) })}
@@ -139,11 +156,11 @@ export const ChapterEditorPage = () => {
           />
 
           <Input
-            label="Назва глави"
+            label="Назва розділу"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
-            placeholder="Глава 1: Початок"
+            placeholder="Розділ 1: Початок"
           />
         </div>
 
@@ -173,7 +190,7 @@ export const ChapterEditorPage = () => {
           onChange={(e) => setFormData({ ...formData, content: e.target.value })}
           required
           rows={20}
-          placeholder="Текст глави..."
+          placeholder="Текст розділу..."
         />
 
         <div className="flex items-center gap-2">
@@ -185,30 +202,44 @@ export const ChapterEditorPage = () => {
             className="rounded text-primary-500 focus:ring-primary-500"
           />
           <label htmlFor="isPremium" className="text-sm text-text-secondary">
-            Преміум глава
+            Преміум розділ
           </label>
         </div>
 
         {formData.isPremium && (
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Ціна (₴) <span className="text-text-muted text-xs">0 = безкоштовно</span>
-            </label>
-            <input
-              type="number"
-              min={0}
-              step={1}
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: Math.max(0, parseFloat(e.target.value) || 0) })}
-              className="w-32 px-3 py-2 rounded-lg bg-surface-2 border border-border text-text-primary focus:outline-none focus:border-primary-500 text-sm"
-              placeholder="0"
-            />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Ціна (₴) <span className="text-text-muted text-xs">0 = безкоштовно</span>
+              </label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: Math.max(0, parseFloat(e.target.value) || 0) })}
+                className="w-32 px-3 py-2 rounded-lg bg-surface-2 border border-border text-text-primary focus:outline-none focus:border-primary-500 text-sm"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Відкрити безкоштовно після{' '}
+                <span className="text-text-muted text-xs">(залиш порожнім якщо завжди платно)</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={formData.earlyAccessUntil}
+                onChange={(e) => setFormData({ ...formData, earlyAccessUntil: e.target.value })}
+                className="px-3 py-2 rounded-lg bg-surface-2 border border-border text-text-primary focus:outline-none focus:border-primary-500 text-sm"
+              />
+            </div>
           </div>
         )}
 
         <div className="flex gap-4">
           <Button type="submit" disabled={loading}>
-            {loading ? 'Збереження...' : isEditMode ? 'Зберегти зміни' : 'Створити главу'}
+            {loading ? 'Збереження...' : isEditMode ? 'Зберегти зміни' : 'Створити розділ'}
           </Button>
 
           <Button

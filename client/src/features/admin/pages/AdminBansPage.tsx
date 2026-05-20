@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { bansApi } from '../../../core/api/bans';
 import type { UserBan } from '../../../core/types/entities';
+import { useDialog } from '../../../shared/hooks/useDialog';
 
 export function AdminBansPage() {
   const [bans, setBans] = useState<UserBan[]>([]);
@@ -10,6 +11,7 @@ export function AdminBansPage() {
   const [expiresAt, setExpiresAt] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const { confirm, alert } = useDialog();
 
   useEffect(() => {
     loadBans();
@@ -47,12 +49,13 @@ export function AdminBansPage() {
   };
 
   const handleUnban = async (banId: string) => {
-    if (!confirm('Зняти бан?')) return;
+    const ok = await confirm({ title: 'Зняти бан?', confirmLabel: 'Зняти' });
+    if (!ok) return;
     try {
       await bansApi.unban(banId);
       setBans((prev) => prev.filter((b) => b.id !== banId));
     } catch {
-      alert('Помилка при знятті бану');
+      await alert({ title: 'Помилка', message: 'Не вдалося зняти бан' });
     }
   };
 

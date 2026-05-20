@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { faqApi } from '../../../core/api/faq';
 import type { FaqItem } from '../../../core/types/entities';
+import { useDialog } from '../../../shared/hooks/useDialog';
 
 interface FaqForm {
   question: string;
@@ -18,6 +19,7 @@ export function AdminFaqPage() {
   const [form, setForm] = useState<FaqForm>(emptyForm);
   const [showCreate, setShowCreate] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { confirm, alert } = useDialog();
 
   useEffect(() => {
     load();
@@ -58,19 +60,20 @@ export function AdminFaqPage() {
       }
       cancelEdit();
     } catch {
-      alert('Помилка при збереженні');
+      await alert({ title: 'Помилка', message: 'Не вдалося зберегти' });
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Видалити питання?')) return;
+    const ok = await confirm({ title: 'Видалити питання?', confirmLabel: 'Видалити', variant: 'danger' });
+    if (!ok) return;
     try {
       await faqApi.delete(id);
       setItems((prev) => prev.filter((i) => i.id !== id));
     } catch {
-      alert('Помилка при видаленні');
+      await alert({ title: 'Помилка', message: 'Не вдалося видалити' });
     }
   };
 

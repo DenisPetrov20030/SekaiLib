@@ -5,6 +5,7 @@ import { useAppSelector } from '../../../app/store/hooks';
 import { TitleCard } from '../../catalog/components/TitleCard';
 import { Pagination } from '../../catalog/components/Pagination';
 import { Button, BlockButton } from '../../../shared/components';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import { ROUTES } from '../../../core/constants';
 import type { UserProfile } from '../../../core/types';
 import type { TitleDto } from '../../../core/types/dtos';
@@ -14,6 +15,7 @@ export const UserProfilePage = () => {
   const { user: authUser } = useAppSelector((state) => state.auth);
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { alert } = useDialog();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -105,12 +107,12 @@ export const UserProfilePage = () => {
     if (!userId) return;
 
     if (!authUser) {
-      alert('Увійдіть в акаунт, щоб додавати в друзі.');
+      await alert({ title: 'Потрібна авторизація', message: 'Увійдіть в акаунт, щоб додавати в друзі.' });
       return;
     }
 
     if (authUser.id === userId) {
-      alert('Себе не можна додати в друзі.');
+      await alert({ title: 'Не можна', message: 'Себе не можна додати в друзі.' });
       return;
     }
 
@@ -118,10 +120,10 @@ export const UserProfilePage = () => {
       setFriendActionLoading(true);
       await usersApi.sendFriendRequest(userId);
       setHasPendingRequest(true);
-      alert('Запит про дружбу відправлено!');
+      await alert({ title: 'Готово', message: 'Запит про дружбу відправлено!' });
     } catch (e) {
       console.error('Send friend request failed:', e);
-      alert('Не вдалося відправити запит. Спробуйте ще раз.');
+      await alert({ title: 'Помилка', message: 'Не вдалося відправити запит. Спробуйте ще раз.' });
     } finally {
       setFriendActionLoading(false);
     }

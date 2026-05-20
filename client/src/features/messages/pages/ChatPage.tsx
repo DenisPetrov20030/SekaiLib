@@ -6,6 +6,7 @@ import { fetchProfile } from '../../profile/store/profileSlice';
 import * as signalR from '@microsoft/signalr';
 import { API_BASE_URL, ACCESS_TOKEN_STORAGE_KEY, ROUTES } from '../../../core/constants';
 import { storage } from '../../../core/utils/storage';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import type { ConversationDto, MessageDto } from '../../../core/types/dtos';
 
 export const ChatPage = () => {
@@ -13,6 +14,7 @@ export const ChatPage = () => {
     const { user: authUser } = useAppSelector((state) => state.auth);
     const { user: profileUser } = useAppSelector((state) => state.profile);
     const dispatch = useAppDispatch();
+    const { confirm } = useDialog();
     const params = useParams<{ userId?: string }>();
     const [search] = useSearchParams();
     const initialRecipient = params.userId || search.get('to') || undefined;
@@ -242,7 +244,8 @@ export const ChatPage = () => {
                             return conv ? (
                                 <div className="absolute bottom-3 right-3">
                                     <button className="p-3 rounded-full bg-zinc-900 border border-white/10 text-white/50 hover:text-red-500 hover:border-red-500 shadow-xl transition-all" onClick={async () => {
-                                        if (confirm(`Видалити чат з ${conv.otherUsername}?`)) {
+                                        const ok = await confirm({ title: `Видалити чат з ${conv.otherUsername}?`, confirmLabel: 'Видалити', variant: 'danger' });
+                                        if (ok) {
                                             await messagesApi.deleteConversation(conv.id);
                                             setConversations(prev => prev.filter(cv => cv.id !== conv.id));
                                             setActiveConversationId(null);
@@ -321,7 +324,8 @@ export const ChatPage = () => {
                                 }}>Редагувати</button>
                             )}
                             <button className="text-xs font-bold text-red-500 hover:text-red-400" onClick={async () => {
-                                if (confirm('Видалити повідомлення?')) {
+                                const ok = await confirm({ title: 'Видалити повідомлення?', confirmLabel: 'Видалити', variant: 'danger' });
+                                if (ok) {
                                     for (const id of Array.from(selected)) await messagesApi.deleteMessage(id);
                                     setSelected(new Set());
                                 }

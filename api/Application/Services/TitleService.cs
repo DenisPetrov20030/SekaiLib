@@ -74,6 +74,13 @@ public class TitleService : ITitleService
             .OrderBy(c => c.Number)
             .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.Price, c.TranslationTeamId, c.TranslationTeam?.Name, c.TitleId, title.Name, title.CoverImageUrl, c.ViewCount));
 
+        var reviews = await _unitOfWork.Reviews.Query()
+            .Where(r => r.TitleId == id && !r.IsHidden)
+            .Select(r => r.Rating)
+            .ToListAsync();
+
+        double? averageScore = reviews.Count > 0 ? Math.Round(reviews.Average(), 2) : null;
+
         return new TitleDetailsDto(
             title.Id,
             title.Name,
@@ -85,7 +92,9 @@ public class TitleService : ITitleService
             publisher,
             genres,
             translationTeams,
-            chapters
+            chapters,
+            averageScore,
+            reviews.Count
         );
     }
 

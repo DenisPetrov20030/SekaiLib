@@ -84,12 +84,13 @@ public class ChapterService : IChapterService
         int? previousChapterNumber = currentIndex > 0 ? allChapters[currentIndex - 1].Number : null;
         int? nextChapterNumber = currentIndex < allChapters.Count - 1 ? allChapters[currentIndex + 1].Number : null;
 
-        var isPremium = chapter.IsPremium && chapter.Price > 0;
+        var earlyAccessExpired = chapter.EarlyAccessUntil.HasValue
+            && DateTime.UtcNow > chapter.EarlyAccessUntil.Value;
+        var isPremium = chapter.IsPremium && chapter.Price > 0 && !earlyAccessExpired;
         var isLocked = false;
 
         if (isPremium)
         {
-            // Перевіряємо, чи є покупка
             if (userId.HasValue)
             {
                 var hasPurchase = await _unitOfWork.UserPurchases.Query()
@@ -115,7 +116,8 @@ public class ChapterService : IChapterService
             chapter.ViewCount,
             isPremium,
             isLocked,
-            chapter.Price
+            chapter.Price,
+            chapter.EarlyAccessUntil
         );
     }
 
@@ -137,6 +139,15 @@ public class ChapterService : IChapterService
                 .FirstOrDefaultAsync(m => m.TeamId == request.TranslationTeamId.Value && m.UserId == userId);
 
             if (teamMember != null)
+                canCreate = true;
+        }
+
+        if (!canCreate)
+        {
+            var isAnyTeamMember = await _unitOfWork.TranslationTeamMembers.Query()
+                .AnyAsync(m => m.UserId == userId);
+
+            if (isAnyTeamMember)
                 canCreate = true;
         }
 
@@ -167,7 +178,10 @@ public class ChapterService : IChapterService
             TranslationTeamId = request.TranslationTeamId,
             IsApproved = !isTeamUpload,
             PublishedAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            EarlyAccessUntil = request.EarlyAccessUntil.HasValue
+                ? DateTime.SpecifyKind(request.EarlyAccessUntil.Value, DateTimeKind.Utc)
+                : null,
         };
 
         await _unitOfWork.Chapters.AddAsync(chapter);

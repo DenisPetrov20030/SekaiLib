@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Modal } from '../../../shared/components/Modal';
 import { reportsApi } from '../../../core/api/reports';
 import { bansApi } from '../../../core/api/bans';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import { ReportStatus, ReportTargetType } from '../../../core/types/enums';
 import type { Report } from '../../../core/types/entities';
 
@@ -42,6 +43,7 @@ export function AdminReportsPage() {
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [adminNote, setAdminNote] = useState('');
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const { confirm, alert } = useDialog();
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [banDuration, setBanDuration] = useState('7d');
   const [banning, setBanning] = useState(false);
@@ -68,13 +70,13 @@ export function AdminReportsPage() {
       setReviewingId(null);
       setAdminNote('');
     } catch {
-      alert('Помилка при оновленні скарги');
+      await alert({ title: 'Помилка', message: 'Помилка при оновленні скарги' });
     }
   };
 
   const handleDeleteReport = async (reportId: string) => {
-    const confirmed = window.confirm('Видалити цю скаргу?');
-    if (!confirmed) {
+    const ok = await confirm({ title: 'Видалити цю скаргу?', confirmLabel: 'Видалити', variant: 'danger' });
+    if (!ok) {
       return;
     }
 
@@ -91,7 +93,7 @@ export function AdminReportsPage() {
         await loadReports(page);
       }
     } catch {
-      alert('Помилка при видаленні скарги');
+      await alert({ title: 'Помилка', message: 'Помилка при видаленні скарги' });
     }
   };
 
@@ -101,7 +103,7 @@ export function AdminReportsPage() {
       const res = await reportsApi.getById(reportId);
       setSelectedReport(res.data);
     } catch {
-      alert('Помилка при завантаженні деталей скарги');
+      await alert({ title: 'Помилка', message: 'Помилка при завантаженні деталей скарги' });
     } finally {
       setDetailsLoading(false);
     }
@@ -134,9 +136,9 @@ export function AdminReportsPage() {
         expiresAt,
       });
 
-      alert('Користувача заблоковано');
+      await alert({ title: 'Успіх', message: 'Користувача заблоковано' });
     } catch {
-      alert('Помилка при блокуванні користувача');
+      await alert({ title: 'Помилка', message: 'Помилка при блокуванні користувача' });
     } finally {
       setBanning(false);
     }

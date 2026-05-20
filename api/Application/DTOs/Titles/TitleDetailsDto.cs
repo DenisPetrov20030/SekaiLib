@@ -14,5 +14,7 @@ public record TitleDetailsDto(
     PublisherDto Publisher,
     IEnumerable<GenreDto> Genres,
     IEnumerable<TranslationTeamDto> TranslationTeams,
-    IEnumerable<ChapterDto> Chapters
+    IEnumerable<ChapterDto> Chapters,
+    double? AverageScore = null,
+    int ReviewsCount = 0
 );

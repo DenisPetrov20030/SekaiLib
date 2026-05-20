@@ -3,6 +3,7 @@ import { useAppSelector } from '../../../app/store/hooks';
 import { axiosInstance } from '../../../core/api';
 import { ReadingStatus } from '../../../core/types/enums';
 import { Button, Select } from '../../../shared/components';
+import { useDialog } from '../../../shared/hooks/useDialog';
 
 interface AddToListButtonProps {
   titleId: string;
@@ -17,6 +18,7 @@ interface CustomList {
 
 export function AddToListButton({ titleId, onLoginRequired, alwaysVisible = false }: AddToListButtonProps) {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { alert } = useDialog();
   const [showSelect, setShowSelect] = useState(false);
   
   const [status, setStatus] = useState<string>(String(ReadingStatus.Planned));
@@ -106,7 +108,7 @@ const payload = {
       setCurrentStatus(status);
       setShowSelect(false);
     } catch (err) {
-      alert("Помилка при збереженні. Перевірте консоль.");
+      await alert({ title: 'Помилка', message: 'Помилка при збереженні' });
       console.error(err);
     } finally {
       setLoading(false);

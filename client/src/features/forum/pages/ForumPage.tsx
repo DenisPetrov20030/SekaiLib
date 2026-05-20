@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { forumApi } from '../../../core/api/forum';
 import type { ForumCategoryDto } from '../../../core/api/forum';
 import { useAppSelector } from '../../../app/store/hooks';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import { UserRole } from '../../../core/types/enums';
 import { ROUTES } from '../../../core/constants';
 
@@ -20,6 +21,7 @@ function formatRelativeDate(iso: string) {
 export const ForumPage = () => {
   const user = useAppSelector((s) => s.auth.user);
   const isModerator = user && user.role >= UserRole.Moderator;
+  const { confirm, alert } = useDialog();
 
   const [categories, setCategories] = useState<ForumCategoryDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,15 +60,19 @@ export const ForumPage = () => {
   };
 
   const handleDeleteCategory = async (id: string, name: string) => {
-    if (!confirm(`Видалити категорію "${name}"? Це видалить всі треди у цій категорії.`)) {
-      return;
-    }
+    const ok = await confirm({
+      title: `Видалити категорію "${name}"?`,
+      message: 'Це видалить всі треди у цій категорії. Дію не можна скасувати.',
+      confirmLabel: 'Видалити',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       await forumApi.deleteCategory(id);
       setCategories(prev => prev.filter(c => c.id !== id));
     } catch (e) {
       console.error('Delete category error:', e);
-      alert('Не вдалося видалити категорію');
+      await alert({ title: 'Помилка', message: 'Не вдалося видалити категорію' });
     }
   };
 
@@ -76,7 +82,7 @@ export const ForumPage = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Форум</h1>
-          <p className="text-text-secondary mt-1">Обговорення тайтлів, новини та спільнота</p>
+          <p className="text-text-secondary mt-1">Обговорення творів, новини та спільнота</p>
         </div>
         {isModerator && (
           <button

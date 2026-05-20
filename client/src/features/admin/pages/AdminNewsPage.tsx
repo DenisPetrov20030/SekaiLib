@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { newsApi } from '../../../core/api/news';
 import type { NewsItem } from '../../../core/types/entities';
 import { ROUTES } from '../../../core/constants';
+import { useDialog } from '../../../shared/hooks/useDialog';
 
 export function AdminNewsPage() {
   const [items, setItems] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { confirm, alert } = useDialog();
 
   useEffect(() => {
     newsApi.getAll(1, 50)
@@ -16,12 +18,13 @@ export function AdminNewsPage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Видалити новину?')) return;
+    const ok = await confirm({ title: 'Видалити новину?', confirmLabel: 'Видалити', variant: 'danger' });
+    if (!ok) return;
     try {
       await newsApi.delete(id);
       setItems((prev) => prev.filter((n) => n.id !== id));
     } catch {
-      alert('Помилка при видаленні');
+      await alert({ title: 'Помилка', message: 'Не вдалося видалити' });
     }
   };
 

@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { reportsApi } from '../../core/api/reports';
 import { ReportTargetType } from '../../core/types/enums';
 import { useAppSelector } from '../../app/store/hooks';
+import { useDialog } from '../hooks/useDialog';
 
 const REASONS = [
   'Спам',
@@ -34,6 +35,7 @@ interface ReportButtonProps {
 
 export function ReportButton({ targetType, targetId, className, label, showIcon = true }: ReportButtonProps) {
   const user = useAppSelector((state) => state.auth.user);
+  const { alert } = useDialog();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState(REASONS[0]);
   const [description, setDescription] = useState('');
@@ -49,7 +51,7 @@ export function ReportButton({ targetType, targetId, className, label, showIcon 
       await reportsApi.create({ targetType, targetId, reason, description: description || undefined });
       setDone(true);
     } catch {
-      alert('Помилка при відправці скарги');
+      await alert({ title: 'Помилка', message: 'Помилка при відправці скарги' });
     } finally {
       setSubmitting(false);
     }

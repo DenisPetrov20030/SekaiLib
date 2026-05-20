@@ -5,6 +5,7 @@ import type { TranslationTeamDto, TeamMemberDto, TeamChapterDto, TeamUserSearchD
 import { TeamMemberRole } from '../../../core/types/dtos';
 import { useAppSelector } from '../../../app/store/hooks';
 import { Button } from '../../../shared/components';
+import { useDialog } from '../../../shared/hooks/useDialog';
 
 type Tab = 'updates' | 'members';
 const DEFAULT_TEAM_COVER = '/team-default-cover.svg';
@@ -21,6 +22,7 @@ export const TeamDetailsPage = () => {
   const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
+  const { confirm, alert } = useDialog();
 
   const [team, setTeam] = useState<TranslationTeamDto | null>(null);
   const [members, setMembers] = useState<TeamMemberDto[]>([]);
@@ -196,7 +198,7 @@ export const TeamDetailsPage = () => {
       setUserSuggestions([]);
       setShowUserSuggestions(false);
     } catch {
-      alert('Не вдалося додати учасника');
+      await alert({ title: 'Помилка', message: 'Не вдалося додати учасника' });
     }
   };
 
@@ -239,8 +241,13 @@ export const TeamDetailsPage = () => {
   const handleDeleteTeam = async () => {
     if (!teamId || deleteLoading) return;
 
-    const confirmed = window.confirm('Ви впевнені, що хочете видалити команду? Цю дію неможливо скасувати.');
-    if (!confirmed) return;
+    const ok = await confirm({
+      title: 'Видалити команду?',
+      message: 'Цю дію неможливо скасувати.',
+      confirmLabel: 'Видалити',
+      variant: 'danger',
+    });
+    if (!ok) return;
 
     try {
       setDeleteLoading(true);
@@ -489,7 +496,7 @@ export const TeamDetailsPage = () => {
                 <p className="mt-2 text-text-muted text-sm whitespace-pre-line">{team.description}</p>
               )}
               <div className="mt-3 flex gap-5 text-sm text-text-muted">
-                <span className="flex items-center gap-1.5" title="Глави">
+                <span className="flex items-center gap-1.5" title="Розділи">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                   <span className="text-text-secondary font-medium">{team.chapterCount}</span>
                 </span>
@@ -559,7 +566,7 @@ export const TeamDetailsPage = () => {
                           <span className="text-sm font-semibold text-text-primary truncate">{ch.titleName}</span>
                         )}
                         <span className="text-sm text-text-muted">•</span>
-                        <span className="font-medium text-text-primary">Глава {ch.chapterNumber}</span>
+                        <span className="font-medium text-text-primary">Розділ {ch.chapterNumber}</span>
                         {ch.name && (
                           <span className="text-text-muted text-sm">— {ch.name}</span>
                         )}

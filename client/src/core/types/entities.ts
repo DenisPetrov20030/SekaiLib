@@ -31,6 +31,8 @@ export interface TitleDetails extends Title {
   genres: Genre[];
   translationTeams: TranslationTeam[];
   chapters: Chapter[];
+  averageScore?: number | null;
+  reviewsCount?: number;
 }
 
 export interface Chapter {

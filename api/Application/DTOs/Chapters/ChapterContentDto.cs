@@ -13,5 +13,6 @@ public record ChapterContentDto(
     int ViewCount = 0,
     bool IsPremium = false,
     bool IsLocked = false,
-    decimal Price = 0m
+    decimal Price = 0m,
+    DateTime? EarlyAccessUntil = null
 );

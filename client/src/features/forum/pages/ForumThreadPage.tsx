@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { forumApi } from '../../../core/api/forum';
 import type { ForumThreadDetailsDto, ForumPostDto } from '../../../core/api/forum';
 import { useAppSelector } from '../../../app/store/hooks';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import { UserRole } from '../../../core/types/enums';
 import { ROUTES } from '../../../core/constants';
 
@@ -23,6 +24,7 @@ export const ForumThreadPage = () => {
   const navigate = useNavigate();
   const user = useAppSelector((s) => s.auth.user);
   const isModerator = user && user.role >= UserRole.Moderator;
+  const { confirm } = useDialog();
 
   const [thread, setThread] = useState<ForumThreadDetailsDto | null>(null);
   const [posts, setPosts] = useState<ForumPostDto[]>([]);
@@ -85,7 +87,8 @@ export const ForumThreadPage = () => {
   };
 
   const handleDelete = async (postId: string) => {
-    if (!confirm('Видалити повідомлення?')) return;
+    const ok = await confirm({ title: 'Видалити повідомлення?', confirmLabel: 'Видалити', variant: 'danger' });
+    if (!ok) return;
     try {
       await forumApi.deletePost(postId);
       setPosts(prev => prev.map(p => p.id === postId
@@ -96,7 +99,14 @@ export const ForumThreadPage = () => {
   };
 
   const handleDeleteThread = async () => {
-    if (!thread || !confirm('Видалити тред? Всі дописи будуть видалені.')) return;
+    if (!thread) return;
+    const ok = await confirm({
+      title: 'Видалити тред?',
+      message: 'Всі дописи будуть видалені. Дію не можна скасувати.',
+      confirmLabel: 'Видалити',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       await forumApi.deleteThread(thread.id);
       navigate(ROUTES.FORUM_CATEGORY.replace(':categoryId', thread.categoryId));
