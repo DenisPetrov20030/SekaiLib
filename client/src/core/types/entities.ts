@@ -47,6 +47,7 @@ export interface Chapter {
   publishedAt: string;
   translationTeamId?: string | null;
   translationTeamName?: string | null;
+  earlyAccessUntil?: string | null;
 }
 
 export interface ChapterContent {

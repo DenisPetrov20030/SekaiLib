@@ -22,6 +22,8 @@ const translateCountry = (country: string): string => {
   return translations[country] || country;
 };
 
+
+
 export const TitleDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -380,45 +382,50 @@ export const TitleDetailsPage = () => {
           )}
 
           <div className="mt-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-text-primary">Розділи</h2>
-              {canManageChapters && (
-                <Button
-                  onClick={() => navigate(`/titles/${id}/chapters/create`)}
-                  size="sm"
-                >
-                  Додати розділ
-                </Button>
-              )}
-            </div>
+            <div className="mb-4">
+              <div className="flex items-center gap-3 mb-3">
+                <h2 className="text-xl font-semibold text-text-primary">Розділи</h2>
+              </div>
 
-            {availableTeams.length > 1 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                <button
-                  onClick={() => setSelectedTeamId(null)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                    selectedTeamId === null
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-surface-hover text-text-secondary hover:text-text-primary'
-                  }`}
-                >
-                  Всі переклади
-                </button>
-                {availableTeams.map((team) => (
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
-                    key={team.id}
-                    onClick={() => setSelectedTeamId(team.id)}
+                    onClick={() => setSelectedTeamId(null)}
                     className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                      selectedTeamId === team.id
+                      selectedTeamId === null
                         ? 'bg-primary-600 text-white'
                         : 'bg-surface-hover text-text-secondary hover:text-text-primary'
                     }`}
                   >
-                    {team.name}
+                    Всі переклади
                   </button>
-                ))}
+                  {availableTeams.map((team) => (
+                    <button
+                      key={team.id}
+                      onClick={() => setSelectedTeamId(team.id)}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                        selectedTeamId === team.id
+                          ? 'bg-primary-600 text-white'
+                          : 'bg-surface-hover text-text-secondary hover:text-text-primary'
+                      }`}
+                    >
+                      {team.name}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex-shrink-0">
+                  {canManageChapters && (
+                    <Button
+                      onClick={() => navigate(`/titles/${id}/chapters/create`)}
+                      size="sm"
+                    >
+                      Додати розділ
+                    </Button>
+                  )}
+                </div>
               </div>
-            )}
+              </div>
 
             <div className="mt-4 space-y-2">
               {filteredChapters.length > 0 ? (
@@ -441,11 +448,20 @@ export const TitleDetailsPage = () => {
                             <span className="ml-2 text-xs text-primary-400">[{chapter.translationTeamName}]</span>
                           )}
                         </div>
-                        {chapter.isPremium && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 font-medium">
-                            {chapter.price && chapter.price > 0 ? `${chapter.price.toFixed(0)} ₴` : 'Premium'}
-                          </span>
-                        )}
+                        {chapter.isPremium && (() => {
+                          const earlyAccessExpired = chapter.earlyAccessUntil
+                            ? Date.now() > new Date(chapter.earlyAccessUntil).getTime()
+                            : false;
+                          const showPrice = (chapter.price ?? 0) > 0 && !earlyAccessExpired;
+                          return showPrice ? (
+                            <div className="flex flex-col items-end">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 font-medium">
+                                {chapter.price && chapter.price > 0 ? `${chapter.price.toFixed(0)} ₴` : 'Premium'}
+                              </span>
+                              {/* Раніше тут показувався текст про те, коли стане безкоштовним. Прибрано за запитом. */}
+                            </div>
+                          ) : null;
+                        })()}
                       </div>
                     </Link>
                     {canManageChapters && (

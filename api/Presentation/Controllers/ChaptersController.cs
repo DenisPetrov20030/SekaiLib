@@ -28,7 +28,12 @@ public class ChaptersController : ControllerBase
     [HttpGet("{chapterId}")]
     public async Task<ActionResult<ChapterContentDto>> GetChapterContent(Guid chapterId)
     {
-        var chapter = await _chapterService.GetChapterContentAsync(chapterId);
+        Guid? userId = null;
+        var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(idClaim))
+            userId = Guid.Parse(idClaim);
+
+        var chapter = await _chapterService.GetChapterContentAsync(chapterId, userId);
         return Ok(chapter);
     }
 

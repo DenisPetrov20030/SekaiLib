@@ -86,7 +86,7 @@ export const PaymentGate = ({ chapterId, chapterName, titleName, price, earlyAcc
         </div>
 
         {earlyAccessUntil && (
-          <p className="text-text-muted text-xs mb-6">
+          <p className="text-text-muted text-sm mb-6">
             Стане безкоштовним{' '}
             <span className="text-text-secondary font-medium">{formatFreeDate(earlyAccessUntil)}</span>
           </p>
@@ -120,7 +120,7 @@ export const PaymentGate = ({ chapterId, chapterName, titleName, price, earlyAcc
           )}
         </button>
 
-        <p className="text-text-muted text-xs mt-4">
+        <p className="text-text-muted text-sm mt-4">
           Оплата через LiqPay. Безпечно та зручно.
         </p>
       </div>

@@ -17,6 +17,12 @@ interface ChapterFormData {
   earlyAccessUntil: string;
 }
 
+const toDateTimeLocalValue = (value: string) => {
+  const date = new Date(value);
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+};
+
 export const ChapterEditorPage = () => {
   const { titleId, chapterId } = useParams<{ titleId: string; chapterId?: string }>();
   const navigate = useNavigate();
@@ -53,14 +59,14 @@ export const ChapterEditorPage = () => {
       setLoading(true);
       const chapter = await chaptersApi.getById(id);
       setFormData({
-        chapterNumber: chapter.number ?? 1,
+        chapterNumber: (chapter as any).number ?? (chapter as any).chapterNumber ?? 1,
         name: chapter.name ?? '',
-        content: chapter.content ?? '',
+        content: chapter.content ?? (chapter as any).text ?? '',
         isPremium: chapter.isPremium ?? false,
         price: chapter.price ?? 0,
-        translationTeamId: '',
+        translationTeamId: (chapter as any).translationTeamId ?? '',
         earlyAccessUntil: chapter.earlyAccessUntil
-          ? new Date(chapter.earlyAccessUntil).toISOString().slice(0, 16)
+          ? toDateTimeLocalValue(chapter.earlyAccessUntil)
           : '',
       });
     } catch (error) {
@@ -83,6 +89,10 @@ export const ChapterEditorPage = () => {
           content: formData.content,
           isPremium: formData.isPremium,
           price: formData.isPremium ? formData.price : 0,
+          translationTeamId: formData.translationTeamId || null,
+          earlyAccessUntil: formData.isPremium && formData.earlyAccessUntil
+            ? new Date(formData.earlyAccessUntil).toISOString()
+            : null,
         };
         await chaptersApi.update(chapterId, request);
       } else if (titleId) {

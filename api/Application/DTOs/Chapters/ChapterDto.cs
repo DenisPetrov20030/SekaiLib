@@ -12,5 +12,6 @@ public record ChapterDto(
     Guid? TitleId = null,
     string? TitleName = null,
     string? TitleCoverImageUrl = null,
+    DateTime? EarlyAccessUntil = null,
     int ViewCount = 0
 );

@@ -99,7 +99,7 @@ public class TitleService : ITitleService
         var translationTeams = title.TitleTranslators.Select(tt => new TranslationTeamDto(tt.TranslationTeam.Id, tt.TranslationTeam.Name));
         var chapters = title.Chapters
             .OrderBy(c => c.Number)
-            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.Price, c.TranslationTeamId, c.TranslationTeam?.Name, c.TitleId, title.Name, title.CoverImageUrl, c.ViewCount));
+            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.Price, c.TranslationTeamId, c.TranslationTeam?.Name, c.TitleId, title.Name, title.CoverImageUrl, c.EarlyAccessUntil, c.ViewCount));
 
         var reviews = await _unitOfWork.Reviews.Query()
             .Where(r => r.TitleId == id && !r.IsHidden)

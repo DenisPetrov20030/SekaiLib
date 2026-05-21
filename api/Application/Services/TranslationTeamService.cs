@@ -276,6 +276,7 @@ public class TranslationTeamService : ITranslationTeamService
             c.TitleId,
             c.Title?.Name,
             c.Title?.CoverImageUrl,
+            c.EarlyAccessUntil,
             c.ViewCount
         ));
 

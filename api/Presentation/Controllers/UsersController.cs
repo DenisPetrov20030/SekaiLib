@@ -317,6 +317,17 @@ public class UsersController : ControllerBase
             if (chapter == null || progress.Title == null)
                 continue;
 
+            // Якщо розділ преміум і користувач не купив — не показуємо його в "Продовжити читати"
+            var earlyAccessExpired = chapter.EarlyAccessUntil.HasValue && DateTime.UtcNow > chapter.EarlyAccessUntil.Value;
+            var isPremium = chapter.IsPremium && chapter.Price > 0 && !earlyAccessExpired;
+            if (isPremium)
+            {
+                var hasPurchase = await _unitOfWork.UserPurchases.Query()
+                    .AnyAsync(p => p.UserId == userId && p.ChapterId == chapter.Id);
+                if (!hasPurchase)
+                    continue;
+            }
+
             var totalPages = 0;
 
             if (!string.IsNullOrWhiteSpace(chapter.Content))
@@ -346,6 +357,20 @@ public class UsersController : ControllerBase
 public async Task<IActionResult> UpdateProgress([FromBody] UpdateProgressRequest request)
 {
     var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+    var chapter = await _unitOfWork.Chapters.GetByTitleAndNumberAsync(request.TitleId, request.ChapterNumber);
+    if (chapter == null)
+        return NotFound();
+
+    var earlyAccessExpired = chapter.EarlyAccessUntil.HasValue && DateTime.UtcNow > chapter.EarlyAccessUntil.Value;
+    var isPremium = chapter.IsPremium && chapter.Price > 0 && !earlyAccessExpired;
+    if (isPremium)
+    {
+        var hasPurchase = await _unitOfWork.UserPurchases.Query()
+            .AnyAsync(p => p.UserId == userId && p.ChapterId == chapter.Id);
+        if (!hasPurchase)
+            return Ok(); // silently ignore progress saves for locked chapters
+    }
 
     var progress = await _unitOfWork.UserReadingProgresses
         .Query()
