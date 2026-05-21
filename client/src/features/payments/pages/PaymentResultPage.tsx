@@ -4,7 +4,7 @@ import { paymentsApi } from '../../../core/api/payments';
 import type { PaymentStatusDto } from '../../../core/api/payments';
 
 const MAX_POLLS = 20;
-const POLL_INTERVAL = 3000;
+const POLL_INTERVAL = 5000;
 
 export const PaymentResultPage = () => {
   const [searchParams] = useSearchParams();
@@ -16,9 +16,17 @@ export const PaymentResultPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollCountRef = useRef(0);
 
   const isDone = (s: PaymentStatusDto) =>
     s.status === 'Success' || s.status === 'Sandbox' || s.status === 'Failure' || s.status === 'Reversed';
+
+  const stopPolling = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
 
   const handleManualRefresh = useCallback(async () => {
     if (!orderId) return;
@@ -26,72 +34,44 @@ export const PaymentResultPage = () => {
     try {
       const data = await paymentsApi.refreshStatus(orderId);
       setStatus(data);
-      if (isDone(data) && intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      if (isDone(data)) stopPolling();
     } catch {
       setError('Не вдалося перевірити статус у LiqPay.');
     } finally {
       setRefreshing(false);
     }
-  }, [orderId]);
+  }, [orderId, stopPolling]);
 
   useEffect(() => {
     if (!orderId) {
-      setError('Відсутній orderId у параметрах URL.');
+      setError('Відсутній ідентифікатор замовлення у параметрах URL.');
       return;
     }
 
     const poll = async () => {
-      try {
-        const data = await paymentsApi.getPaymentStatus(orderId);
-        setStatus(data);
-        setPollCount(c => c + 1);
+      if (pollCountRef.current >= MAX_POLLS) {
+        stopPolling();
+        return;
+      }
 
-        if (isDone(data)) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-        }
+      try {
+        const data = await paymentsApi.refreshStatus(orderId);
+        pollCountRef.current += 1;
+        setPollCount(pollCountRef.current);
+        setStatus(data);
+
+        if (isDone(data)) stopPolling();
       } catch {
         setError('Не вдалося отримати статус платежу.');
-        if (intervalRef.current) clearInterval(intervalRef.current);
+        stopPolling();
       }
     };
 
-    // Immediately try to pull status from LiqPay in case server_url callback was missed
-    paymentsApi.refreshStatus(orderId).then((data) => {
-      setStatus(data);
-      if (isDone(data)) return; // no need to start polling
-      // Start polling only if still pending
-      poll();
-      intervalRef.current = setInterval(() => {
-        setPollCount(c => {
-          if (c >= MAX_POLLS) {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            return c;
-          }
-          return c;
-        });
-        poll();
-      }, POLL_INTERVAL);
-    }).catch(() => {
-      // refreshStatus failed (e.g. not authenticated) — fall back to plain polling
-      poll();
-      intervalRef.current = setInterval(() => {
-        setPollCount(c => {
-          if (c >= MAX_POLLS) {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            return c;
-          }
-          return c;
-        });
-        poll();
-      }, POLL_INTERVAL);
-    });
+    poll();
+    intervalRef.current = setInterval(poll, POLL_INTERVAL);
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [orderId]);
+    return stopPolling;
+  }, [orderId, stopPolling]);
 
   const isSuccess = status?.status === 'Success' || status?.status === 'Sandbox';
   const isFailure = status?.status === 'Failure' || status?.status === 'Reversed';

@@ -20,6 +20,8 @@ export interface Title {
   description: string;
   status: TitleStatus;
   countryOfOrigin: string;
+  averageScore?: number | null;
+  reviewsCount?: number;
 }
 
 export interface TitleDetails extends Title {
@@ -60,6 +62,7 @@ export interface ChapterContent {
   isPremium?: boolean;
   isLocked?: boolean;
   price?: number;
+  earlyAccessUntil?: string | null;
 }
 
 export interface Genre {

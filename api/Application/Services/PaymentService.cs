@@ -266,7 +266,7 @@ public class PaymentService : IPaymentService
             .FirstOrDefaultAsync(p => p.OrderId == orderId);
 
         if (payment == null)
-            throw new NotFoundException($"Payment with orderId {orderId} was not found");
+            throw new NotFoundException($"Платіж з orderId {orderId} не знайдено");
 
         if (payment.Status == PaymentStatus.Success || payment.Status == PaymentStatus.Sandbox)
         {

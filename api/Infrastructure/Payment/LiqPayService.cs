@@ -112,10 +112,17 @@ public class LiqPayService : ILiqPayService
             using var doc = JsonDocument.Parse(body);
             var root = doc.RootElement;
 
-            // Якщо LiqPay повернув статус помилки (наприклад, неправильний підпис/запит), логуємо опис причини
             if (root.TryGetProperty("status", out var st) && (st.GetString() == "error" || st.GetString() == "failure"))
             {
+                var errCode = root.TryGetProperty("err_code", out var code) ? code.GetString() : null;
                 var errDesc = root.TryGetProperty("err_description", out var desc) ? desc.GetString() : "Unknown LiqPay error";
+
+                if (errCode == "payment_not_found")
+                {
+                    _logger.LogInformation($"LiqPay: order {orderId} not yet registered on LiqPay side (payment_not_found) — treating as still pending");
+                    return null;
+                }
+
                 _logger.LogError($"LiqPay returned error status for order {orderId}: {errDesc}");
             }
 

@@ -65,7 +65,7 @@ public class ChapterService : IChapterService
     {
         var chapter = await _unitOfWork.Chapters.GetByTitleAndNumberAsync(titleId, chapterNumber);
         if (chapter == null)
-            throw new NotFoundException($"Chapter number {chapterNumber} for Title {titleId} was not found");
+            throw new NotFoundException($"Розділ №{chapterNumber} для твору {titleId} не знайдено");
 
         return await BuildChapterContentDto(chapter, userId);
     }

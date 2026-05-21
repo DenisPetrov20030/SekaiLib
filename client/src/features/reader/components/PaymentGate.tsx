@@ -7,9 +7,21 @@ interface PaymentGateProps {
   chapterName: string;
   titleName: string;
   price: number;
+  earlyAccessUntil?: string | null;
 }
 
-export const PaymentGate = ({ chapterId, chapterName, titleName, price }: PaymentGateProps) => {
+const formatFreeDate = (isoDate: string): string => {
+  const date = new Date(isoDate);
+  return date.toLocaleString('uk-UA', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+export const PaymentGate = ({ chapterId, chapterName, titleName, price, earlyAccessUntil }: PaymentGateProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -68,10 +80,17 @@ export const PaymentGate = ({ chapterId, chapterName, titleName, price }: Paymen
         <h2 className="text-xl font-bold text-text-primary mb-1">{titleName}</h2>
         <p className="text-text-secondary mb-6 text-sm">{chapterName}</p>
 
-        <div className="bg-surface-2 rounded-xl p-4 mb-6">
+        <div className="bg-surface-2 rounded-xl p-4 mb-4">
           <p className="text-text-secondary text-sm mb-1">Ціна розділу</p>
           <p className="text-3xl font-bold text-primary-400">{price.toFixed(2)} ₴</p>
         </div>
+
+        {earlyAccessUntil && (
+          <p className="text-text-muted text-xs mb-6">
+            Стане безкоштовним{' '}
+            <span className="text-text-secondary font-medium">{formatFreeDate(earlyAccessUntil)}</span>
+          </p>
+        )}
 
         {error && (
           <p className="text-red-400 text-sm mb-4 bg-red-500/10 rounded-lg px-3 py-2">{error}</p>

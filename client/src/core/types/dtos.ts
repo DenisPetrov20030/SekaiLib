@@ -145,6 +145,8 @@ export interface TitleDto {
   status: TitleStatus;
   chapterCount: number;
   countryOfOrigin?: string;
+  averageScore?: number | null;
+  reviewsCount?: number;
 }
 
 export interface ChapterContentDto {

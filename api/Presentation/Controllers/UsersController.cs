@@ -314,9 +314,12 @@ public class UsersController : ControllerBase
         foreach (var progress in latestByTitle)
         {
             var chapter = await _unitOfWork.Chapters.GetByTitleAndNumberAsync(progress.TitleId, progress.ChapterNumber);
+            if (chapter == null || progress.Title == null)
+                continue;
+
             var totalPages = 0;
 
-            if (chapter != null && !string.IsNullOrWhiteSpace(chapter.Content))
+            if (!string.IsNullOrWhiteSpace(chapter.Content))
             {
                 totalPages = CountTotalPages(chapter.Content);
             }

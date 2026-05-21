@@ -266,6 +266,7 @@ export const ReaderPage = () => {
             chapterName={`Розділ ${currentChapter.chapterNumber}: ${currentChapter.name}`}
             titleName={currentChapter.titleName}
             price={currentChapter.price ?? 0}
+            earlyAccessUntil={currentChapter.earlyAccessUntil}
           />
         </div>
       </div>

@@ -24,6 +24,29 @@ public class TitleService : ITitleService
         _notifications = notifications;
     }
 
+    private async Task<Dictionary<Guid, (double? AverageScore, int ReviewsCount)>> GetReviewStatsAsync(IEnumerable<Guid> titleIds)
+    {
+        var ids = titleIds.Distinct().ToList();
+        if (ids.Count == 0)
+            return new Dictionary<Guid, (double? AverageScore, int ReviewsCount)>();
+
+        var stats = await _unitOfWork.Reviews.Query()
+            .Where(r => ids.Contains(r.TitleId) && !r.IsHidden)
+            .GroupBy(r => r.TitleId)
+            .Select(g => new
+            {
+                TitleId = g.Key,
+                AverageScore = g.Average(r => (double)r.Rating),
+                ReviewsCount = g.Count()
+            })
+            .ToListAsync();
+
+        return stats.ToDictionary(
+            x => x.TitleId,
+            x => ((double?)Math.Round(x.AverageScore, 1), x.ReviewsCount)
+        );
+    }
+
     public async Task<PagedResponse<TitleDto>> GetCatalogAsync(CatalogFilterDto filter, int page, int pageSize)
     {
         var catalogFilter = new CatalogFilter
@@ -36,6 +59,7 @@ public class TitleService : ITitleService
         };
 
         var result = await _unitOfWork.Titles.GetCatalogAsync(catalogFilter, page, pageSize);
+        var reviewStats = await GetReviewStatsAsync(result.Data.Select(t => t.Id));
 
         var titleDtos = result.Data.Select(t => new TitleDto(
             t.Id,
@@ -45,7 +69,10 @@ public class TitleService : ITitleService
             t.Description ?? "",
             t.CountryOfOrigin ?? string.Empty,
             t.Status,
-            0         ));
+            0,
+            reviewStats.TryGetValue(t.Id, out var stats) ? stats.AverageScore : null,
+            reviewStats.TryGetValue(t.Id, out var reviewCount) ? reviewCount.ReviewsCount : 0
+        ));
 
         return new PagedResponse<TitleDto>(
             titleDtos,
@@ -101,6 +128,7 @@ public class TitleService : ITitleService
     public async Task<IEnumerable<TitleDto>> SearchAsync(string query)
     {
         var titles = await _unitOfWork.Titles.SearchByNameAsync(query);
+        var reviewStats = await GetReviewStatsAsync(titles.Select(t => t.Id));
 
         return titles.Select(t => new TitleDto(
             t.Id,
@@ -110,7 +138,9 @@ public class TitleService : ITitleService
             t.Description ?? "",
             t.CountryOfOrigin ?? string.Empty,
             t.Status,
-            t.Chapters?.Count ?? 0
+            t.Chapters?.Count ?? 0,
+            reviewStats.TryGetValue(t.Id, out var stats) ? stats.AverageScore : null,
+            reviewStats.TryGetValue(t.Id, out var reviewCount) ? reviewCount.ReviewsCount : 0
         ));
     }
 
@@ -314,9 +344,14 @@ public class TitleService : ITitleService
     public async Task<IEnumerable<TitleDto>> GetLatestTitlesAsync(int count)
     {
         var titles = await _unitOfWork.Titles.GetAllAsync();
-        return titles
+        var latestTitles = titles
             .OrderByDescending(t => t.CreatedAt)
             .Take(count)
+            .ToList();
+
+        var reviewStats = await GetReviewStatsAsync(latestTitles.Select(t => t.Id));
+
+        return latestTitles
             .Select(t => new TitleDto(
                 t.Id,
                 t.Name,
@@ -325,7 +360,9 @@ public class TitleService : ITitleService
                 t.Description ?? "",
                 t.CountryOfOrigin ?? string.Empty,
                 t.Status,
-                0
+                0,
+                reviewStats.TryGetValue(t.Id, out var stats) ? stats.AverageScore : null,
+                reviewStats.TryGetValue(t.Id, out var reviewCount) ? reviewCount.ReviewsCount : 0
             ));
     }
 }
