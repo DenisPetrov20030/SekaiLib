@@ -323,6 +323,7 @@ export const NotificationType = {
   FriendRequest: 3,
   TitleCompleted: 4,
   NewTeamChapter: 5,
+  FriendRequestAccepted: 6,
 } as const;
 
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];

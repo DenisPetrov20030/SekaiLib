@@ -7,9 +7,10 @@ import { useDialog } from '../hooks/useDialog';
 interface BlockButtonProps {
   userId: string;
   className?: string;
+  onBlockChange?: (isBlocked: boolean) => void;
 }
 
-export function BlockButton({ userId, className }: BlockButtonProps) {
+export function BlockButton({ userId, className, onBlockChange }: BlockButtonProps) {
   const currentUser = useAppSelector((state) => state.auth.user);
   const [blocked, setBlocked] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -31,6 +32,7 @@ export function BlockButton({ userId, className }: BlockButtonProps) {
       if (blocked) {
         await blocksApi.unblock(userId);
         setBlocked(false);
+        onBlockChange?.(false);
       } else {
         const ok = await confirm({
           title: 'Заблокувати користувача?',
@@ -41,6 +43,7 @@ export function BlockButton({ userId, className }: BlockButtonProps) {
         if (!ok) { setToggling(false); return; }
         await blocksApi.block(userId);
         setBlocked(true);
+        onBlockChange?.(true);
       }
     } catch {
       await alert({ title: 'Помилка', message: 'Не вдалося виконати дію' });

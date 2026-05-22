@@ -46,7 +46,7 @@ export function Dialog({
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onCancel}
       />
-      <div className="relative w-full max-w-md mx-4 bg-surface-800 rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md mx-4 bg-zinc-900 rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         <div className="px-6 pt-6 pb-4">
           <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
           {message && (

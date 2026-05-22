@@ -1,9 +1,30 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { reportsApi } from '../../../core/api/reports';
 import { bansApi } from '../../../core/api/bans';
 import { moderationApi } from '../../../core/api/moderation';
 import { ReportStatus, ReportTargetType } from '../../../core/types/enums';
 import type { Report } from '../../../core/types/entities';
+
+const buildResourceLink = (report: Report): string | null => {
+  const { targetType, targetId, targetUserId } = report;
+  switch (targetType) {
+    case ReportTargetType.User:
+      return `/users/${targetId}`;
+    case ReportTargetType.Title:
+      return `/titles/${targetId}`;
+    case ReportTargetType.ForumThread:
+      return `/forum/threads/${targetId}`;
+    case ReportTargetType.Review:
+    case ReportTargetType.ReviewComment:
+    case ReportTargetType.ChapterComment:
+    case ReportTargetType.TitleComment:
+    case ReportTargetType.ForumPost:
+      return targetUserId ? `/users/${targetUserId}` : null;
+    default:
+      return null;
+  }
+};
 
 const STATUS_LABELS: Record<number, string> = {
   [ReportStatus.Pending]: 'Очікує',
@@ -114,6 +135,22 @@ export function ModeratorReportsPage() {
               <p className="text-sm text-text-secondary">
                 Причина: <span className="text-text-primary">{report.reason}</span>
               </p>
+
+              {buildResourceLink(report) && (
+                <div className="mt-2">
+                  <Link
+                    to={buildResourceLink(report)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary-400 hover:text-primary-300 underline underline-offset-2"
+                  >
+                    Переглянути ресурс
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </Link>
+                </div>
+              )}
 
               {report.description && (
                 <p className="text-sm text-text-muted mt-1 line-clamp-2">{report.description}</p>

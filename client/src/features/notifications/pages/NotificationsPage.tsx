@@ -44,8 +44,9 @@ export const NotificationsPage = () => {
       case 'other':
         // ДОДАНО: Тепер сповіщення від команди потрапляють у вкладку "Інше"
         return (
-          n.type === NotificationType.FriendRequest || 
-          n.type === NotificationType.TitleCompleted || 
+          n.type === NotificationType.FriendRequest ||
+          n.type === NotificationType.FriendRequestAccepted ||
+          n.type === NotificationType.TitleCompleted ||
           n.type === NotificationType.NewTeamChapter
         );
       default:
@@ -224,6 +225,8 @@ export const NotificationsPage = () => {
                         ? 'Повідомлення'
                         : notification.type === NotificationType.FriendRequest
                         ? 'Заявка в друзі'
+                        : notification.type === NotificationType.FriendRequestAccepted
+                        ? 'Друзі'
                         : 'Завершено'}
                     </span>
                     <span>•</span>

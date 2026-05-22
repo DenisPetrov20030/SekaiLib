@@ -7,5 +7,6 @@ public enum NotificationType
     DirectMessage = 2,
     FriendRequest = 3,
     TitleCompleted = 4,
-    NewTeamChapter = 5
+    NewTeamChapter = 5,
+    FriendRequestAccepted = 6
 }

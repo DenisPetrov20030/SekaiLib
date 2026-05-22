@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../../core/constants';
 import type { CollectionDto } from '../../../core/api/collections';
 
@@ -19,6 +19,7 @@ const formatDate = (iso: string) => {
 };
 
 export const CollectionCard = ({ collection }: Props) => {
+  const navigate = useNavigate();
   const to = ROUTES.COLLECTION_DETAILS.replace(':id', collection.id);
   const covers = collection.coverImages.slice(0, 3);
 
@@ -125,7 +126,17 @@ export const CollectionCard = ({ collection }: Props) => {
               {collection.authorUsername.charAt(0).toUpperCase()}
             </div>
           )}
-          <span className="text-xs text-text-muted truncate">{collection.authorUsername}</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate(ROUTES.USER_PROFILE.replace(':userId', collection.authorId));
+            }}
+            className="text-xs text-text-muted truncate hover:text-primary-400 transition-colors"
+          >
+            {collection.authorUsername}
+          </button>
           <span className="text-xs text-text-muted ml-auto flex-shrink-0">{formatDate(collection.createdAt)}</span>
         </div>
       </div>

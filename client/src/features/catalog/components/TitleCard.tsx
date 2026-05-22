@@ -22,8 +22,8 @@ export const TitleCard = ({ title }: TitleCardProps) => {
           <img
             src={title.coverImageUrl}
             alt={title.name}
-            loading="eager"
-            decoding="sync"
+            loading="lazy"
+            decoding="async"
             // object-cover гарантує повне заповнення без смуг, а group-hover додає преміальний ефект легкого збільшення
             className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
           />

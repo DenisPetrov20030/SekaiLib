@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usersApi } from '../../../core/api';
+import { blocksApi } from '../../../core/api/blocks';
 import { useAppSelector } from '../../../app/store/hooks';
 import { TitleCard } from '../../catalog/components/TitleCard';
 import { Pagination } from '../../catalog/components/Pagination';
@@ -26,6 +27,7 @@ export const UserProfilePage = () => {
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
   const [friendActionLoading, setFriendActionLoading] = useState(false);
   const [friendsCount, setFriendsCount] = useState(0);
+  const [isBlockedByMe, setIsBlockedByMe] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -34,8 +36,19 @@ export const UserProfilePage = () => {
       loadFriendshipStatus();
       loadPendingRequestStatus();
       loadFriendsCount();
+      loadBlockStatus();
     }
   }, [userId]);
+
+  const loadBlockStatus = async () => {
+    if (!userId || !authUser || authUser.id === userId) return;
+    try {
+      const res = await blocksApi.isBlocked(userId);
+      setIsBlockedByMe(res.data);
+    } catch {
+      setIsBlockedByMe(false);
+    }
+  };
 
   const loadProfile = async () => {
     try {
@@ -252,7 +265,18 @@ export const UserProfilePage = () => {
           </div>
           </div>
           <div className="shrink-0 flex items-center gap-2">
-            <Button variant="primary" onClick={() => navigate(`/messages/to/${userId}`)}>Написати повідомлення</Button>
+            <Button
+              variant="primary"
+              onClick={async () => {
+                if (isBlockedByMe) {
+                  await alert({ title: 'Користувач заблокований', message: 'Розблокуйте користувача, щоб написати повідомлення.' });
+                  return;
+                }
+                navigate(`/messages/to/${userId}`);
+              }}
+            >
+              Написати повідомлення
+            </Button>
             {authUser?.id !== userId && !isFriend && (
               <Button
                 variant="primary"
@@ -264,7 +288,7 @@ export const UserProfilePage = () => {
             )}
             {/* Block / Ignore button */}
             {authUser?.id !== userId && (
-              <BlockButton userId={userId!} />
+              <BlockButton userId={userId!} onBlockChange={setIsBlockedByMe} />
             )}
             <Link to={`/users/${userId}/reading-lists`} state={{ username: profile.username }}>
               <Button>Перейти до списків</Button>

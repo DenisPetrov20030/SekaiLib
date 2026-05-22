@@ -630,6 +630,19 @@ public async Task<IActionResult> AcceptFriendRequest(Guid requestId)
     await _unitOfWork.Friendships.AddAsync(friendship);
     await _unitOfWork.SaveChangesAsync();
 
+    var acceptor = await _unitOfWork.Users.GetByIdAsync(me);
+    if (acceptor != null)
+    {
+        await _notifications.CreateAsync(new CreateNotificationRequest(
+            request.FromUserId,
+            NotificationType.FriendRequestAccepted,
+            "Запит прийнято",
+            $"{acceptor.Username} прийняв(ла) ваш запит у друзі.",
+            $"/users/{me}",
+            ActorUserId: me
+        ));
+    }
+
     return Ok(new { accepted = true });
 }
 
