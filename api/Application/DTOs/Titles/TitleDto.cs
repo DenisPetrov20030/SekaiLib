@@ -10,7 +10,5 @@ public record TitleDto(
     string Description,
     string CountryOfOrigin,
     TitleStatus Status,
-    int TitlesCount,
-    double? AverageScore = null,
-    int ReviewsCount = 0
+    int TitlesCount 
 );

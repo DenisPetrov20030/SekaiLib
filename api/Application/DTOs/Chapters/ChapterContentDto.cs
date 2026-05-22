@@ -8,8 +8,6 @@ public record ChapterContentDto(
     DateTime PublishedAt,
     Guid TitleId,
     string TitleName,
-    Guid? TranslationTeamId,
-    string? TranslationTeamName,
     int? PreviousChapterNumber,
     int? NextChapterNumber,
     int ViewCount = 0,

@@ -49,23 +49,23 @@ public class ChapterService : IChapterService
 
         return query
             .OrderBy(c => c.Number)
-            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.Price, c.TranslationTeamId, c.TranslationTeam?.Name, c.TitleId, title.Name, title.CoverImageUrl, c.EarlyAccessUntil, c.ViewCount));
+            .Select(c => new ChapterDto(c.Id, c.Number, c.Name, c.PublishedAt, c.IsPremium, c.Price, c.TranslationTeamId, c.TranslationTeam?.Name, c.TitleId, title.Name, title.CoverImageUrl, c.ViewCount));
     }
 
-    public async Task<ChapterContentDto> GetChapterContentAsync(Guid chapterId, Guid? userId = null)
+    public async Task<ChapterContentDto> GetChapterContentAsync(Guid chapterId)
     {
         var chapter = await _unitOfWork.Chapters.GetByIdAsync(chapterId);
         if (chapter == null)
             throw new NotFoundException("Chapter", chapterId);
 
-        return await BuildChapterContentDto(chapter, userId);
+        return await BuildChapterContentDto(chapter);
     }
 
     public async Task<ChapterContentDto> GetChapterContentByNumberAsync(Guid titleId, int chapterNumber, Guid? userId = null)
     {
         var chapter = await _unitOfWork.Chapters.GetByTitleAndNumberAsync(titleId, chapterNumber);
         if (chapter == null)
-            throw new NotFoundException($"Розділ №{chapterNumber} для твору {titleId} не знайдено");
+            throw new NotFoundException($"Chapter number {chapterNumber} for Title {titleId} was not found");
 
         return await BuildChapterContentDto(chapter, userId);
     }
@@ -88,16 +88,14 @@ public class ChapterService : IChapterService
             && DateTime.UtcNow > chapter.EarlyAccessUntil.Value;
         var isPremium = chapter.IsPremium && chapter.Price > 0 && !earlyAccessExpired;
         var isLocked = false;
-        var canManage = false;
 
         if (isPremium)
         {
             if (userId.HasValue)
             {
-                canManage = await CanManageChapterAsync(userId.Value, chapter, title);
                 var hasPurchase = await _unitOfWork.UserPurchases.Query()
                     .AnyAsync(p => p.UserId == userId.Value && p.ChapterId == chapter.Id);
-                isLocked = !(hasPurchase || canManage);
+                isLocked = !hasPurchase;
             }
             else
             {
@@ -113,8 +111,6 @@ public class ChapterService : IChapterService
             chapter.PublishedAt,
             title.Id,
             title.Name,
-            chapter.TranslationTeamId,
-            chapter.TranslationTeam?.Name,
             previousChapterNumber,
             nextChapterNumber,
             chapter.ViewCount,
@@ -123,28 +119,6 @@ public class ChapterService : IChapterService
             chapter.Price,
             chapter.EarlyAccessUntil
         );
-    }
-
-    private async Task<bool> CanManageChapterAsync(Guid userId, Domain.Entities.Chapter chapter, Domain.Entities.Title? title = null)
-    {
-        title ??= await _unitOfWork.Titles.GetByIdAsync(chapter.TitleId);
-        if (title == null)
-            return false;
-
-        var user = await _unitOfWork.Users.GetByIdAsync(userId);
-        if (user == null)
-            return false;
-
-        if (title.PublisherId == userId || user.Role == UserRole.Administrator)
-            return true;
-
-        if (chapter.TranslationTeamId.HasValue)
-        {
-            return await _unitOfWork.TranslationTeamMembers.Query()
-                .AnyAsync(m => m.TeamId == chapter.TranslationTeamId.Value && m.UserId == userId);
-        }
-
-        return false;
     }
 
     public async Task<ChapterContentDto> CreateAsync(Guid userId, Guid titleId, CreateChapterRequest request)
@@ -233,6 +207,7 @@ public class ChapterService : IChapterService
         foreach (var group in followerGroups)
         {
             var followerId = group.Key;
+            if (followerId == userId) continue;
 
             // Загружаємо налаштування користувача
             var follower = await _unitOfWork.Users.GetByIdAsync(followerId);
@@ -351,7 +326,7 @@ public class ChapterService : IChapterService
 
                 var team = await _unitOfWork.TranslationTeams.GetByIdAsync(request.TranslationTeamId.Value);
 
-                foreach (var subscriberId in teamSubscriberIds)
+                foreach (var subscriberId in teamSubscriberIds.Where(id => id != userId))
                 {
                     await _notifications.CreateAsync(new CreateNotificationRequest(
                         subscriberId,
@@ -407,10 +382,6 @@ public class ChapterService : IChapterService
         chapter.Content = PrepareTextForDb(request.Content);
         chapter.IsPremium = request.IsPremium;
         chapter.Price = request.Price;
-        chapter.TranslationTeamId = request.TranslationTeamId;
-        chapter.EarlyAccessUntil = request.EarlyAccessUntil.HasValue
-            ? DateTime.SpecifyKind(request.EarlyAccessUntil.Value, DateTimeKind.Utc)
-            : null;
 
         await _unitOfWork.Chapters.UpdateAsync(chapter);
         await _unitOfWork.SaveChangesAsync();
@@ -441,19 +412,15 @@ public class ChapterService : IChapterService
         }
 
         if (!canManage)
+        {
+            canManage = await _unitOfWork.TranslationTeamMembers.Query()
+                .AnyAsync(m => m.UserId == userId);
+        }
+
+        if (!canManage)
             throw new ForbiddenException();
 
         await _unitOfWork.Chapters.DeleteAsync(chapter);
-
-        var chapterNotifications = await _unitOfWork.Notifications.Query()
-            .Where(n => n.ChapterId == chapterId)
-            .ToListAsync();
-
-        foreach (var notification in chapterNotifications)
-        {
-            await _unitOfWork.Notifications.DeleteAsync(notification);
-        }
-
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -485,25 +452,6 @@ public class ChapterService : IChapterService
     
     public async Task UpdateReadingProgressAsync(Guid userId, Guid titleId, int chapterNumber, int page)
     {
-        var chapter = await _unitOfWork.Chapters.GetByTitleAndNumberAsync(titleId, chapterNumber);
-        if (chapter == null)
-            return; // nothing to update
-
-        var earlyAccessExpired = chapter.EarlyAccessUntil.HasValue
-            && DateTime.UtcNow > chapter.EarlyAccessUntil.Value;
-        var isPremium = chapter.IsPremium && chapter.Price > 0 && !earlyAccessExpired;
-
-        if (isPremium)
-        {
-            var hasPurchase = await _unitOfWork.UserPurchases.Query()
-                .AnyAsync(p => p.UserId == userId && p.ChapterId == chapter.Id);
-            if (!hasPurchase)
-            {
-                // Do not record progress for locked (premium, not purchased) chapters
-                return;
-            }
-        }
-
         var progress = await _unitOfWork.UserReadingProgresses
             .Query()
             .FirstOrDefaultAsync(p => p.UserId == userId && p.TitleId == titleId);

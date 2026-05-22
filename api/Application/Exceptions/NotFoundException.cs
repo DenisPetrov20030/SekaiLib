@@ -3,7 +3,7 @@ namespace SekaiLib.Application.Exceptions;
 public class NotFoundException : Exception
 {
     public NotFoundException(string entityName, Guid id)
-        : base($"{entityName} з ID {id} не знайдено") { }
+        : base($"{entityName} with ID {id} was not found") { }
 
     public NotFoundException(string message)
         : base(message) { }

@@ -5,7 +5,5 @@ public record UpdateChapterRequest(
     string Name,
     string Content,
     bool IsPremium,
-    decimal Price = 0m,
-    Guid? TranslationTeamId = null,
-    DateTime? EarlyAccessUntil = null
+    decimal Price = 0m
 );
