@@ -4,6 +4,7 @@ import { reportsApi } from '../../../core/api/reports';
 import { bansApi } from '../../../core/api/bans';
 import { moderationApi } from '../../../core/api/moderation';
 import { ReportStatus, ReportTargetType } from '../../../core/types/enums';
+import { useDialog } from '../../../shared/hooks/useDialog';
 import type { Report } from '../../../core/types/entities';
 
 const buildResourceLink = (report: Report): string | null => {
@@ -44,10 +45,11 @@ const TARGET_LABELS: Record<number, string> = {
 const STATUS_COLORS: Record<number, string> = {
   [ReportStatus.Pending]: 'bg-yellow-500/20 text-yellow-400',
   [ReportStatus.Reviewed]: 'bg-green-500/20 text-green-400',
-  [ReportStatus.Dismissed]: 'bg-surface-600 text-text-muted',
+  [ReportStatus.Dismissed]: 'bg-zinc-700 text-text-muted',
 };
 
 export function ModeratorReportsPage() {
+  const { confirm, alert } = useDialog();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -92,7 +94,20 @@ export function ModeratorReportsPage() {
   };
 
   const handleBan = async (userId: string) => {
-    await bansApi.banUser(userId, { reason: 'Блокування за скаргою' });
+    const ok = await confirm({
+      title: 'Забанити користувача?',
+      message: 'Бан буде безстроковим. Підтвердіть дію.',
+      confirmLabel: 'Забанити',
+      variant: 'danger',
+    });
+    if (!ok) return;
+    try {
+      await bansApi.banUser(userId, { reason: 'Блокування за скаргою' });
+      await alert({ title: 'Готово', message: 'Користувача забанено.' });
+      load(page);
+    } catch {
+      await alert({ title: 'Помилка', message: 'Не вдалося забанити користувача.' });
+    }
   };
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -110,10 +125,10 @@ export function ModeratorReportsPage() {
       ) : (
         <div className="space-y-4">
           {reports.map((report) => (
-            <div key={report.id} className="bg-surface-800 rounded-lg p-5">
+            <div key={report.id} className="bg-zinc-900 rounded-lg p-5">
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-medium px-2 py-0.5 rounded bg-surface-700 text-text-secondary">
+                  <span className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-800 text-text-secondary">
                     {TARGET_LABELS[report.targetType] ?? `Type ${report.targetType}`}
                   </span>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded ${STATUS_COLORS[report.status]}`}>
@@ -182,7 +197,7 @@ export function ModeratorReportsPage() {
                   )}
                   <button
                     onClick={() => handleDismiss(report.id)}
-                    className="px-3 py-1.5 bg-surface-700 hover:bg-surface-600 text-text-secondary text-sm rounded-lg"
+                    className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-text-secondary text-sm rounded-lg"
                   >
                     Відхилити
                   </button>
@@ -198,7 +213,7 @@ export function ModeratorReportsPage() {
           <button
             disabled={page <= 1}
             onClick={() => { const p = page - 1; setPage(p); load(p); }}
-            className="px-3 py-1 bg-surface-700 hover:bg-surface-600 rounded text-sm disabled:opacity-40"
+            className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-sm disabled:opacity-40"
           >
             ←
           </button>
@@ -206,7 +221,7 @@ export function ModeratorReportsPage() {
           <button
             disabled={page >= totalPages}
             onClick={() => { const p = page + 1; setPage(p); load(p); }}
-            className="px-3 py-1 bg-surface-700 hover:bg-surface-600 rounded text-sm disabled:opacity-40"
+            className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-sm disabled:opacity-40"
           >
             →
           </button>
@@ -216,7 +231,7 @@ export function ModeratorReportsPage() {
       {/* Warn modal */}
       {warnUserId && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-surface-800 rounded-xl p-6 w-full max-w-md mx-4">
+          <div className="bg-zinc-900 rounded-xl p-6 w-full max-w-md mx-4">
             <h3 className="text-lg font-semibold text-text-primary mb-4">Попередження</h3>
             <textarea
               value={warnReason}
@@ -227,7 +242,7 @@ export function ModeratorReportsPage() {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setWarnUserId(null)}
-                className="px-4 py-2 bg-surface-700 hover:bg-surface-600 text-text-primary text-sm rounded-lg"
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-text-primary text-sm rounded-lg"
               >
                 Скасувати
               </button>

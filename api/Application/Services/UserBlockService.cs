@@ -56,6 +56,12 @@ public class UserBlockService : IUserBlockService
             .AnyAsync(b => b.BlockerId == blockerId && b.BlockedUserId == blockedUserId);
     }
 
+    public async Task<bool> IsBlockedByAsync(Guid userId, Guid potentialBlockerId)
+    {
+        return await _unitOfWork.UserBlocks.Query()
+            .AnyAsync(b => b.BlockerId == potentialBlockerId && b.BlockedUserId == userId);
+    }
+
     public async Task<IEnumerable<Guid>> GetBlockedUserIdsAsync(Guid blockerId)
     {
         return await _unitOfWork.UserBlocks.Query()

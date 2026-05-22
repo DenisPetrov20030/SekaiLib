@@ -17,6 +17,7 @@ public class TitleRepository : Repository<Title>, ITitleRepository
             .Include(t => t.Chapters)
             .Include(t => t.TitleGenres)
                 .ThenInclude(tg => tg.Genre)
+            .Include(t => t.Reviews)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
@@ -86,6 +87,7 @@ public class TitleRepository : Repository<Title>, ITitleRepository
     {
         return await _dbSet
             .Include(t => t.Chapters)
+            .Include(t => t.Reviews)
             .Where(t => t.Name.Contains(query))
             .OrderBy(t => t.Name)
             .Take(20)
@@ -98,6 +100,7 @@ public class TitleRepository : Repository<Title>, ITitleRepository
             .Include(t => t.Chapters)
             .Include(t => t.TitleGenres)
                 .ThenInclude(tg => tg.Genre)
+            .Include(t => t.Reviews)
             .Where(t => t.PublisherId == publisherId);
 
         var totalCount = await query.CountAsync();

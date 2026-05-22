@@ -28,6 +28,7 @@ export const UserProfilePage = () => {
   const [friendActionLoading, setFriendActionLoading] = useState(false);
   const [friendsCount, setFriendsCount] = useState(0);
   const [isBlockedByMe, setIsBlockedByMe] = useState(false);
+  const [isBlockedByThem, setIsBlockedByThem] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -43,10 +44,15 @@ export const UserProfilePage = () => {
   const loadBlockStatus = async () => {
     if (!userId || !authUser || authUser.id === userId) return;
     try {
-      const res = await blocksApi.isBlocked(userId);
-      setIsBlockedByMe(res.data);
+      const [blockedRes, blockedByRes] = await Promise.all([
+        blocksApi.isBlocked(userId),
+        blocksApi.isBlockedBy(userId),
+      ]);
+      setIsBlockedByMe(blockedRes.data);
+      setIsBlockedByThem(blockedByRes.data);
     } catch {
       setIsBlockedByMe(false);
+      setIsBlockedByThem(false);
     }
   };
 
@@ -265,18 +271,20 @@ export const UserProfilePage = () => {
           </div>
           </div>
           <div className="shrink-0 flex items-center gap-2">
-            <Button
-              variant="primary"
-              onClick={async () => {
-                if (isBlockedByMe) {
-                  await alert({ title: 'Користувач заблокований', message: 'Розблокуйте користувача, щоб написати повідомлення.' });
-                  return;
-                }
-                navigate(`/messages/to/${userId}`);
-              }}
-            >
-              Написати повідомлення
-            </Button>
+            {!isBlockedByThem && (
+              <Button
+                variant="primary"
+                onClick={async () => {
+                  if (isBlockedByMe) {
+                    await alert({ title: 'Користувач заблокований', message: 'Розблокуйте користувача, щоб написати повідомлення.' });
+                    return;
+                  }
+                  navigate(`/messages/to/${userId}`);
+                }}
+              >
+                Написати повідомлення
+              </Button>
+            )}
             {authUser?.id !== userId && !isFriend && (
               <Button
                 variant="primary"

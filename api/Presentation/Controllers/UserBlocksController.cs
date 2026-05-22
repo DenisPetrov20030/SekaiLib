@@ -42,6 +42,14 @@ public class UserBlocksController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{userId}/blocked-by")]
+    public async Task<ActionResult<bool>> IsBlockedBy(Guid userId)
+    {
+        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _blockService.IsBlockedByAsync(currentUserId, userId);
+        return Ok(result);
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Guid>>> GetBlockedUsers()
     {

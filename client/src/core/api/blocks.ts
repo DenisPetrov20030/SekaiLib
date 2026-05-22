@@ -11,6 +11,9 @@ export const blocksApi = {
   isBlocked: (userId: string) =>
     apiClient.get<boolean>(`/blocks/${userId}/status`),
 
+  isBlockedBy: (userId: string) =>
+    apiClient.get<boolean>(`/blocks/${userId}/blocked-by`),
+
   getBlockedUsers: () =>
     apiClient.get<string[]>('/blocks'),
 

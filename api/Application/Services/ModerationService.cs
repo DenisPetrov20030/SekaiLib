@@ -155,7 +155,7 @@ public class ModerationService : IModerationService
             .CountAsync(r => r.Status == ReportStatus.Pending);
 
         var activeBans = await _unitOfWork.UserBans.Query()
-            .CountAsync(b => b.ExpiresAt == null || b.ExpiresAt > DateTime.UtcNow);
+            .CountAsync(b => b.IsActive && (b.ExpiresAt == null || b.ExpiresAt > DateTime.UtcNow));
 
         var today = DateTime.UtcNow.Date;
         var warningsToday = await _unitOfWork.UserWarnings.Query()

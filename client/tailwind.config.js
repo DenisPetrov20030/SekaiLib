@@ -10,6 +10,12 @@ export default {
         background: '#09090b', // zinc-950
         surface: '#18181b', // zinc-900
         'surface-hover': '#27272a', // zinc-800
+        'surface-500': '#52525b', // zinc-600
+        'surface-600': '#3f3f46', // zinc-700
+        'surface-700': '#27272a', // zinc-800
+        'surface-800': '#18181b', // zinc-900
+        'surface-900': '#09090b', // zinc-950
+        divider: '#27272a',
         text: {
           primary: '#f4f4f5', // zinc-100
           secondary: '#a1a1aa', // zinc-400

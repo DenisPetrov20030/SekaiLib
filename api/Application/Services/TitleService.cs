@@ -45,7 +45,9 @@ public class TitleService : ITitleService
             t.Description ?? "",
             t.CountryOfOrigin ?? string.Empty,
             t.Status,
-            0         ));
+            0,
+            t.Reviews.Any() ? Math.Round(t.Reviews.Average(r => r.Rating), 2) : null
+        ));
 
         return new PagedResponse<TitleDto>(
             titleDtos,
@@ -110,7 +112,8 @@ public class TitleService : ITitleService
             t.Description ?? "",
             t.CountryOfOrigin ?? string.Empty,
             t.Status,
-            t.Chapters?.Count ?? 0
+            t.Chapters?.Count ?? 0,
+            t.Reviews.Any() ? Math.Round(t.Reviews.Average(r => r.Rating), 2) : null
         ));
     }
 
@@ -299,7 +302,8 @@ public class TitleService : ITitleService
             t.Description ?? "",
             t.CountryOfOrigin ?? string.Empty,
             t.Status,
-            t.Chapters?.Count ?? 0
+            t.Chapters?.Count ?? 0,
+            t.Reviews.Any() ? Math.Round(t.Reviews.Average(r => r.Rating), 2) : null
         ));
 
         return new PagedResponse<TitleDto>(
@@ -325,7 +329,8 @@ public class TitleService : ITitleService
                 t.Description ?? "",
                 t.CountryOfOrigin ?? string.Empty,
                 t.Status,
-                0
+                0,
+                t.Reviews.Any() ? Math.Round(t.Reviews.Average(r => r.Rating), 2) : null
             ));
     }
 }
