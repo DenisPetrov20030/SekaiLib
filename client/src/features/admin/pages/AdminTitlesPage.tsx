@@ -70,6 +70,7 @@ export function AdminTitlesPage() {
       </div>
 
       <div className="bg-surface-800 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-surface-700">
             <tr>
@@ -114,6 +115,7 @@ export function AdminTitlesPage() {
             ))}
           </tbody>
         </table>
+        </div>
 
         {titles.length === 0 && (
           <div className="text-center py-8 text-text-muted">Творів не знайдено</div>

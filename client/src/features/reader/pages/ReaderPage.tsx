@@ -323,7 +323,7 @@ export const ReaderPage = () => {
             <span>←</span> До змісту
           </button>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2">
             <select
               value={settings.theme}
               onChange={(e) => dispatch(setTheme(e.target.value as ReaderTheme))}
@@ -426,28 +426,28 @@ export const ReaderPage = () => {
         </section>
 
         {}
-        <nav className="mt-16 flex items-center justify-between border-t border-gray-700/20 pt-10">
+        <nav className="mt-16 flex items-center justify-between gap-2 border-t border-gray-700/20 pt-10">
           {currentChapter.previousChapterNumber ? (
             <button
               onClick={() => navigateToChapter(currentChapter.previousChapterNumber!)}
-              className="px-8 py-3 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-700 transition-all shadow-md"
+              className="px-4 sm:px-8 py-3 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-700 transition-all shadow-md text-sm sm:text-base"
             >
               ← Попередня
             </button>
-          ) : <div className="w-32"></div>}
+          ) : <div className="w-16 sm:w-32 shrink-0"></div>}
 
-          <div className="text-base font-medium opacity-60">
+          <div className="text-sm sm:text-base font-medium opacity-60 text-center">
             Розділ {currentChapter.chapterNumber}
           </div>
 
           {currentChapter.nextChapterNumber ? (
             <button
               onClick={() => navigateToChapter(currentChapter.nextChapterNumber!)}
-              className="px-8 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-all shadow-md"
+              className="px-4 sm:px-8 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-all shadow-md text-sm sm:text-base"
             >
               Наступна →
             </button>
-          ) : <div className="w-32"></div>}
+          ) : <div className="w-16 sm:w-32 shrink-0"></div>}
         </nav>
       </div>
     </div>

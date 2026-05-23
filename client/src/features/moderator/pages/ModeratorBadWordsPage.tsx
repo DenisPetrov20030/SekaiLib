@@ -72,6 +72,7 @@ export function ModeratorBadWordsPage() {
         <div className="text-center py-8 text-text-secondary">Список порожній</div>
       ) : (
         <div className="bg-surface-800 rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-surface-700">
@@ -101,6 +102,7 @@ export function ModeratorBadWordsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

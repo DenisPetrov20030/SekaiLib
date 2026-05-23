@@ -106,6 +106,7 @@ export const GenresManagementPage = () => {
       </div>
 
       <div className="bg-surface rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-surface-hover">
           <thead className="bg-surface-hover">
             <tr>
@@ -141,6 +142,7 @@ export const GenresManagementPage = () => {
             ))}
           </tbody>
         </table>
+        </div>
 
         {genres.length === 0 && (
           <div className="text-center py-12">

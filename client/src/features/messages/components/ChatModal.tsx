@@ -173,7 +173,7 @@ export const ChatModal = ({ isOpen, onClose, recipientId, recipientUsername, rec
         </header>
 
         <div className="flex flex-1 min-h-0">
-          <aside className="w-[320px] bg-zinc-950 border-r border-white/5 flex flex-col">
+          <aside className="hidden md:flex w-[320px] bg-zinc-950 border-r border-white/5 flex-col">
             <div className="p-4">
               <div className="relative">
                 <input

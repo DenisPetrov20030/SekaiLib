@@ -43,9 +43,38 @@ const navItems = [
 export function ModeratorLayout() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Mobile: horizontal scrollable tab bar */}
+      <nav className="md:hidden flex gap-1 overflow-x-auto scrollbar-none bg-surface-800 rounded-lg p-2 mb-6">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            className={({ isActive }) =>
+              `flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
+                isActive
+                  ? 'bg-primary-500/20 text-primary-400'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-700'
+              }`
+            }
+          >
+            <svg
+              className="w-4 h-4 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+            </svg>
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
+
       <div className="flex gap-6">
-        {/* Sidebar */}
-        <aside className="w-56 shrink-0">
+        {/* Desktop sidebar */}
+        <aside className="hidden md:block w-56 shrink-0">
           <div className="bg-surface-800 rounded-lg p-3 sticky top-24">
             <p className="text-xs font-semibold text-text-muted uppercase tracking-wider px-3 mb-2">
               Модерація

@@ -18,6 +18,7 @@ export const Header = () => {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [activeTab, setActiveTab] = useState<'all' | 'chapters' | 'replies' | 'personal' | 'other'>('all');
@@ -57,6 +58,10 @@ export const Header = () => {
       return true;
     });
   };
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const auth = new URLSearchParams(location.search).get('auth');
@@ -230,62 +235,44 @@ export const Header = () => {
     } catch {}
   };
 
+  const navLinks = [
+    { to: ROUTES.CATALOG, label: 'Каталог' },
+    { to: ROUTES.FORUM, label: 'Форум' },
+    { to: ROUTES.NEWS, label: 'Новини' },
+    { to: ROUTES.TEAMS, label: 'Команди' },
+    ...(user?.role === UserRole.Moderator ? [{ to: ROUTES.MODERATOR, label: 'Модерація', highlight: true }] : []),
+    ...(user?.role === UserRole.Administrator ? [{ to: ROUTES.ADMIN, label: 'Адмін', highlight: true }] : []),
+  ];
+
   return (
     <>
-      <header className="bg-surface shadow-sm">
+      <header className="bg-surface shadow-sm relative z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
-              
+
               <Link to={ROUTES.HOME} className="text-2xl font-bold text-primary-500">
                 SekaiLib
               </Link>
-              
-              <nav className="flex space-x-4">
-                <Link
-                  to={ROUTES.CATALOG}
-                  className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Каталог
-                </Link>
-                <Link
-                  to={ROUTES.FORUM}
-                  className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Форум
-                </Link>
-                <Link
-                  to={ROUTES.NEWS}
-                  className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Новини
-                </Link>
-                <Link
-                  to={ROUTES.TEAMS}
-                  className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Команди
-                </Link>
-                {user?.role === UserRole.Moderator && (
+
+              <nav className="hidden md:flex space-x-4">
+                {navLinks.map((link) => (
                   <Link
-                    to={ROUTES.MODERATOR}
-                    className="text-primary-400 hover:text-primary-300 px-3 py-2 rounded-md text-sm font-medium"
+                    key={link.to}
+                    to={link.to}
+                    className={`px-3 py-2 rounded-md text-sm font-medium ${
+                      link.highlight
+                        ? 'text-primary-400 hover:text-primary-300'
+                        : 'text-text-secondary hover:text-primary-400'
+                    }`}
                   >
-                    Модерація
+                    {link.label}
                   </Link>
-                )}
-                {user?.role === UserRole.Administrator && (
-                  <Link
-                    to={ROUTES.ADMIN}
-                    className="text-primary-400 hover:text-primary-300 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Адмін
-                  </Link>
-                )}
+                ))}
               </nav>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 md:space-x-4">
               {isAuthenticated ? (
                 <>
                   <div className="relative" ref={dropdownRef}>
@@ -308,7 +295,7 @@ export const Header = () => {
                     </button>
 
                     {isNotificationsOpen && (
-                      <div className="absolute right-0 mt-3 w-[400px] bg-black border border-white/10 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)] z-50 overflow-hidden backdrop-blur-xl">
+                      <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] max-w-[400px] bg-black border border-white/10 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)] z-50 overflow-hidden backdrop-blur-xl">
                         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-zinc-900/30">
                           <span className="text-sm font-black text-white uppercase tracking-widest">Сповіщення</span>
                           <button
@@ -453,21 +440,102 @@ export const Header = () => {
                 <>
                   <button
                     onClick={() => { setAuthMode('login'); setIsLoginModalOpen(true); }}
-                    className="text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
+                    className="hidden md:block text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium"
                   >
                     Вхід
                   </button>
                   <button
                     onClick={() => { setAuthMode('register'); setIsLoginModalOpen(true); }}
-                    className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700"
+                    className="hidden md:block bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700"
                   >
                     Реєстрація
                   </button>
                 </>
               )}
+
+              {/* Hamburger */}
+              <button
+                onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+                className="md:hidden p-2 rounded-md text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+                aria-label="Меню"
+              >
+                {isMobileMenuOpen ? (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 12h18M3 6h18M3 18h18" />
+                  </svg>
+                )}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-white/10 bg-surface/95 backdrop-blur-xl">
+            <nav className="px-4 py-3 space-y-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`block px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                    link.highlight
+                      ? 'text-primary-400 hover:text-primary-300 hover:bg-white/5'
+                      : 'text-text-secondary hover:text-primary-400 hover:bg-white/5'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+
+            {!isAuthenticated && (
+              <div className="px-4 pb-4 flex gap-3">
+                <button
+                  onClick={() => { setAuthMode('login'); setIsLoginModalOpen(true); setIsMobileMenuOpen(false); }}
+                  className="flex-1 text-center text-text-secondary hover:text-primary-400 px-3 py-2 rounded-md text-sm font-medium border border-white/10 hover:border-primary-500/50 transition-colors"
+                >
+                  Вхід
+                </button>
+                <button
+                  onClick={() => { setAuthMode('register'); setIsLoginModalOpen(true); setIsMobileMenuOpen(false); }}
+                  className="flex-1 text-center bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700 transition-colors"
+                >
+                  Реєстрація
+                </button>
+              </div>
+            )}
+
+            {isAuthenticated && user && (
+              <div className="px-4 pb-4 space-y-1 border-t border-white/5 pt-3">
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-wider px-3 mb-2">{user.username}</p>
+                {([
+                  { label: 'Профіль', route: ROUTES.PROFILE },
+                  { label: 'Мої списки', route: ROUTES.READING_LISTS },
+                  { label: 'Колекції', route: ROUTES.COLLECTIONS },
+                  { label: 'Налаштування', route: ROUTES.PROFILE_SETTINGS },
+                ] as const).map(({ label, route }) => (
+                  <button
+                    key={route}
+                    onClick={() => { setIsMobileMenuOpen(false); navigate(route); }}
+                    className="w-full text-left px-3 py-2.5 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-md transition-colors"
+                  >
+                    {label}
+                  </button>
+                ))}
+                <button
+                  onClick={() => { setIsMobileMenuOpen(false); logout(); }}
+                  className="w-full text-left px-3 py-2.5 text-sm text-white/60 hover:text-red-400 hover:bg-white/5 rounded-md transition-colors"
+                >
+                  Вийти
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       <AuthDialog

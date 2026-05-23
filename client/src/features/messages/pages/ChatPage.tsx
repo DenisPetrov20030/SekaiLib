@@ -22,6 +22,7 @@ export const ChatPage = () => {
 
     const [conversations, setConversations] = useState<ConversationDto[]>([]);
     const [loadingConversations, setLoadingConversations] = useState(false);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(!initialConversationId && !initialRecipient);
     const [query, setQuery] = useState('');
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
     const [messages, setMessages] = useState<MessageDto[]>([]);
@@ -193,6 +194,11 @@ export const ChatPage = () => {
             {/* Header */}
             <header className="flex items-center justify-between px-6 py-4 bg-zinc-900 rounded-xl border border-white/5 mb-4">
                 <div className="flex items-center gap-4">
+                    {!isMobileSidebarOpen ? (
+                      <button onClick={() => setIsMobileSidebarOpen(true)} className="md:hidden p-2 -ml-2 rounded-full text-white/40 hover:text-red-500 hover:bg-red-500/10 transition-all">
+                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                      </button>
+                    ) : null}
                     <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full text-white/40 hover:text-red-500 hover:bg-red-500/10 transition-all">
                         <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/></svg>
                     </button>
@@ -212,9 +218,9 @@ export const ChatPage = () => {
                 </div>
             </header>
 
-            <div className="grid grid-cols-[320px_1fr] gap-4 flex-1 min-h-0">
+            <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4 flex-1 min-h-0">
                 {/* Sidebar */}
-                <aside className="bg-zinc-900 rounded-2xl border border-white/5 flex flex-col overflow-hidden">
+                <aside className={`bg-zinc-900 rounded-2xl border border-white/5 flex flex-col overflow-hidden ${isMobileSidebarOpen ? 'flex' : 'hidden'} md:flex`}>
                     <div className="p-4 border-b border-white/5">
                         <input className="w-full bg-zinc-900/50 border border-white/5 rounded-xl px-4 py-2 text-xs text-white focus:border-red-600/50 outline-none" placeholder="Пошук..." value={query} onChange={(e) => setQuery(e.target.value)} />
                     </div>
@@ -226,7 +232,7 @@ export const ChatPage = () => {
                             <ul className="space-y-1">
                                 {filteredConversations.map(c => (
                                     <li key={c.id} className="group relative">
-                                        <button className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${activeConversationId === c.id ? 'bg-red-600/10 border border-red-600/30' : 'hover:bg-white/[0.03] border border-transparent'}`} onClick={() => { openConversation(c.id); }}>
+                                        <button className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${activeConversationId === c.id ? 'bg-red-600/10 border border-red-600/30' : 'hover:bg-white/[0.03] border border-transparent'}`} onClick={() => { openConversation(c.id); setIsMobileSidebarOpen(false); }}>
                                             <div className={`w-11 h-11 rounded-full bg-zinc-900 flex items-center justify-center overflow-hidden border-2 ${activeConversationId === c.id ? 'border-red-600' : 'border-white/5'}`}>
                                                 {c.otherAvatarUrl ? <img src={c.otherAvatarUrl} className="w-full h-full object-cover" /> : <span className="text-sm font-bold text-white/20">{c.otherUsername[0]}</span>}
                                             </div>
@@ -261,7 +267,7 @@ export const ChatPage = () => {
                 </aside>
 
                 {/* Main Chat Area */}
-                <section className="bg-zinc-900 rounded-2xl border border-white/5 flex flex-col overflow-hidden relative shadow-2xl">
+                <section className={`bg-zinc-900 rounded-2xl border border-white/5 flex flex-col overflow-hidden relative shadow-2xl ${!isMobileSidebarOpen ? 'flex' : 'hidden'} md:flex`}>
                     <div ref={viewportRef} className="flex-1 overflow-y-auto p-6 space-y-6 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-zinc-900/10 via-black to-black">
                         {loadingMessages ? (
                             <div className="h-full flex items-center justify-center"><div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin" /></div>
