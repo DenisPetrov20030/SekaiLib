@@ -157,10 +157,10 @@ export const ProfilePage = () => {
         
         {/* Головний контейнер: Ліва частина (інфа) + Права частина (кнопки) */}
         <div className="flex flex-col md:flex-row items-start justify-between gap-8">
-          
+
           {/* ЛІВА ЧАСТИНА */}
-          <div className="flex items-start gap-6 w-full md:w-2/3">
-            
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 w-full md:w-2/3">
+
             {/* 1. Колонка Аватарки + Додаткової інформації */}
             <div className="flex flex-col items-center gap-4 shrink-0">
               
@@ -244,10 +244,10 @@ export const ProfilePage = () => {
             </div>
 
             {/* 2. Основні дані (Нікнейм, дата) */}
-            <div className="flex-1 min-w-0">
-              <h1 className="text-3xl font-bold text-text-primary truncate">{profile.username}</h1>
+            <div className="flex-1 min-w-0 text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl font-bold text-text-primary truncate">{profile.username}</h1>
               <p className="text-text-secondary mt-1 truncate">{profile.email}</p>
-              <div className="flex items-center gap-4 mt-2">
+              <div className="flex items-center justify-center sm:justify-start gap-4 mt-2">
                 <p className="text-text-muted text-sm">
                   На сайті з {getLocalizedRegistrationDate(profile.createdAt)}
                 </p>
@@ -262,12 +262,12 @@ export const ProfilePage = () => {
           </div>
           
           {/* ПРАВА ЧАСТИНА (Кнопки) */}
-          <div className="flex flex-col sm:flex-row gap-3 shrink-0 w-full md:w-auto">
-            <Link to={ROUTES.PROFILE_SETTINGS} className="w-full sm:w-auto">
-              <Button variant="secondary" className="w-full sm:w-auto">Налаштування профілю</Button>
+          <div className="flex flex-col gap-3 shrink-0 w-full md:w-auto">
+            <Link to={ROUTES.PROFILE_SETTINGS} className="w-full md:w-auto">
+              <Button variant="secondary" className="w-full">Налаштування профілю</Button>
             </Link>
-            <Link to={ROUTES.TITLE_CREATE} className="w-full sm:w-auto">
-              <Button variant="secondary" className="w-full sm:w-auto">Опублікувати твір</Button>
+            <Link to={ROUTES.TITLE_CREATE} className="w-full md:w-auto">
+              <Button variant="secondary" className="w-full">Опублікувати твір</Button>
             </Link>
           </div>
           
