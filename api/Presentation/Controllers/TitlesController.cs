@@ -137,8 +137,9 @@ public class TitlesController : ControllerBase
         if (!allowed.Contains(ext))
             return BadRequest("Підтримуються лише PNG/JPG/JPEG/WEBP.");
 
-        if (cover.Length > 5 * 1024 * 1024)
-            return BadRequest("Максимальний розмір файлу — 5 МБ.");
+        // Allow up to 50 MB (should match server/nginx limits)
+        if (cover.Length > 50 * 1024 * 1024)
+            return BadRequest("Максимальний розмір файлу — 50 МБ.");
 
         var uploadsRoot = Path.Combine(_environment.ContentRootPath, "uploads", "covers");
         if (!Directory.Exists(uploadsRoot)) Directory.CreateDirectory(uploadsRoot);
