@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SekaiLib.Presentation.Extensions;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using SekaiLib.Infrastructure.Persistence;
 using Microsoft.Extensions.FileProviders;
 
@@ -33,6 +35,19 @@ builder.Services.AddCors(options =>
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices();
 builder.Services.AddJwtAuthentication(builder.Configuration);
+
+// Increase default request size limits to allow large file uploads (e.g. cover images)
+// Adjust value (bytes) as needed — here set to 50 MB.
+var maxUploadSize = 50 * 1024 * 1024; // 50 MB
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = maxUploadSize;
+});
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = maxUploadSize;
+});
 
 var app = builder.Build();
 
