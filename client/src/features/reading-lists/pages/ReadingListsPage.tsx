@@ -332,7 +332,7 @@ export const ReadingListsPage = () => {
           </main>
         </div>
 
-      <Modal isOpen={isEditMode} onClose={() => setIsEditMode(false)} title="Редактирование списков">
+      <Modal isOpen={isEditMode} onClose={() => setIsEditMode(false)} title="Редагування списків">
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {READING_STATUSES.map((status, index) => (
             <div key={status} className="flex items-center gap-3 p-3 bg-surface-hover rounded border border-divider">
@@ -344,7 +344,7 @@ export const ReadingListsPage = () => {
                   <button
                     onClick={() => handleMoveList(index, 'up')}
                     className="p-1 text-text-muted hover:text-text-primary hover:bg-surface-600 rounded"
-                    title="Вверх"
+                    title="Вгору"
                   >
                     ↑
                   </button>

@@ -55,6 +55,7 @@ export function AdminTitleEditPage() {
   const [coverTab, setCoverTab] = useState<CoverTab>('upload');
   const [coverUploading, setCoverUploading] = useState(false);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchGenres = async () => {
@@ -140,7 +141,7 @@ export function AdminTitleEditPage() {
       setCoverPreview(url);
     } catch (error) {
       console.error('Failed to upload cover:', error);
-      await alert({ title: 'Помилка', message: 'Помилка при завантаженні обкладинки' });
+      await alert({ title: 'Помилка', message: 'Помилка при завантаженні кладинки' });
     } finally {
       setCoverUploading(false);
     }
@@ -216,13 +217,23 @@ export function AdminTitleEditPage() {
 
           {coverTab === 'upload' && (
             <div className="space-y-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleCoverFileChange}
-                disabled={coverUploading}
-                className="block w-full text-sm text-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary-500 file:text-white hover:file:bg-primary-600 disabled:opacity-50"
-              />
+              <div className="flex items-center gap-3">
+                <label className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium ${coverUploading ? 'opacity-50 pointer-events-none bg-primary-500 text-white' : 'bg-primary-500 text-white hover:bg-primary-600'}`}>
+                  Огляд...
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      setSelectedFileName(file ? file.name : null);
+                      handleCoverFileChange(e);
+                    }}
+                    disabled={coverUploading}
+                    className="sr-only"
+                  />
+                </label>
+                <div className="text-sm text-text-secondary">{selectedFileName ?? 'Файл не вибрано'}</div>
+              </div>
               {coverUploading && (
                 <p className="text-sm text-text-secondary">Завантаження...</p>
               )}
