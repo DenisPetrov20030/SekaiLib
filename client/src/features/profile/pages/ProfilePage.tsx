@@ -247,6 +247,23 @@ export const ProfilePage = () => {
             <div className="flex-1 min-w-0 text-center sm:text-left">
               <h1 className="text-2xl sm:text-3xl font-bold text-text-primary truncate">{profile.username}</h1>
               <p className="text-text-secondary mt-1 truncate">{profile.email}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <p className="text-xs text-text-muted">ID: <span className="font-mono text-sm text-text-primary">{profile.id}</span></p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(profile.id);
+                      await alert({ title: 'Скопійовано', message: 'ID користувача скопійовано в буфер обміну.' });
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }}
+                  className="text-[11px] text-primary-500 hover:text-primary-400 ml-2"
+                >
+                  Копіювати
+                </button>
+              </div>
               <div className="flex items-center justify-center sm:justify-start gap-4 mt-2">
                 <p className="text-text-muted text-sm">
                   На сайті з {getLocalizedRegistrationDate(profile.createdAt)}
