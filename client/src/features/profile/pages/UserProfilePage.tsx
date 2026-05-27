@@ -8,6 +8,7 @@ import { Pagination } from '../../catalog/components/Pagination';
 import { Button, BlockButton } from '../../../shared/components';
 import { useDialog } from '../../../shared/hooks/useDialog';
 import { ROUTES } from '../../../core/constants';
+import { UserRole } from '../../../core/types/enums';
 import type { UserProfile } from '../../../core/types';
 import type { TitleDto } from '../../../core/types/dtos';
 import type { PagedResponse } from '../../../core/types';
@@ -29,6 +30,9 @@ export const UserProfilePage = () => {
   const [friendsCount, setFriendsCount] = useState(0);
   const [isBlockedByMe, setIsBlockedByMe] = useState(false);
   const [isBlockedByThem, setIsBlockedByThem] = useState(false);
+  const canSeeUserId = !!authUser && authUser.id !== userId && (
+    authUser.role === UserRole.Administrator || authUser.role === UserRole.Moderator
+  );
 
   useEffect(() => {
     if (userId) {
@@ -262,6 +266,11 @@ export const UserProfilePage = () => {
           <div>
             <h1 className="text-3xl font-bold text-text-primary">{profile.username}</h1>
             <p className="text-text-secondary mt-1">{profile.email}</p>
+            {canSeeUserId && (
+              <p className="text-text-muted text-sm mt-1">
+                ID: <span className="font-mono text-text-primary">{profile.id}</span>
+              </p>
+            )}
             <p className="text-text-muted text-sm mt-2">
               На сайті з {new Date(profile.createdAt).toLocaleDateString('uk-UA')}
             </p>
