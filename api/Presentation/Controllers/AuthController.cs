@@ -165,6 +165,11 @@ public class AuthController : ControllerBase
 
     private string BuildCallbackUrl(string provider)
     {
+        if (!string.IsNullOrWhiteSpace(_oAuthOptions.BackendBaseUrl))
+        {
+            return $"{_oAuthOptions.BackendBaseUrl.TrimEnd('/')}/api/auth/oauth/{provider}/callback";
+        }
+
         return Url.ActionLink(nameof(OAuthCallback), values: new { provider })!;
     }
 

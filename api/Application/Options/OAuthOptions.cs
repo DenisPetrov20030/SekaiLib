@@ -3,6 +3,7 @@
 public class OAuthOptions
 {
     public string FrontendCallbackBaseUrl { get; set; } = string.Empty;
+    public string BackendBaseUrl { get; set; } = string.Empty;
     public int TicketTtlMinutes { get; set; } = 5;
     public OAuthProviderOptions Google { get; set; } = new();
 }
