@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { Dispatch, SetStateAction, FormEvent } from 'react';
 import { faqApi } from '../../../core/api/faq';
 import type { FaqItem } from '../../../core/types/entities';
 import { useDialog } from '../../../shared/hooks/useDialog';
@@ -12,6 +13,81 @@ interface FaqForm {
 
 const emptyForm: FaqForm = { question: '', answer: '', order: 0, isPublished: true };
 
+interface FaqFormPanelProps {
+  form: FaqForm;
+  setForm: Dispatch<SetStateAction<FaqForm>>;
+  editingId: string | null;
+  onSave: (e: FormEvent) => void;
+  cancelEdit: () => void;
+  submitting: boolean;
+}
+
+function FaqFormPanel({ form, setForm, editingId, onSave, cancelEdit, submitting }: FaqFormPanelProps) {
+  return (
+    <form onSubmit={onSave} className="bg-surface-800 rounded-lg p-6 mb-6 space-y-4">
+      <h2 className="text-lg font-semibold text-text-primary">
+        {editingId ? 'Редагувати питання' : 'Нове питання'}
+      </h2>
+      <div>
+        <label className="block text-sm text-text-muted mb-1">Питання</label>
+        <input
+          type="text"
+          value={form.question}
+          onChange={(e) => setForm((f) => ({ ...f, question: e.target.value }))}
+          className="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:border-primary-500"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm text-text-muted mb-1">Відповідь</label>
+        <textarea
+          value={form.answer}
+          onChange={(e) => setForm((f) => ({ ...f, answer: e.target.value }))}
+          rows={4}
+          className="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:border-primary-500 resize-y"
+          required
+        />
+      </div>
+      <div className="flex items-center gap-4">
+        <div>
+          <label className="block text-sm text-text-muted mb-1">Порядок</label>
+          <input
+            type="number"
+            value={form.order}
+            onChange={(e) => setForm((f) => ({ ...f, order: Number(e.target.value) }))}
+            className="w-24 bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:border-primary-500"
+          />
+        </div>
+        <div className="flex items-center gap-2 mt-5">
+          <input
+            type="checkbox"
+            id="faqPublished"
+            checked={form.isPublished}
+            onChange={(e) => setForm((f) => ({ ...f, isPublished: e.target.checked }))}
+            className="w-4 h-4 accent-primary-500"
+          />
+          <label htmlFor="faqPublished" className="text-text-primary text-sm">Опублікувати</label>
+        </div>
+      </div>
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+        >
+          {submitting ? 'Збереження...' : 'Зберегти'}
+        </button>
+        <button
+          type="button"
+          onClick={cancelEdit}
+          className="px-5 py-2 bg-surface-700 hover:bg-surface-600 text-text-primary rounded-lg text-sm transition-colors"
+        >
+          Скасувати
+        </button>
+      </div>
+    </form>
+  );
+}
 export function AdminFaqPage() {
   const [items, setItems] = useState<FaqItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,70 +153,6 @@ export function AdminFaqPage() {
     }
   };
 
-  const FormPanel = () => (
-    <form onSubmit={handleSave} className="bg-surface-800 rounded-lg p-6 mb-6 space-y-4">
-      <h2 className="text-lg font-semibold text-text-primary">
-        {editingId ? 'Редагувати питання' : 'Нове питання'}
-      </h2>
-      <div>
-        <label className="block text-sm text-text-muted mb-1">Питання</label>
-        <input
-          type="text"
-          value={form.question}
-          onChange={(e) => setForm((f) => ({ ...f, question: e.target.value }))}
-          className="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:border-primary-500"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm text-text-muted mb-1">Відповідь</label>
-        <textarea
-          value={form.answer}
-          onChange={(e) => setForm((f) => ({ ...f, answer: e.target.value }))}
-          rows={4}
-          className="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:border-primary-500 resize-y"
-          required
-        />
-      </div>
-      <div className="flex items-center gap-4">
-        <div>
-          <label className="block text-sm text-text-muted mb-1">Порядок</label>
-          <input
-            type="number"
-            value={form.order}
-            onChange={(e) => setForm((f) => ({ ...f, order: Number(e.target.value) }))}
-            className="w-24 bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:border-primary-500"
-          />
-        </div>
-        <div className="flex items-center gap-2 mt-5">
-          <input
-            type="checkbox"
-            id="faqPublished"
-            checked={form.isPublished}
-            onChange={(e) => setForm((f) => ({ ...f, isPublished: e.target.checked }))}
-            className="w-4 h-4 accent-primary-500"
-          />
-          <label htmlFor="faqPublished" className="text-text-primary text-sm">Опублікувати</label>
-        </div>
-      </div>
-      <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-        >
-          {submitting ? 'Збереження...' : 'Зберегти'}
-        </button>
-        <button
-          type="button"
-          onClick={cancelEdit}
-          className="px-5 py-2 bg-surface-700 hover:bg-surface-600 text-text-primary rounded-lg text-sm transition-colors"
-        >
-          Скасувати
-        </button>
-      </div>
-    </form>
-  );
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -156,7 +168,16 @@ export function AdminFaqPage() {
         )}
       </div>
 
-      {(showCreate || editingId) && <FormPanel />}
+      {(showCreate || editingId) && (
+        <FaqFormPanel
+          form={form}
+          setForm={setForm}
+          editingId={editingId}
+          onSave={handleSave}
+          cancelEdit={cancelEdit}
+          submitting={submitting}
+        />
+      )}
 
       <div className="bg-surface-800 rounded-lg overflow-hidden">
         {loading ? (
