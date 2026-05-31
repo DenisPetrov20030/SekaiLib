@@ -374,6 +374,16 @@ public class ModerationService : IModerationService
                 var chapter = await _dbContext.Chapters.FindAsync(contentId);
                 if (chapter != null) { chapter.IsApproved = true; }
                 break;
+
+            case "ChapterComment":
+                var chapterComment = await _dbContext.ChapterComments.FindAsync(contentId);
+                if (chapterComment != null) { chapterComment.IsHidden = false; }
+                break;
+
+            case "TitleComment":
+                var titleComment = await _dbContext.TitleComments.FindAsync(contentId);
+                if (titleComment != null) { titleComment.IsHidden = false; }
+                break;
         }
     }
 

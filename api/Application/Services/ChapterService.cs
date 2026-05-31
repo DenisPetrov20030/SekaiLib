@@ -20,15 +20,18 @@ public class ChapterService : IChapterService
     private readonly IUserBlockService _userBlockService;
     private readonly IViewTrackingService _viewTracking;
     private readonly IModerationService _moderation;
+    private readonly IAutoModerationService _autoMod;
 
     public ChapterService(IUnitOfWork unitOfWork, INotificationService notifications,
-        IUserBlockService userBlockService, IViewTrackingService viewTracking, IModerationService moderation)
+        IUserBlockService userBlockService, IViewTrackingService viewTracking,
+        IModerationService moderation, IAutoModerationService autoMod)
     {
         _unitOfWork = unitOfWork;
         _notifications = notifications;
         _userBlockService = userBlockService;
         _viewTracking = viewTracking;
         _moderation = moderation;
+        _autoMod = autoMod;
     }
 
     public async Task<IEnumerable<ChapterDto>> GetChaptersByTitleAsync(Guid titleId, Guid? teamId = null)
@@ -161,6 +164,7 @@ public class ChapterService : IChapterService
                 { nameof(request.ChapterNumber), new[] { $"Глава з номером {request.ChapterNumber} вже існує" } }
             });
 
+        // Admin/publisher uploads are auto-approved; team member uploads go to moderation queue
         var isTeamUpload = request.TranslationTeamId.HasValue
             && title.PublisherId != userId
             && user.Role < UserRole.Administrator;
@@ -190,6 +194,10 @@ public class ChapterService : IChapterService
 
         await _unitOfWork.SaveChangesAsync();
 
+        // ---------------------------------------------------------
+        // РОЗУМНИЙ ФІЛЬТР ДЛЯ ПІДПИСНИКІВ ТАЙТЛУ
+        // Ураховуємо налаштування користувачів: стандартні статуси і власні списки
+        // ---------------------------------------------------------
         var readingEntries = await _unitOfWork.ReadingLists.Query()
             .Where(rl => rl.TitleId == titleId)
             .Select(rl => new { rl.UserId, rl.Status, rl.UserListId })
@@ -204,6 +212,7 @@ public class ChapterService : IChapterService
             var followerId = group.Key;
             if (followerId == userId) continue;
 
+            // Загружаємо налаштування користувача
             var follower = await _unitOfWork.Users.GetByIdAsync(followerId);
             if (follower == null) continue;
 
@@ -226,6 +235,7 @@ public class ChapterService : IChapterService
 
             foreach (var entry in group)
             {
+                // Custom list entry
                 if (entry.UserListId.HasValue)
                 {
                     var listIdStr = entry.UserListId.Value.ToString();
@@ -237,6 +247,7 @@ public class ChapterService : IChapterService
                 }
                 else
                 {
+                    // Standard list entry (status)
                     if (notifyStatuses.Contains((int)entry.Status))
                     {
                         shouldNotify = true;
@@ -249,6 +260,7 @@ public class ChapterService : IChapterService
                 finalFollowers.Add(followerId);
         }
 
+        // Якщо глава прив'язана до команди — додатково фільтруємо тих, хто підписаний на конкретні команди (дзвінки)
         if (request.TranslationTeamId.HasValue)
         {
             var teamsOnThisTitle = await _unitOfWork.Chapters.Query()
@@ -276,6 +288,7 @@ public class ChapterService : IChapterService
                 }
                 else
                 {
+                    // Якщо юзер не вибирав дзвіночків — залишаємо як є
                     filtered.Add(followerId);
                 }
             }
@@ -283,6 +296,7 @@ public class ChapterService : IChapterService
             finalFollowers = filtered;
         }
 
+        // Розсилаємо сповіщення відфільтрованому списку читачів
         foreach (var followerId in finalFollowers)
         {
             await _notifications.CreateAsync(new CreateNotificationRequest(
@@ -297,6 +311,9 @@ public class ChapterService : IChapterService
             ));
         }
 
+        // ---------------------------------------------------------
+        // СПОВІЩЕННЯ "КОМАНДА РОЗПОЧАЛА ПЕРЕВЕДЕННЯ" (Лише перша глава команди)
+        // ---------------------------------------------------------
         if (request.TranslationTeamId.HasValue)
         {
             var teamChaptersCount = await _unitOfWork.Chapters.Query()
@@ -546,6 +563,10 @@ public class ChapterService : IChapterService
                 throw new ForbiddenException("Ви не можете відповідати на коментарі цього користувача.");
         }
 
+        var autoModResult = await _autoMod.CheckAsync(request.Content);
+        if (autoModResult.IsFlagged)
+            throw new ValidationException("Content", "Коментар містить заборонені слова або порушує правила спільноти.");
+
         var comment = new ChapterComment
         {
             Id = Guid.NewGuid(),
@@ -708,10 +729,12 @@ public class ChapterService : IChapterService
         if (chapter == null)
             throw new NotFoundException("Chapter", chapterId);
 
+        // Redis fast-path: skip DB entirely if already seen within 24h
         var isNew = await _viewTracking.TryRecordViewAsync("chapter", chapterId, userId, ipAddress);
         if (!isNew)
             return chapter.ViewCount;
 
+        // DB insert for analytics history
         var ipHash = HashIp(ipAddress);
         await _unitOfWork.ChapterViews.AddAsync(new ChapterView
         {

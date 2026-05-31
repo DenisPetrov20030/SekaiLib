@@ -8,6 +8,7 @@ public class ChapterComment
     public Guid ChapterId { get; set; }
     public Guid UserId { get; set; }
     public string Content { get; set; } = string.Empty;
+    public bool IsHidden { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public Guid? ParentCommentId { get; set; }

@@ -13,12 +13,15 @@ public class TitleCommentService : ITitleCommentService
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notifications;
     private readonly IUserBlockService _userBlockService;
+    private readonly IAutoModerationService _autoMod;
 
-    public TitleCommentService(IUnitOfWork unitOfWork, INotificationService notifications, IUserBlockService userBlockService)
+    public TitleCommentService(IUnitOfWork unitOfWork, INotificationService notifications,
+        IUserBlockService userBlockService, IAutoModerationService autoMod)
     {
         _unitOfWork = unitOfWork;
         _notifications = notifications;
         _userBlockService = userBlockService;
+        _autoMod = autoMod;
     }
 
     public async Task<IEnumerable<TitleCommentResponse>> GetCommentsByTitleAsync(Guid titleId, Guid? currentUserId)
@@ -95,6 +98,10 @@ public class TitleCommentService : ITitleCommentService
             if (await _userBlockService.IsBlockedAsync(parent.UserId, userId))
                 throw new ForbiddenException("Ви не можете відповідати на коментарі цього користувача.");
         }
+
+        var autoModResult = await _autoMod.CheckAsync(request.Content);
+        if (autoModResult.IsFlagged)
+            throw new ValidationException("Content", "Коментар містить заборонені слова або порушує правила спільноти.");
 
         var comment = new TitleComment
         {
