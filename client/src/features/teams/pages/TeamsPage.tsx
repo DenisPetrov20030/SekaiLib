@@ -49,17 +49,12 @@ export const TeamsPage = () => {
               className="flex items-center gap-4 p-4 bg-surface rounded-lg shadow hover:bg-surface-hover transition-colors"
             >
               <img
-                src={DEFAULT_TEAM_AVATAR}
+                src={team.avatarUrl || DEFAULT_TEAM_AVATAR}
                 alt={team.name}
                 className="w-14 h-14 rounded-full object-cover flex-shrink-0"
-                onLoad={(e) => {
-                  if (team.avatarUrl) {
-                    const img = new Image();
-                    img.src = team.avatarUrl;
-                    img.onload = () => {
-                      e.currentTarget.src = team.avatarUrl!;
-                    };
-                  }
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.src = DEFAULT_TEAM_AVATAR;
                 }}
               />
               <div className="min-w-0">
